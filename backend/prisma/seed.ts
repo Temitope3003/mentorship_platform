@@ -30,6 +30,24 @@ async function main() {
   });
   console.log('Created mentor 2:', mentor2.email);
 
+  const mentee = await prisma.mentee.upsert({
+    where: { email: 'amara@test.com' },
+    update: {},
+    create: {
+      name: 'Amara Johnson',
+      email: 'amara@test.com',
+      accessCode: 'AMARA-1234',
+      domainTrack: 'AI & Machine Learning',
+      topMatch: 'AI & Machine Learning',
+      secondMatch: 'Data',
+      isActive: true,
+      mentorId: mentor1.id,
+    },
+  });
+  console.log('Test mentee created:');
+  console.log('  Name:        ' + mentee.name);
+  console.log('  Access Code: ' + mentee.accessCode);
+  console.log('  Domain:      ' + mentee.domainTrack)
   console.log('Seed complete.');
 }
 
