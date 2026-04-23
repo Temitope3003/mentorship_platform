@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { authRouter } from './routes/auth';
+import { assessmentRouter } from './routes/assessment';
 import { menteeRouter } from './routes/mentee';
 import { mentorRouter } from './routes/mentor';
 
@@ -18,12 +19,13 @@ app.use(express.json({ limit: '10kb' }));
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'MLOps Mentorship API is running',
+    message: 'Tech Mentorship API is running',
     timestamp: new Date().toISOString(),
   });
 });
 
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/assessment', assessmentRouter);
 app.use('/api/v1/mentee', menteeRouter);
 app.use('/api/v1/mentor', mentorRouter);
 
