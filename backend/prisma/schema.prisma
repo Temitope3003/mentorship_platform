@@ -1,81 +1,84 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Mentor {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @db.VarChar(255)
+  name         String   @db.VarChar(255)
+  createdAt    DateTime @default(now())
+  mentees      Mentee[]
+}
 
 model Mentee {
-  id              String   @id @default(uuid())
-  name            String
-  email           String   @unique
-  accessCode      String   @unique @map("access_code")
-  domainTrack     String   @map("domain_track")
-  statedGoal      String?  @map("stated_goal")
-  goalDomain      String?  @map("goal_domain")
-  alignmentStatus String?  @map("alignment_status")
-  topMatch        String?  @map("top_match")
-  secondMatch     String?  @map("second_match")
-  allScores       Json?    @map("all_scores")
-  mentorNote      String?  @map("mentor_note")
-  startDate       DateTime @default(now()) @map("start_date")
-  isActive        Boolean  @default(true) @map("is_active")
-  onboardedAt     DateTime? @map("onboarded_at")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  submissions WeeklySubmission[]
-  emailLogs   EmailLog[]
+  id              String    @id @default(uuid()) @db.VarChar(36)
+  name            String    @db.VarChar(255)
+  email           String    @unique @db.VarChar(255)
+  accessCode      String    @unique @db.VarChar(50)
+  domainTrack     String    @db.VarChar(100)
+  statedGoal      String?   @db.Text
+  goalDomain      String?   @db.VarChar(100)
+  alignmentStatus String?   @db.VarChar(20)
+  topMatch        String?   @db.VarChar(100)
+  secondMatch     String?   @db.VarChar(100)
+  allScores       Json?
+  mentorNote      String?   @db.Text
+  startDate       DateTime  @default(now())
+  isActive        Boolean   @default(true)
+  onboardedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  mentorId        String?   @db.VarChar(36)
+  mentor          Mentor?   @relation(fields: [mentorId], references: [id])
+  submissions     WeeklySubmission[]
+  emailLogs       EmailLog[]
 }
 
 model WeeklySubmission {
-  id             String   @id @default(uuid())
-  menteeId       String
+  id             String    @id @default(uuid()) @db.VarChar(36)
+  menteeId       String    @db.VarChar(36)
   weekNumber     Int
-  summary        String
-  workDone       String   @map("work_done")
-  link           String?
-  mentorFeedback String?  @map("mentor_feedback")
-  feedbackAt     DateTime? @map("feedback_at")
-  submittedAt    DateTime @default(now()) @map("submitted_at")
-  updatedAt      DateTime @updatedAt
-
-  mentee Mentee @relation(fields: [menteeId], references: [id], onDelete: Cascade)
+  summary        String    @db.Text
+  workDone       String    @db.Text
+  link           String?   @db.VarChar(500)
+  mentorFeedback String?   @db.Text
+  feedbackAt     DateTime?
+  submittedAt    DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  mentee         Mentee    @relation(fields: [menteeId], references: [id], onDelete: Cascade)
 
   @@unique([menteeId, weekNumber])
-  @@map("weekly_submissions")
-}
-
-model EmailLog {
-  id           String   @id @default(uuid())
-  menteeId     String?
-  emailType    String
-  recipient    String
-  subject      String
-  status       String   @default("queued")
-  providerId   String?  @map("provider_id")
-  errorMessage String?  @map("error_message")
-  sentAt       DateTime? @map("sent_at")
-  createdAt    DateTime @default(now())
-
-  mentee Mentee? @relation(fields: [menteeId], references: [id])
 }
 
 model AssessmentSession {
-  id           String   @id @default(uuid())
-  sessionToken String   @unique @map("session_token")
-  name         String?
-  email        String?
-  statedGoal   String?  @map("stated_goal")
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  sessionToken String   @unique @db.VarChar(36)
+  name         String?  @db.VarChar(255)
+  email        String?  @db.VarChar(255)
+  statedGoal   String?  @db.Text
   answers      Json?
   completed    Boolean  @default(false)
-  menteeId     String?
+  menteeId     String?  @db.VarChar(36)
   expiresAt    DateTime
   createdAt    DateTime @default(now())
-
-  mentee Mentee? @relation(fields: [menteeId], references: [id])
 }
 
-model MentorAccount {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  name         String
-  createdAt    DateTime @default(now())
+model EmailLog {
+  id         String    @id @default(uuid()) @db.VarChar(36)
+  menteeId   String?   @db.VarChar(36)
+  emailType  String    @db.VarChar(100)
+  recipient  String    @db.VarChar(255)
+  subject    String    @db.VarChar(500)
+  status     String    @default("queued") @db.VarChar(50)
+  providerId String?   @db.VarChar(255)
+  errorMsg   String?   @db.Text
+  sentAt     DateTime?
+  createdAt  DateTime  @default(now())
+  mentee     Mentee?   @relation(fields: [menteeId], references: [id])
 }
