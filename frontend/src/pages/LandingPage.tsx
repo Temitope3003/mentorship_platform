@@ -79,7 +79,7 @@ export function LandingPage() {
             <div className="animate-fade-up mb-6 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/8 px-4 py-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-accent" />
               <span className="text-xs font-semibold uppercase tracking-widest text-accent">
-                MLOps Mentorship Program
+                Tech Mentorship Program
               </span>
             </div>
 
@@ -305,7 +305,7 @@ export function LandingPage() {
                     { icon: '🗺️', title: '12-month learning roadmap', desc: 'Week by week, phase by phase, built for you' },
                     { icon: '📬', title: 'Automatic access code', desc: 'Emailed to you instantly after assessment' },
                     { icon: '📊', title: 'Weekly progress tracker', desc: 'Log your work and get mentor feedback' },
-                    { icon: '🤝', title: 'Direct mentor support', desc: '1-on-1 sessions with an experienced MLOps engineer' },
+                    { icon: '🤝', title: 'Direct mentor support', desc: '1-on-1 sessions with an experienced engineer' },
                     { icon: '📚', title: 'Free course recommendations', desc: 'Curated resources, mostly free, per your domain' },
                   ].map((item) => (
                     <div key={item.title} className="flex gap-4">
@@ -382,10 +382,10 @@ export function LandingPage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
               <span className="font-display text-xs font-bold italic text-white">M</span>
             </div>
-            <span className="font-display text-sm font-semibold text-text">MLOps Mentorship</span>
+            <span className="font-display text-sm font-semibold text-text">Tech Mentorship</span>
           </div>
           <p className="text-xs text-muted">
-            © 2025 MLOps Mentorship Program. Empowering the next generation of tech professionals.
+            © 2025 Tech Mentorship Program. Empowering the next generation of tech professionals.
           </p>
           <div className="flex gap-4">
             <Link to="/assess" className="text-xs text-muted transition hover:text-text">Assessment</Link>

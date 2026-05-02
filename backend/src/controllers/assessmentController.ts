@@ -7,6 +7,8 @@ import {
   generateAccessCode,
 } from '../services/assessmentService';
 import { analyseGoalAlignment } from '../services/goalAnalysisService';
+import { sendWelcomeEmail } from '../emails/welcomeEmail';
+import { sendMentorAlertEmail } from '../emails/mentorAlertEmail';
 
 export async function startSession(req: Request, res: Response) {
   try {
@@ -119,30 +121,85 @@ export async function completeAssessment(req: Request, res: Response) {
       );
     }
 
-    // Generate unique access code
-    const existingCodes = await prisma.mentee.findMany({
-      select: { accessCode: true },
+    // Check if mentee with this email already exists
+    const existingMentee = await prisma.mentee.findUnique({
+      where: { email: session.email },
     });
-    const codes = existingCodes.map((m) => m.accessCode);
-    const accessCode = generateAccessCode(session.name, codes);
 
-    // Create the mentee record
-    const mentee = await prisma.mentee.create({
-      data: {
-        name: session.name,
-        email: session.email,
-        accessCode,
-        domainTrack: topMatch,
-        statedGoal: session.statedGoal,
-        goalDomain: analysis?.goalDomain || null,
-        alignmentStatus: analysis?.alignmentStatus || null,
-        topMatch,
-        secondMatch,
-        allScores: scores,
-        mentorNote: analysis?.mentorNote || null,
-        onboardedAt: new Date(),
-      },
-    });
+    let mentee;
+
+    if (existingMentee) {
+      mentee = await prisma.mentee.update({
+        where: { email: session.email },
+        data: {
+          name: session.name,
+          domainTrack: topMatch,
+          statedGoal: session.statedGoal,
+          goalDomain: analysis?.goalDomain || null,
+          alignmentStatus: analysis?.alignmentStatus || null,
+          topMatch,
+          secondMatch,
+          allScores: scores,
+          mentorNote: analysis?.mentorNote || null,
+          onboardedAt: new Date(),
+        },
+      });
+
+    } else {
+      const existingCodes = await prisma.mentee.findMany({
+        select: { accessCode: true },
+      });
+      const codes = existingCodes.map((m) => m.accessCode);
+      const accessCode = generateAccessCode(session.name, codes);
+
+      mentee = await prisma.mentee.create({
+        data: {
+          name: session.name,
+          email: session.email,
+          accessCode,
+          domainTrack: topMatch,
+          statedGoal: session.statedGoal,
+          goalDomain: analysis?.goalDomain || null,
+          alignmentStatus: analysis?.alignmentStatus || null,
+          topMatch,
+          secondMatch,
+          allScores: scores,
+          mentorNote: analysis?.mentorNote || null,
+          onboardedAt: new Date(),
+        },
+      });
+    }
+
+    // Send welcome email directly (non-blocking)
+
+    // Send welcome email directly (non-blocking)
+    // Send welcome email to mentee (non-blocking)
+    sendWelcomeEmail({
+      name: mentee.name,
+      email: mentee.email,
+      accessCode: mentee.accessCode,
+      topMatch: mentee.topMatch!,
+      secondMatch: mentee.secondMatch!,
+      alignmentStatus: mentee.alignmentStatus || undefined,
+      alignmentSummary: analysis?.alignmentSummary || undefined,
+      warningText: analysis?.warningText || undefined,
+      choiceContext: analysis?.choiceContext || undefined,
+    }).catch((err) => console.error('Welcome email error:', err.message));
+
+    // Send mentor alert email (non-blocking)
+    sendMentorAlertEmail({
+      mentorEmail: 'ajaotemitope5@gmail.com',
+      menteeName: mentee.name,
+      menteeEmail: mentee.email,
+      accessCode: mentee.accessCode,
+      topMatch: mentee.topMatch!,
+      secondMatch: mentee.secondMatch!,
+      alignmentStatus: mentee.alignmentStatus || null,
+      alignmentSummary: analysis?.alignmentSummary || null,
+      warningText: analysis?.warningText || null,
+      mentorNote: analysis?.mentorNote || null,
+      statedGoal: mentee.statedGoal || null,
+    }).catch((err) => console.error('Mentor alert email error:', err.message));
 
     // Mark session complete
     await prisma.assessmentSession.update({

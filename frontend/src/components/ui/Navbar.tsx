@@ -19,10 +19,10 @@ export function Navbar() {
         {/* brand */}
         <Link to="/" className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-            <span className="font-display text-sm font-bold italic text-white">M</span>
+            <span className="font-display text-sm font-bold italic text-white">T</span>
           </div>
           <span className="font-display text-lg font-semibold text-text">
-            MLOps <span className="text-accent">Mentorship</span>
+            Tech <span className="text-accent">Mentorship</span>
           </span>
         </Link>
 
