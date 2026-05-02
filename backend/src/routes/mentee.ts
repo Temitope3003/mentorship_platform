@@ -1,17 +1,23 @@
-import { Router, Request, Response } from 'express';
-import { requireMentee } from '../middleware/auth';
+import { Router, Request, Response } from 'express'
+import { requireMentee } from '../middleware/auth'
+import {
+  getProfile,
+  getRoadmap,
+  getSubmissions,
+  createSubmission,
+  getStats,
+} from '../controllers/menteeController'
 
 interface AuthRequest extends Request {
-  menteeId?: string;
+  menteeId?: string
 }
 
-export const menteeRouter = Router();
+export const menteeRouter = Router()
 
-menteeRouter.use(requireMentee);
+menteeRouter.use(requireMentee)
 
-menteeRouter.get('/me', (req: AuthRequest, res: Response) => {
-  res.json({
-    message: 'Mentee route working',
-    menteeId: req.menteeId,
-  });
-});
+menteeRouter.get('/me', getProfile)
+menteeRouter.get('/me/roadmap', getRoadmap)
+menteeRouter.get('/me/submissions', getSubmissions)
+menteeRouter.post('/me/submissions', createSubmission)
+menteeRouter.get('/me/stats', getStats)

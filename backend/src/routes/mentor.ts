@@ -1,17 +1,23 @@
-import { Router, Request, Response } from 'express';
-import { requireMentor } from '../middleware/auth';
+import { Router, Request, Response } from 'express'
+import { requireMentor } from '../middleware/auth'
+import {
+  getAllMentees,
+  getMentee,
+  createMentee,
+  getAllSubmissions,
+  addFeedback,
+  getCohortStats,
+  getAccessCodes,
+} from '../controllers/mentorController'
 
-interface AuthRequest extends Request {
-  mentorId?: string;
-}
+export const mentorRouter = Router()
 
-export const mentorRouter = Router();
+mentorRouter.use(requireMentor)
 
-mentorRouter.use(requireMentor);
-
-mentorRouter.get('/me', (req: AuthRequest, res: Response) => {
-  res.json({
-    message: 'Mentor route working',
-    mentorId: req.mentorId,
-  });
-});
+mentorRouter.get('/mentees', getAllMentees)
+mentorRouter.post('/mentees', createMentee)
+mentorRouter.get('/mentees/:id', getMentee)
+mentorRouter.get('/submissions', getAllSubmissions)
+mentorRouter.post('/submissions/:id/feedback', addFeedback)
+mentorRouter.get('/stats', getCohortStats)
+mentorRouter.get('/codes', getAccessCodes)
