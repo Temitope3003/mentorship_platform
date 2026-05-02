@@ -221,9 +221,10 @@ export function LandingPage() {
 
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {DOMAINS.map((d) => (
-              <div
+              <Link
+                to={`/domain/${encodeURIComponent(d.name)}`}
                 key={d.name}
-                className="group cursor-default rounded-2xl border border-border bg-white p-5 shadow-warm-sm transition hover:-translate-y-1 hover:shadow-warm-md"
+                className="group cursor-pointer rounded-2xl border border-border bg-white p-5 shadow-warm-sm transition hover:-translate-y-1 hover:shadow-warm-md"
               >
                 <div
                   className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl text-xl transition group-hover:scale-110"
@@ -236,7 +237,10 @@ export function LandingPage() {
                   className="mt-2 h-0.5 w-8 rounded-full transition group-hover:w-14"
                   style={{ background: d.color }}
                 />
-              </div>
+                <div className="mt-2 text-xs text-muted opacity-0 transition group-hover:opacity-100">
+                  Learn more →
+                </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -380,7 +384,7 @@ export function LandingPage() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 md:flex-row">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
-              <span className="font-display text-xs font-bold italic text-white">M</span>
+              <span className="font-display text-xs font-bold italic text-white">T</span>
             </div>
             <span className="font-display text-sm font-semibold text-text">Tech Mentorship</span>
           </div>

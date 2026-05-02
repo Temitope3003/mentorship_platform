@@ -1,9 +1,9 @@
 export const DOMAINS = [
   { name: 'AI & Machine Learning', color: '#ff6b2b', icon: '🤖' },
-  { name: 'Data', color: '#2563eb', icon: '📊' },
+  { name: 'Data Analysis', color: '#2563eb', icon: '📊' },
   { name: 'Software Engineering', color: '#7c3aed', icon: '💻' },
   { name: 'Cloud & Infrastructure', color: '#0891b2', icon: '☁️' },
-  { name: 'Security', color: '#ef4444', icon: '🔐' },
+  { name: 'CyberSecurity', color: '#ef4444', icon: '🔐' },
   { name: 'Product & Design', color: '#ec4899', icon: '🎨' },
   { name: 'Emerging Tech', color: '#f59e0b', icon: '🚀' },
   { name: 'Virtual Assistant', color: '#059669', icon: '🗂️' },

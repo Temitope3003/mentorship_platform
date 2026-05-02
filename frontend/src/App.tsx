@@ -8,6 +8,7 @@ import { MenteeLoginPage } from './pages/MenteeLoginPage'
 import { MentorLoginPage } from './pages/MentorLoginPage'
 import { MenteeDashboard } from './pages/MenteeDashboard'
 import { MentorDashboard } from './pages/MentorDashboard'
+import { DomainPage } from './pages/DomainPage'
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/results/:token" element={<ResultsPage />} />
         <Route path="/login" element={<MenteeLoginPage />} />
         <Route path="/mentor/login" element={<MentorLoginPage />} />
+        <Route path="/domain/:domainId" element={<DomainPage />} />
         <Route
           path="/dashboard"
           element={
