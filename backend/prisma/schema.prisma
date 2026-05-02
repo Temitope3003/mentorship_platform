@@ -3,51 +3,51 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Mentor {
-  id           String   @id @default(uuid()) @db.VarChar(36)
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @db.VarChar(255)
-  name         String   @db.VarChar(255)
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
   createdAt    DateTime @default(now())
   mentees      Mentee[]
 }
 
 model Mentee {
-  id              String    @id @default(uuid()) @db.VarChar(36)
-  name            String    @db.VarChar(255)
-  email           String    @unique @db.VarChar(255)
-  accessCode      String    @unique @db.VarChar(50)
-  domainTrack     String    @db.VarChar(100)
-  statedGoal      String?   @db.Text
-  goalDomain      String?   @db.VarChar(100)
-  alignmentStatus String?   @db.VarChar(20)
-  topMatch        String?   @db.VarChar(100)
-  secondMatch     String?   @db.VarChar(100)
+  id              String    @id @default(uuid())
+  name            String
+  email           String    @unique
+  accessCode      String    @unique
+  domainTrack     String
+  statedGoal      String?
+  goalDomain      String?
+  alignmentStatus String?
+  topMatch        String?
+  secondMatch     String?
   allScores       Json?
-  mentorNote      String?   @db.Text
+  mentorNote      String?
   startDate       DateTime  @default(now())
   isActive        Boolean   @default(true)
   onboardedAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  mentorId        String?   @db.VarChar(36)
+  mentorId        String?
   mentor          Mentor?   @relation(fields: [mentorId], references: [id])
   submissions     WeeklySubmission[]
   emailLogs       EmailLog[]
 }
 
 model WeeklySubmission {
-  id             String    @id @default(uuid()) @db.VarChar(36)
-  menteeId       String    @db.VarChar(36)
+  id             String    @id @default(uuid())
+  menteeId       String
   weekNumber     Int
-  summary        String    @db.Text
-  workDone       String    @db.Text
-  link           String?   @db.VarChar(500)
-  mentorFeedback String?   @db.Text
+  summary        String
+  workDone       String
+  link           String?
+  mentorFeedback String?
   feedbackAt     DateTime?
   submittedAt    DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -57,27 +57,27 @@ model WeeklySubmission {
 }
 
 model AssessmentSession {
-  id           String   @id @default(uuid()) @db.VarChar(36)
-  sessionToken String   @unique @default(uuid()) @db.VarChar(36)
-  name         String?  @db.VarChar(255)
-  email        String?  @db.VarChar(255)
-  statedGoal   String?  @db.Text
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @default(uuid())
+  name         String?
+  email        String?
+  statedGoal   String?
   answers      Json?
   completed    Boolean  @default(false)
-  menteeId     String?  @db.VarChar(36)
+  menteeId     String?
   expiresAt    DateTime
   createdAt    DateTime @default(now())
 }
 
 model EmailLog {
-  id         String    @id @default(uuid()) @db.VarChar(36)
-  menteeId   String?   @db.VarChar(36)
-  emailType  String    @db.VarChar(100)
-  recipient  String    @db.VarChar(255)
-  subject    String    @db.VarChar(500)
-  status     String    @default("queued") @db.VarChar(50)
-  providerId String?   @db.VarChar(255)
-  errorMsg   String?   @db.Text
+  id         String    @id @default(uuid())
+  menteeId   String?
+  emailType  String
+  recipient  String
+  subject    String
+  status     String    @default("queued")
+  providerId String?
+  errorMsg   String?
   sentAt     DateTime?
   createdAt  DateTime  @default(now())
   mentee     Mentee?   @relation(fields: [menteeId], references: [id])
