@@ -13,8 +13,7 @@
     "studio": ".\\.\\node_modules\\.bin\\prisma studio",
     "db:push": ".\\.\\node_modules\\.bin\\prisma db push",
     "test": "jest",
-    "seed": "ts-node --project prisma/tsconfig.json prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "seed": "ts-node --project prisma/tsconfig.json prisma/seed.ts"
   },
   "keywords": [
     "mentorship",
