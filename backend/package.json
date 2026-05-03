@@ -4,20 +4,22 @@
   "description": "Tech Mentorship Platform Backend - Full Stack Production",
   "main": "src/index.ts",
   "type": "commonjs",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migrate": ".\\.\\node_modules\\.bin\\prisma migrate dev",
-    "generate": ".\\.\\node_modules\\.bin\\prisma generate",
-    "studio": ".\\.\\node_modules\\.bin\\prisma studio",
-    "db:push": ".\\.\\node_modules\\.bin\\prisma db push",
+    "migrate": "prisma migrate dev",
+    "generate": "prisma generate",
+    "studio": "prisma studio",
+    "db:push": "prisma db push",
     "test": "jest",
     "seed": "ts-node --project prisma/tsconfig.json prisma/seed.ts"
   },
   "keywords": [
     "mentorship",
-    "mlops",
     "tech",
     "career",
     "fullstack"
