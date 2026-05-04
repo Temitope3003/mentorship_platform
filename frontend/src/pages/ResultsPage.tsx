@@ -83,7 +83,7 @@ export function ResultsPage() {
           <div className="flex items-center justify-between gap-4">
             <p className="font-mono text-2xl font-semibold tracking-widest text-text">{mentee.accessCode}</p>
             <button
-              onClick={() => { navigator.clipboard.writeText(mentee.accessCode); toast && (window as any).toast?.success?.('Copied!') }}
+              onClick={() => { navigator.clipboard.writeText(mentee.accessCode) }}
               className="rounded-xl border border-teal/20 bg-white px-4 py-2 text-xs font-semibold text-teal shadow-warm-sm transition hover:shadow-warm-md"
             >
               Copy

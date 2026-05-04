@@ -169,7 +169,7 @@ export function LandingPage() {
           </p>
 
           <div className="grid gap-6 md:grid-cols-2">
-            {STEPS.map((step, i) => (
+            {STEPS.map((step) => (
               <div
                 key={step.num}
                 className="group relative overflow-hidden rounded-3xl border border-border bg-white p-8 shadow-warm-sm transition hover:-translate-y-1 hover:shadow-warm-md"
