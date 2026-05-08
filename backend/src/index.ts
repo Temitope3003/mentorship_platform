@@ -14,13 +14,29 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 app.use(helmet())
-app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }))
+app.use(cors({
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://buildintech.xyz',
+      'https://www.buildintech.xyz',
+      'http://localhost:3000',
+      'http://localhost:5173'
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, origin);   // Allow the request
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '10kb' }))
 
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'MLOps Mentorship API is running',
+    message: 'Tech Mentorship API is running',
     timestamp: new Date().toISOString(),
   })
 })
