@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   useMentorStats,
   useMentees,
@@ -9,6 +10,7 @@ import {
   useCreateMentee,
 } from '../hooks/useMentor'
 import toast from 'react-hot-toast'
+import { api } from '../utils/api'
 
 const DOMAINS = [
   'AI & Machine Learning', 'Data', 'Software Engineering',
@@ -44,6 +46,7 @@ export function MentorDashboard() {
   const { data: codes } = useAccessCodes()
   const addFeedback = useAddFeedback()
   const createMentee = useCreateMentee()
+  const queryClient = useQueryClient()
 
   const filteredMentees = (mentees || []).filter((m: any) => {
     const matchSearch = !search || m.name.toLowerCase().includes(search.toLowerCase()) || m.email.toLowerCase().includes(search.toLowerCase())
@@ -202,12 +205,24 @@ export function MentorDashboard() {
                             <div className="font-mono text-xs text-muted">{m.accessCode}</div>
                           </td>
                           <td className="px-4 py-3.5">
-                            <span
-                              className="rounded-full border px-2.5 py-1 text-xs font-semibold"
-                              style={{ background: color + '15', borderColor: color + '30', color }}
+                            <select
+                              value={m.domainTrack}
+                              onChange={async (e) => {
+                                try {
+                                  await api.patch(`/mentor/mentees/${m.id}`, { domain: e.target.value })
+                                  toast.success(`Track updated to ${e.target.value}`)
+                                  queryClient.invalidateQueries({ queryKey: ['mentor'] })
+                                } catch {
+                                  toast.error('Failed to update track')
+                                }
+                              }}
+                              className="rounded-lg border border-border bg-white px-2 py-1 text-xs font-semibold outline-none focus:border-accent"
+                              style={{ color }}
                             >
-                              {m.domainTrack}
-                            </span>
+                              {DOMAINS.map(d => (
+                                <option key={d} value={d}>{d}</option>
+                              ))}
+                            </select>
                           </td>
                           <td className="px-4 py-3.5">
                             <span className="font-mono text-sm text-text2">W{m.currentWeek}/48</span>

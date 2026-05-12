@@ -361,4 +361,14 @@ async function sendPhaseCompleteEmail(data: {
   })
 }
 
+// Keep Supabase awake by pinging every 4 days
+cron.schedule('0 8 */4 * *', async () => {
+  try {
+    await prisma.mentor.count()
+    console.log('[Scheduler] Supabase keep-alive ping sent')
+  } catch (error) {
+    console.error('[Scheduler] Keep-alive ping failed:', error)
+  }
+})
+
 console.log('[Scheduler] All cron jobs registered')

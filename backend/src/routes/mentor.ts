@@ -8,6 +8,7 @@ import {
   addFeedback,
   getCohortStats,
   getAccessCodes,
+  updateMentee,
 } from '../controllers/mentorController'
 
 export const mentorRouter = Router()
@@ -21,3 +22,4 @@ mentorRouter.get('/submissions', getAllSubmissions)
 mentorRouter.post('/submissions/:id/feedback', addFeedback)
 mentorRouter.get('/stats', getCohortStats)
 mentorRouter.get('/codes', getAccessCodes)
+mentorRouter.patch('/mentees/:id', updateMentee)

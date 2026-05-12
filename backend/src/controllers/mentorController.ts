@@ -185,3 +185,22 @@ export async function getAccessCodes(req: AuthRequest, res: Response) {
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export async function updateMentee(req: AuthRequest, res: Response) {
+  try {
+    const domain = Array.isArray(req.body.domain) ? req.body.domain[0] : req.body.domain
+    if (!domain) return res.status(400).json({ error: 'Domain is required' })
+
+    const mentee = await prisma.mentee.update({
+      where: { id: String(req.params.id) },
+      data: {
+        domainTrack: domain as string,
+        topMatch: domain as string,
+      },
+    })
+    return res.json(mentee)
+  } catch (error) {
+    console.error('Update mentee error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
