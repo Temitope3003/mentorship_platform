@@ -1,12 +1,18 @@
 export const DOMAINS = [
   { name: 'AI & Machine Learning', color: '#ff6b2b', icon: '🤖' },
   { name: 'Data Analysis', color: '#2563eb', icon: '📊' },
-  { name: 'Software Engineering', color: '#7c3aed', icon: '💻' },
-  { name: 'Cloud & Infrastructure', color: '#0891b2', icon: '☁️' },
-  { name: 'CyberSecurity', color: '#ef4444', icon: '🔐' },
-  { name: 'Product & Design', color: '#ec4899', icon: '🎨' },
-  { name: 'Emerging Tech', color: '#f59e0b', icon: '🚀' },
-  { name: 'Virtual Assistant', color: '#059669', icon: '🗂️' },
+  { name: 'Data Science & Engineering', color: '#7c3aed', icon: '🔬' },
+  { name: 'Full Stack Engineering', color: '#0891b2', icon: '💻' },
+  { name: 'Frontend Development', color: '#f59e0b', icon: '🎨' },
+  { name: 'Backend Development', color: '#059669', icon: '⚙️' },
+  { name: 'Cloud & Infrastructure', color: '#6366f1', icon: '☁️' },
+  { name: 'Cybersecurity', color: '#ef4444', icon: '🔐' },
+  { name: 'Product, Design & UX', color: '#ec4899', icon: '✏️' },
+  { name: 'Emerging Tech', color: '#14b8a6', icon: '🚀' },
+  { name: 'Virtual Assistant', color: '#84cc16', icon: '🗂️' },
+  { name: 'AI Automation & No-Code', color: '#f97316', icon: '⚡' },
+  { name: 'DevRel & Technical Writing', color: '#8b5cf6', icon: '✍️' },
+  { name: 'Mobile Development', color: '#06b6d4', icon: '📱' },
 ]
 
 export const QUESTIONS = [
