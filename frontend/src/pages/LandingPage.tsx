@@ -27,7 +27,7 @@ const TESTIMONIALS = [
 
 const STATS = [
   { num: '35+', label: 'Active Mentees' },
-  { num: '8', label: 'Career Domains' },
+  { num: '14', label: 'Career Domains' },
   { num: '48', label: 'Weeks of Curriculum' },
   { num: '28', label: 'Career Paths' },
 ]
@@ -44,7 +44,7 @@ const STEPS = [
     num: '02',
     icon: '🧠',
     title: 'Complete the Assessment',
-    desc: '18 questions about how you think, what excites you, and how you work. Takes about 8 minutes.',
+    desc: '24 questions about how you think, what excites you, and how you work. Takes about 8 minutes.',
     color: '#1a7a6e',
   },
   {
@@ -206,14 +206,14 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── 8 DOMAINS ── */}
+      {/* ── 14 DOMAINS ── */}
       <section className="bg-cream px-6 py-24">
         <div className="mx-auto max-w-5xl">
           <div className="mb-4 text-center">
             <span className="text-xs font-bold uppercase tracking-widest text-accent">Career domains</span>
           </div>
           <h2 className="font-display mb-4 text-center text-4xl font-black text-text md:text-5xl">
-            8 paths. One right fit <span className="italic text-accent">for you.</span>
+            14 paths. One right fit <span className="italic text-accent">for you.</span>
           </h2>
           <p className="mx-auto mb-14 max-w-xl text-center text-lg text-muted">
             Our assessment matches you to the domain that fits your natural strengths and working style, not just what is popular.
@@ -389,7 +389,7 @@ export function LandingPage() {
             <span className="font-display text-sm font-semibold text-text">Tech Mentorship</span>
           </div>
           <p className="text-xs text-muted">
-            © 2025 Tech Mentorship Program. Empowering the next generation of tech professionals.
+            © 2026 Tech Mentorship Program. Empowering the next generation of tech professionals.
           </p>
           <div className="flex gap-4">
             <Link to="/assess" className="text-xs text-muted transition hover:text-text">Assessment</Link>
