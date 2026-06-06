@@ -8,6 +8,7 @@ import { authRouter } from './routes/auth'
 import { assessmentRouter } from './routes/assessment'
 import { menteeRouter } from './routes/mentee'
 import { mentorRouter } from './routes/mentor'
+import { liaisonRouter } from './routes/liaison'
 require('./jobs/scheduler')
 
 const app = express()
@@ -53,3 +54,5 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`)
 })
+
+app.use('/api/v1/liaison', liaisonRouter)

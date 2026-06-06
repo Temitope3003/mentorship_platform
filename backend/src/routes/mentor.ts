@@ -9,6 +9,9 @@ import {
   getCohortStats,
   getAccessCodes,
   updateMentee,
+  createLiaisonOfficer,
+  getAllLiaisonOfficers,
+  assignMenteeToOfficer,
 } from '../controllers/mentorController'
 
 export const mentorRouter = Router()
@@ -23,3 +26,6 @@ mentorRouter.post('/submissions/:id/feedback', addFeedback)
 mentorRouter.get('/stats', getCohortStats)
 mentorRouter.get('/codes', getAccessCodes)
 mentorRouter.patch('/mentees/:id', updateMentee)
+mentorRouter.get('/liaison-officers', getAllLiaisonOfficers)
+mentorRouter.post('/liaison-officers', createLiaisonOfficer)
+mentorRouter.patch('/mentees/:id/assign', assignMenteeToOfficer)

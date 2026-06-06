@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -13,23 +13,31 @@ import toast from 'react-hot-toast'
 import { api } from '../utils/api'
 
 const DOMAINS = [
-  'AI & Machine Learning', 'Data', 'Software Engineering',
-  'Cloud & Infrastructure', 'Security', 'Product & Design',
-  'Emerging Tech', 'Virtual Assistant',
+  'AI & Machine Learning', 'Data Analysis', 'Data Science & Engineering',
+  'Full Stack Engineering', 'Frontend Development', 'Backend Development',
+  'Cloud & Infrastructure', 'Cybersecurity', 'Product, Design & UX',
+  'Emerging Tech', 'Virtual Assistant', 'AI Automation & No-Code',
+  'DevRel & Technical Writing', 'Mobile Development',
 ]
 
 const DOMAIN_COLORS: Record<string, string> = {
   'AI & Machine Learning': '#ff6b2b',
   'Data Analysis': '#2563eb',
-  'Software Engineering': '#7c3aed',
-  'Cloud & Infrastructure': '#0891b2',
-  'CyberSecurity': '#ef4444',
-  'Product & Design': '#ec4899',
-  'Emerging Tech': '#f59e0b',
-  'Virtual Assistant': '#059669',
+  'Data Science & Engineering': '#7c3aed',
+  'Full Stack Engineering': '#0891b2',
+  'Frontend Development': '#f59e0b',
+  'Backend Development': '#059669',
+  'Cloud & Infrastructure': '#6366f1',
+  'Cybersecurity': '#ef4444',
+  'Product, Design & UX': '#ec4899',
+  'Emerging Tech': '#14b8a6',
+  'Virtual Assistant': '#84cc16',
+  'AI Automation & No-Code': '#f97316',
+  'DevRel & Technical Writing': '#8b5cf6',
+  'Mobile Development': '#06b6d4',
 }
 
-type Tab = 'mentees' | 'submissions' | 'codes' | 'add'
+type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison'
 
 export function MentorDashboard() {
   const { user } = useAuthStore()
@@ -147,6 +155,7 @@ export function MentorDashboard() {
             { id: 'submissions', label: 'Submissions' },
             { id: 'codes', label: 'Access Codes' },
             { id: 'add', label: '+ Add Mentee' },
+            { id: 'liaison', label: 'Liaison Officers' },
           ] as { id: Tab; label: string }[]).map(t => (
             <button
               key={t.id}
@@ -401,6 +410,9 @@ export function MentorDashboard() {
           </div>
         )}
 
+        {/* TAB: LIAISON OFFICERS */}
+        {tab === 'liaison' && <LiaisonOfficersTab />}
+
       </div>
 
       {/* FEEDBACK MODAL */}
@@ -446,6 +458,98 @@ export function MentorDashboard() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function LiaisonOfficersTab() {
+  const [officers, setOfficers] = useState<any[]>([])
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const load = async () => {
+    try {
+      const res = await api.get('/mentor/liaison-officers')
+      setOfficers(res.data)
+    } catch {}
+  }
+
+  useEffect(() => { load() }, [])
+
+  const create = async () => {
+    setError('')
+    if (!name || !email || !password) { setError('All fields are required'); return }
+    setLoading(true)
+    try {
+      await api.post('/mentor/liaison-officers', { name, email, password })
+      setName(''); setEmail(''); setPassword('')
+      load()
+      toast.success('Liaison officer created successfully')
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to create officer')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl border border-border p-6 shadow-warm-sm">
+        <h3 className="font-semibold text-text mb-1">Add Liaison Officer</h3>
+        <p className="text-sm text-muted mb-4">Liaison officers manage a group of mentees and receive weekly reports every Monday.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Full name"
+            className="rounded-xl border border-border bg-ivory px-4 py-2.5 text-sm text-text outline-none focus:border-accent"
+          />
+          <input
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="Email address"
+            className="rounded-xl border border-border bg-ivory px-4 py-2.5 text-sm text-text outline-none focus:border-accent"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Password"
+            className="rounded-xl border border-border bg-ivory px-4 py-2.5 text-sm text-text outline-none focus:border-accent"
+          />
+        </div>
+        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        <button
+          onClick={create}
+          disabled={loading}
+          className="mt-4 bg-accent text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-accent/90 disabled:opacity-50 transition"
+        >
+          {loading ? 'Creating...' : 'Create Officer'}
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {officers.map(o => (
+          <div key={o.id} className="bg-white rounded-2xl border border-border p-5 flex items-center justify-between shadow-warm-sm">
+            <div>
+              <p className="font-semibold text-text">{o.name}</p>
+              <p className="text-sm text-muted">{o.email}</p>
+              <p className="text-xs text-muted mt-1">Logs in at buildintech.xyz/liaison/login</p>
+            </div>
+            <div className="text-right">
+              <p className="text-3xl font-bold text-text">{o.menteeCount}</p>
+              <p className="text-xs text-muted">mentees assigned</p>
+            </div>
+          </div>
+        ))}
+        {officers.length === 0 && (
+          <div className="py-12 text-center text-muted text-sm">
+            No liaison officers yet. Add one above.
+          </div>
+        )}
+      </div>
     </div>
   )
 }

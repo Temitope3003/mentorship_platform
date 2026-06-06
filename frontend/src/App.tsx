@@ -9,6 +9,8 @@ import { MentorLoginPage } from './pages/MentorLoginPage'
 import { MenteeDashboard } from './pages/MenteeDashboard'
 import { MentorDashboard } from './pages/MentorDashboard'
 import { DomainPage } from './pages/DomainPage'
+import { LiaisonLoginPage } from './pages/LiaisonLoginPage'
+import { LiaisonDashboard } from './pages/LiaisonDashboard'
 
 export default function App() {
   return (
@@ -21,6 +23,8 @@ export default function App() {
         <Route path="/login" element={<MenteeLoginPage />} />
         <Route path="/mentor/login" element={<MentorLoginPage />} />
         <Route path="/domain/:domainId" element={<DomainPage />} />
+        <Route path="/liaison/login" element={<LiaisonLoginPage />} />
+        <Route path="/liaison/dashboard" element={<LiaisonDashboard />} />
         <Route
           path="/dashboard"
           element={

@@ -38,6 +38,9 @@ model Mentee {
   mentor          Mentor?   @relation(fields: [mentorId], references: [id])
   submissions     WeeklySubmission[]
   emailLogs       EmailLog[]
+  liaisonOfficerId String?
+  liaisonOfficer   LiaisonOfficer? @relation(fields: [liaisonOfficerId], references: [id])
+  liaisonNotes String?
 }
 
 model WeeklySubmission {
@@ -81,4 +84,14 @@ model EmailLog {
   sentAt     DateTime?
   createdAt  DateTime  @default(now())
   mentee     Mentee?   @relation(fields: [menteeId], references: [id])
+}
+
+model LiaisonOfficer {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  mentees      Mentee[]
 }

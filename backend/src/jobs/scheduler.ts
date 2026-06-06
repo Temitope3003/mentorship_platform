@@ -361,6 +361,106 @@ async function sendPhaseCompleteEmail(data: {
   })
 }
 
+// Every Monday at 7am send weekly report to liaison officers
+cron.schedule('0 7 * * 1', async () => {
+  try {
+    const officers = await prisma.liaisonOfficer.findMany({
+      where: { isActive: true },
+      include: {
+        mentees: {
+          where: { isActive: true },
+          include: {
+            submissions: {
+              select: { weekNumber: true, submittedAt: true },
+            },
+          },
+        },
+      },
+    })
+
+    for (const officer of officers) {
+      if (officer.mentees.length === 0) continue
+
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
+      const submitted = officer.mentees.filter(m =>
+        m.submissions.some(s => new Date(s.submittedAt) > oneWeekAgo)
+      )
+
+      const notSubmitted = officer.mentees.filter(m =>
+        !m.submissions.some(s => new Date(s.submittedAt) > oneWeekAgo)
+      )
+
+      const atRisk = officer.mentees.filter(m => {
+        const currentWeek = Math.max(1, Math.min(48,
+          Math.floor((Date.now() - new Date(m.startDate).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1
+        ))
+        const lastSubmitted = m.submissions.length > 0
+          ? Math.max(...m.submissions.map(s => s.weekNumber))
+          : 0
+        return currentWeek - lastSubmitted >= 2
+      })
+
+      const { sendEmail } = await import('../emails/sender')
+      await sendEmail({
+        to: officer.email,
+        subject: `Weekly Mentee Report — ${new Date().toDateString()}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #d4622a;">Weekly Report — Build In Tech</h2>
+            <p>Hi ${officer.name}, here is your mentee summary for this week.</p>
+
+            <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px; margin: 16px 0; border-radius: 4px;">
+              <h3 style="margin: 0 0 8px; color: #166534;">✅ Submitted This Week (${submitted.length})</h3>
+              ${submitted.length === 0 ? '<p style="color: #666;">None yet</p>' :
+                submitted.map(m => `<p style="margin: 4px 0;"><strong>${m.name}</strong> — ${m.domainTrack} — ${m.accessCode}</p>`).join('')
+              }
+            </div>
+
+            <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; margin: 16px 0; border-radius: 4px;">
+              <h3 style="margin: 0 0 8px; color: #92400e;">⚠️ Not Submitted Yet (${notSubmitted.length})</h3>
+              ${notSubmitted.length === 0 ? '<p style="color: #666;">Everyone submitted this week!</p>' :
+                notSubmitted.map(m => `<p style="margin: 4px 0;"><strong>${m.name}</strong> — ${m.domainTrack} — ${m.accessCode}</p>`).join('')
+              }
+            </div>
+
+            <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 16px 0; border-radius: 4px;">
+              <h3 style="margin: 0 0 8px; color: #991b1b;">🚨 Needs Urgent Help (${atRisk.length})</h3>
+              ${atRisk.length === 0 ? '<p style="color: #666;">No one is at risk this week.</p>' :
+                atRisk.map(m => {
+                  const currentWeek = Math.max(1, Math.min(48,
+                    Math.floor((Date.now() - new Date(m.startDate).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1
+                  ))
+                  const lastSubmitted = m.submissions.length > 0
+                    ? Math.max(...m.submissions.map(s => s.weekNumber))
+                    : 0
+                  return `<p style="margin: 4px 0;"><strong>${m.name}</strong> — ${m.domainTrack} — ${currentWeek - lastSubmitted} weeks behind</p>`
+                }).join('')
+              }
+            </div>
+
+            <div style="background: #f1f5f9; padding: 16px; border-radius: 4px; margin-top: 16px;">
+              <h3 style="margin: 0 0 8px;">📊 Summary</h3>
+              <p style="margin: 4px 0;">Total mentees: <strong>${officer.mentees.length}</strong></p>
+              <p style="margin: 4px 0;">Submitted: <strong>${submitted.length}</strong></p>
+              <p style="margin: 4px 0;">Not submitted: <strong>${notSubmitted.length}</strong></p>
+              <p style="margin: 4px 0;">At risk: <strong>${atRisk.length}</strong></p>
+              <p style="margin: 4px 0;">Engagement rate: <strong>${officer.mentees.length > 0 ? Math.round((submitted.length / officer.mentees.length) * 100) : 0}%</strong></p>
+            </div>
+
+            <p style="margin-top: 24px;">Log in to your dashboard at <a href="https://buildintech.xyz/liaison/login">buildintech.xyz/liaison/login</a> to send check-in messages.</p>
+
+            <p>Build In Tech Mentorship Team</p>
+          </div>
+        `,
+      })
+    }
+    console.log('[Scheduler] Liaison weekly reports sent')
+  } catch (error) {
+    console.error('[Scheduler] Liaison report error:', error)
+  }
+})
+
 // Keep Supabase awake by pinging every 4 days
 cron.schedule('0 8 */4 * *', async () => {
   try {

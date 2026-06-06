@@ -204,3 +204,71 @@ export async function updateMentee(req: AuthRequest, res: Response) {
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export async function createLiaisonOfficer(req: AuthRequest, res: Response) {
+  try {
+    const { name, email, password } = req.body
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' })
+    }
+
+    const existing = await prisma.liaisonOfficer.findUnique({ where: { email } })
+    if (existing) return res.status(400).json({ error: 'An officer with this email already exists' })
+
+    const passwordHash = await bcrypt.hash(password, 12)
+    const officer = await prisma.liaisonOfficer.create({
+      data: { name, email, passwordHash },
+    })
+
+    return res.status(201).json({
+      id: officer.id,
+      name: officer.name,
+      email: officer.email,
+      isActive: officer.isActive,
+      createdAt: officer.createdAt,
+    })
+  } catch (error) {
+    console.error('Create liaison officer error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getAllLiaisonOfficers(req: AuthRequest, res: Response) {
+  try {
+    const officers = await prisma.liaisonOfficer.findMany({
+      include: {
+        mentees: {
+          where: { isActive: true },
+          select: { id: true, name: true, domainTrack: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return res.json(officers.map(o => ({
+      id: o.id,
+      name: o.name,
+      email: o.email,
+      isActive: o.isActive,
+      menteeCount: o.mentees.length,
+      mentees: o.mentees,
+    })))
+  } catch (error) {
+    console.error('Get liaison officers error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function assignMenteeToOfficer(req: AuthRequest, res: Response) {
+  try {
+    const { officerId } = req.body
+    const mentee = await prisma.mentee.update({
+      where: { id: String(req.params.id) },
+      data: { liaisonOfficerId: officerId || null },
+    })
+    return res.json(mentee)
+  } catch (error) {
+    console.error('Assign mentee error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
