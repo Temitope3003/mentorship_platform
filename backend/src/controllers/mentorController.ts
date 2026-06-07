@@ -4,6 +4,7 @@ import { sendFeedbackEmail } from '../emails/feedbackEmail'
 import { sendMentorAlertEmail } from '../emails/mentorAlertEmail'
 import { generateAccessCode } from '../services/assessmentService'
 import { sendWelcomeEmail } from '../emails/welcomeEmail'
+import bcrypt from 'bcryptjs'
 
 interface AuthRequest extends Request {
   mentorId?: string

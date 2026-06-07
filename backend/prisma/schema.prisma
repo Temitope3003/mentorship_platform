@@ -17,30 +17,30 @@ model Mentor {
 }
 
 model Mentee {
-  id              String    @id @default(uuid())
-  name            String
-  email           String    @unique
-  accessCode      String    @unique
-  domainTrack     String
-  statedGoal      String?
-  goalDomain      String?
-  alignmentStatus String?
-  topMatch        String?
-  secondMatch     String?
-  allScores       Json?
-  mentorNote      String?
-  startDate       DateTime  @default(now())
-  isActive        Boolean   @default(true)
-  onboardedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  mentorId        String?
-  mentor          Mentor?   @relation(fields: [mentorId], references: [id])
-  submissions     WeeklySubmission[]
-  emailLogs       EmailLog[]
+  id               String             @id @default(uuid())
+  name             String
+  email            String             @unique
+  accessCode       String             @unique
+  domainTrack      String
+  statedGoal       String?
+  goalDomain       String?
+  alignmentStatus  String?
+  topMatch         String?
+  secondMatch      String?
+  allScores        Json?
+  mentorNote       String?
+  startDate        DateTime           @default(now())
+  isActive         Boolean            @default(true)
+  onboardedAt      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  mentorId         String?
   liaisonOfficerId String?
-  liaisonOfficer   LiaisonOfficer? @relation(fields: [liaisonOfficerId], references: [id])
-  liaisonNotes String?
+  liaisonNotes     String?
+  emailLogs        EmailLog[]
+  liaisonOfficer   LiaisonOfficer?    @relation(fields: [liaisonOfficerId], references: [id])
+  mentor           Mentor?            @relation(fields: [mentorId], references: [id])
+  submissions      WeeklySubmission[]
 }
 
 model WeeklySubmission {

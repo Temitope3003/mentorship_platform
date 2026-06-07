@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
@@ -43,7 +43,7 @@ export function LiaisonDashboard() {
     setLoading(false)
   }
 
-  useState(() => { if (token) load() }, [])
+  useEffect(() => { if (token) load() }, [])
 
   const sendCheckin = async (id: string) => {
     setCheckinLoading(id)
