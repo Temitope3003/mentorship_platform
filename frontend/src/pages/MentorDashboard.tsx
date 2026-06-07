@@ -47,6 +47,7 @@ export function MentorDashboard() {
   const [feedbackModal, setFeedbackModal] = useState<{ id: string; week: number; name: string; summary: string } | null>(null)
   const [feedbackText, setFeedbackText] = useState('')
   const [addForm, setAddForm] = useState({ name: '', email: '', domain: '' })
+  const [officers, setOfficers] = useState<any[]>([])
 
   const { data: stats } = useMentorStats()
   const { data: mentees, isLoading: menteesLoading } = useMentees()
@@ -55,6 +56,10 @@ export function MentorDashboard() {
   const addFeedback = useAddFeedback()
   const createMentee = useCreateMentee()
   const queryClient = useQueryClient()
+
+  useEffect(() => {
+    api.get('/mentor/liaison-officers').then(res => setOfficers(res.data)).catch(() => {})
+  }, [])
 
   const filteredMentees = (mentees || []).filter((m: any) => {
     const matchSearch = !search || m.name.toLowerCase().includes(search.toLowerCase()) || m.email.toLowerCase().includes(search.toLowerCase())
@@ -195,7 +200,7 @@ export function MentorDashboard() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      {['Mentee', 'Domain', 'Week', 'Submissions', 'Progress', 'Status'].map(h => (
+                      {['Mentee', 'Domain', 'Week', 'Submissions', 'Progress', 'Status', 'Assign'].map(h => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-muted">
                           {h}
                         </th>
@@ -253,6 +258,26 @@ export function MentorDashboard() {
                             ) : (
                               <span className="rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">Active</span>
                             )}
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <select
+                              defaultValue={m.liaisonOfficerId || ''}
+                              onChange={async (e) => {
+                                try {
+                                  await api.patch(`/mentor/mentees/${m.id}/assign`, { officerId: e.target.value || null })
+                                  toast.success('Mentee assigned')
+                                  queryClient.invalidateQueries({ queryKey: ['mentor'] })
+                                } catch {
+                                  toast.error('Failed to assign mentee')
+                                }
+                              }}
+                              className="rounded-lg border border-border bg-white px-2 py-1 text-xs outline-none focus:border-accent"
+                            >
+                              <option value="">Unassigned</option>
+                              {officers.map((o: any) => (
+                                <option key={o.id} value={o.id}>{o.name}</option>
+                              ))}
+                            </select>
                           </td>
                         </tr>
                       )
@@ -411,7 +436,7 @@ export function MentorDashboard() {
         )}
 
         {/* TAB: LIAISON OFFICERS */}
-        {tab === 'liaison' && <LiaisonOfficersTab />}
+        {tab === 'liaison' && <LiaisonOfficersTab onOfficersChange={setOfficers} />}
 
       </div>
 
@@ -462,7 +487,7 @@ export function MentorDashboard() {
   )
 }
 
-function LiaisonOfficersTab() {
+function LiaisonOfficersTab({ onOfficersChange }: { onOfficersChange: (officers: any[]) => void }) {
   const [officers, setOfficers] = useState<any[]>([])
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -474,6 +499,7 @@ function LiaisonOfficersTab() {
     try {
       const res = await api.get('/mentor/liaison-officers')
       setOfficers(res.data)
+      onOfficersChange(res.data)
     } catch {}
   }
 
