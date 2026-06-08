@@ -200,7 +200,7 @@ export function MentorDashboard() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      {['Mentee', 'Domain', 'Week', 'Submissions', 'Progress', 'Status', 'Assign'].map(h => (
+                      {['Mentee', 'Domain', 'Week', 'Submissions', 'Progress', 'Status', 'Assign', 'Remove'].map(h => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-muted">
                           {h}
                         </th>
@@ -278,6 +278,23 @@ export function MentorDashboard() {
                                 <option key={o.id} value={o.id}>{o.name}</option>
                               ))}
                             </select>
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Remove ${m.name} from the program?`)) return
+                                try {
+                                  await api.patch(`/mentor/mentees/${m.id}/deactivate`)
+                                  toast.success(`${m.name} removed`)
+                                  queryClient.invalidateQueries({ queryKey: ['mentor'] })
+                                } catch {
+                                  toast.error('Failed to remove mentee')
+                                }
+                              }}
+                              className="text-xs text-red-500 hover:text-red-700 font-medium"
+                            >
+                              Remove
+                            </button>
                           </td>
                         </tr>
                       )
@@ -564,9 +581,26 @@ function LiaisonOfficersTab({ onOfficersChange }: { onOfficersChange: (officers:
               <p className="text-sm text-muted">{o.email}</p>
               <p className="text-xs text-muted mt-1">Logs in at buildintech.xyz/liaison/login</p>
             </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold text-text">{o.menteeCount}</p>
-              <p className="text-xs text-muted">mentees assigned</p>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-3xl font-bold text-text">{o.menteeCount}</p>
+                <p className="text-xs text-muted">mentees assigned</p>
+              </div>
+              <button
+                onClick={async () => {
+                  if (!confirm(`Remove ${o.name} as liaison officer?`)) return
+                  try {
+                    await api.patch(`/mentor/liaison-officers/${o.id}/deactivate`)
+                    toast.success(`${o.name} removed`)
+                    load()
+                  } catch {
+                    toast.error('Failed to remove officer')
+                  }
+                }}
+                className="text-xs text-red-500 hover:text-red-700 font-medium"
+              >
+                Remove
+              </button>
             </div>
           </div>
         ))}
