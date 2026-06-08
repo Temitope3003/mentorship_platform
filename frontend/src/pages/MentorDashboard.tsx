@@ -514,7 +514,7 @@ function LiaisonOfficersTab({ onOfficersChange }: { onOfficersChange: (officers:
 
   const load = async () => {
     try {
-      const res = await api.get(`/mentor/liaison-officers?t=${Date.now()}`)
+      const res = await api.get('/mentor/liaison-officers?t=${Date.now()}')
       setOfficers(res.data)
       onOfficersChange(res.data)
     } catch {}
@@ -592,7 +592,9 @@ function LiaisonOfficersTab({ onOfficersChange }: { onOfficersChange: (officers:
                   try {
                     await api.patch(`/mentor/liaison-officers/${o.id}/deactivate`)
                     toast.success(`${o.name} removed`)
-                    load()
+                    const updated = officers.filter((x: any) => x.id !== o.id)
+                    setOfficers(updated)
+                    onOfficersChange(updated)
                   } catch {
                     toast.error('Failed to remove officer')
                   }
