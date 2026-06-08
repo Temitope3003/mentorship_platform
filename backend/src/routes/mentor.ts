@@ -12,6 +12,8 @@ import {
   createLiaisonOfficer,
   getAllLiaisonOfficers,
   assignMenteeToOfficer,
+  deactivateMentee,
+  deactivateLiaisonOfficer,
 } from '../controllers/mentorController'
 
 export const mentorRouter = Router()
@@ -29,3 +31,5 @@ mentorRouter.patch('/mentees/:id', updateMentee)
 mentorRouter.get('/liaison-officers', getAllLiaisonOfficers)
 mentorRouter.post('/liaison-officers', createLiaisonOfficer)
 mentorRouter.patch('/mentees/:id/assign', assignMenteeToOfficer)
+mentorRouter.patch('/mentees/:id/deactivate', deactivateMentee)
+mentorRouter.patch('/liaison-officers/:id/deactivate', deactivateLiaisonOfficer)

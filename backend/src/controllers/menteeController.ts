@@ -167,3 +167,33 @@ export async function getStats(req: AuthRequest, res: Response) {
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export async function updateTrack(req: Request, res: Response) {
+  try {
+    const menteeId = (req as any).menteeId
+    const { domain } = req.body
+
+    if (!domain) return res.status(400).json({ error: 'Domain is required' })
+
+    const mentee = await prisma.mentee.findUnique({
+      where: { id: menteeId },
+      include: { submissions: { select: { id: true }, take: 1 } },
+    })
+
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    if (mentee.submissions.length > 0) {
+      return res.status(403).json({ error: 'Track cannot be changed after you have started submitting work' })
+    }
+
+    const updated = await prisma.mentee.update({
+      where: { id: menteeId },
+      data: { domainTrack: domain, topMatch: domain },
+    })
+
+    return res.json({ message: 'Track updated successfully', mentee: updated })
+  } catch (error) {
+    console.error('Update track error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}

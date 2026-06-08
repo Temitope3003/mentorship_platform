@@ -2,17 +2,32 @@ import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useMenteeStats, useMenteeRoadmap, useCreateSubmission } from '../hooks/useMentee'
 import toast from 'react-hot-toast'
+import { api } from '../utils/api'
 
 const DOMAIN_COLORS: Record<string, string> = {
   'AI & Machine Learning': '#ff6b2b',
   'Data Analysis': '#2563eb',
-  'Software Engineering': '#7c3aed',
-  'Cloud & Infrastructure': '#0891b2',
-  'CyberSecurity': '#ef4444',
-  'Product & Design': '#ec4899',
-  'Emerging Tech': '#f59e0b',
-  'Virtual Assistant': '#059669',
+  'Data Science & Engineering': '#7c3aed',
+  'Full Stack Engineering': '#0891b2',
+  'Frontend Development': '#f59e0b',
+  'Backend Development': '#059669',
+  'Cloud & Infrastructure': '#6366f1',
+  'Cybersecurity': '#ef4444',
+  'Product, Design & UX': '#ec4899',
+  'Emerging Tech': '#14b8a6',
+  'Virtual Assistant': '#84cc16',
+  'AI Automation & No-Code': '#f97316',
+  'DevRel & Technical Writing': '#8b5cf6',
+  'Mobile Development': '#06b6d4',
 }
+
+const DOMAINS = [
+  'AI & Machine Learning', 'Data Analysis', 'Data Science & Engineering',
+  'Full Stack Engineering', 'Frontend Development', 'Backend Development',
+  'Cloud & Infrastructure', 'Cybersecurity', 'Product, Design & UX',
+  'Emerging Tech', 'Virtual Assistant', 'AI Automation & No-Code',
+  'DevRel & Technical Writing', 'Mobile Development',
+]
 
 interface SubmissionFormData {
   summary: string
@@ -28,9 +43,11 @@ export function MenteeDashboard() {
   const [openWeek, setOpenWeek] = useState<number | null>(null)
   const [forms, setForms] = useState<Record<number, SubmissionFormData>>({})
   const [submitting, setSubmitting] = useState<number | null>(null)
+  const [trackChanging, setTrackChanging] = useState(false)
 
   const domainColor = DOMAIN_COLORS[user?.domain || ''] || '#d4622a'
   const firstName = user?.name?.split(' ')[0] || 'there'
+  const hasSubmissions = (stats?.weeksSubmitted || 0) > 0
 
   function toggleWeek(week: number) {
     setOpenWeek(prev => prev === week ? null : week)
@@ -39,8 +56,27 @@ export function MenteeDashboard() {
   function updateForm(week: number, field: keyof SubmissionFormData, value: string) {
     setForms(prev => ({
       ...prev,
-      [week]: { ...prev[week], summary: prev[week]?.summary || '', workDone: prev[week]?.workDone || '', link: prev[week]?.link || '', [field]: value }
+      [week]: {
+        ...prev[week],
+        summary: prev[week]?.summary || '',
+        workDone: prev[week]?.workDone || '',
+        link: prev[week]?.link || '',
+        [field]: value
+      }
     }))
+  }
+
+  async function handleTrackChange(domain: string) {
+    if (domain === user?.domain) return
+    setTrackChanging(true)
+    try {
+      await api.patch('/mentee/me/track', { domain })
+      toast.success('Track updated. Reloading your curriculum...')
+      setTimeout(() => window.location.reload(), 1500)
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to update track')
+    }
+    setTrackChanging(false)
   }
 
   async function handleSubmit(weekNumber: number) {
@@ -103,6 +139,28 @@ export function MenteeDashboard() {
           <p className="mt-2 text-muted">
             Week {currentWeek} of 48 · {stats?.currentPhase}
           </p>
+
+          {/* track change — only visible before first submission */}
+          {!hasSubmissions && (
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <span className="text-sm text-amber-700 font-medium">Want to change your track?</span>
+              <select
+                defaultValue={user?.domain || ''}
+                onChange={e => handleTrackChange(e.target.value)}
+                disabled={trackChanging}
+                className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-accent disabled:opacity-50"
+              >
+                {DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              {trackChanging && <span className="text-xs text-amber-600">Updating...</span>}
+            </div>
+          )}
+
+          {hasSubmissions && (
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-muted">
+              🔒 Track locked after first submission
+            </div>
+          )}
         </div>
 
         {/* stats row */}

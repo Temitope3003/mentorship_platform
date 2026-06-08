@@ -6,7 +6,10 @@ import {
   getSubmissions,
   createSubmission,
   getStats,
+  updateTrack,
 } from '../controllers/menteeController'
+
+
 
 interface AuthRequest extends Request {
   menteeId?: string
@@ -21,3 +24,4 @@ menteeRouter.get('/me/roadmap', getRoadmap)
 menteeRouter.get('/me/submissions', getSubmissions)
 menteeRouter.post('/me/submissions', createSubmission)
 menteeRouter.get('/me/stats', getStats)
+menteeRouter.patch('/me/track', updateTrack)

@@ -273,3 +273,29 @@ export async function assignMenteeToOfficer(req: AuthRequest, res: Response) {
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export async function deactivateMentee(req: AuthRequest, res: Response) {
+  try {
+    const mentee = await prisma.mentee.update({
+      where: { id: String(req.params.id) },
+      data: { isActive: false },
+    })
+    return res.json({ message: 'Mentee deactivated', mentee })
+  } catch (error) {
+    console.error('Deactivate mentee error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function deactivateLiaisonOfficer(req: AuthRequest, res: Response) {
+  try {
+    const officer = await prisma.liaisonOfficer.update({
+      where: { id: String(req.params.id) },
+      data: { isActive: false },
+    })
+    return res.json({ message: 'Liaison officer deactivated', officer })
+  } catch (error) {
+    console.error('Deactivate liaison officer error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
