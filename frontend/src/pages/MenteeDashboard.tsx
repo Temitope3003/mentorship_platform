@@ -67,17 +67,19 @@ export function MenteeDashboard() {
   }
 
   async function handleTrackChange(domain: string) {
-    if (domain === user?.domain) return
-    setTrackChanging(true)
-    try {
-      await api.patch('/mentee/me/track', { domain })
-      toast.success('Track updated. Reloading your curriculum...')
-      setTimeout(() => window.location.reload(), 1500)
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Failed to update track')
-    }
-    setTrackChanging(false)
+  if (domain === user?.domain) return
+  setTrackChanging(true)
+  try {
+    await api.patch('/mentee/me/track', { domain })
+    const { token, setAuth } = useAuthStore.getState()
+    setAuth(token!, { ...user!, domain })
+    toast.success('Track updated. Reloading your curriculum...')
+    setTimeout(() => window.location.reload(), 1500)
+  } catch (err: any) {
+    toast.error(err.response?.data?.error || 'Failed to update track')
   }
+  setTrackChanging(false)
+}
 
   async function handleSubmit(weekNumber: number) {
     const form = forms[weekNumber]
