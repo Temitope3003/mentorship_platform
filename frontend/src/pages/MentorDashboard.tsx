@@ -514,10 +514,7 @@ function LiaisonOfficersTab({ onOfficersChange }: { onOfficersChange: (officers:
 
   const load = async () => {
     try {
-      const res = await api.get('/mentor/liaison-officers', {
-        headers: { 'Cache-Control': 'no-cache' }
-      }
-      )
+      const res = await api.get('/mentor/liaison-officers?t=${Date.now()}')
       setOfficers(res.data)
       onOfficersChange(res.data)
     } catch {}
