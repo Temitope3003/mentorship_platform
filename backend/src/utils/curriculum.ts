@@ -216,7 +216,7 @@ export const CURRICULUM: Record<string, WeeklyAssignment[]> = {
     { week:48, phase:'Phase 4: Job Readiness', title:'Program Graduation', task:'Write a 500-word reflection on your 12-month journey. Share your portfolio and celebrate publicly.', resources:['Your GitHub portfolio','LinkedIn'] },
   ],
 
-  'CyberSecurity': [
+  'Cybersecurity': [
     { week:1, phase:'Phase 1: Foundations', title:'Security Mindset', task:'Complete TryHackMe Pre-Security path modules 1 to 3. Write a 200-word summary of the attacker mindset and why it matters for defenders.', resources:['TryHackMe — tryhackme.com','Security Engineering book by Ross Anderson'] },
     { week:2, phase:'Phase 1: Foundations', title:'Networking for Security', task:'Study TCP/IP, DNS, HTTP, and common ports. Use Wireshark to capture and analyse 100 packets from your own traffic.', resources:['Wireshark docs — wireshark.org','Professor Messer Network+ notes'] },
     { week:3, phase:'Phase 1: Foundations', title:'Linux for Security', task:'Complete OverTheWire Bandit levels 0 to 20. Document every command and technique you used.', resources:['OverTheWire — overthewire.org','Linux Basics for Hackers book'] },
@@ -727,7 +727,7 @@ export const CURRICULUM: Record<string, WeeklyAssignment[]> = {
 }
 
 export function getCurriculumForDomain(domain: string): WeeklyAssignment[] {
-  return CURRICULUM[domain] || CURRICULUM['Software Engineering']
+  return CURRICULUM[domain] || CURRICULUM['Full Stack Engineering']
 }
 
 export function getWeekForDomain(domain: string, week: number): WeeklyAssignment | null {
