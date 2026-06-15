@@ -16,6 +16,22 @@ interface MenteeResult {
   mentorNote: string | null
 }
 
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
+
+  @keyframes bit-spin { to { transform: rotate(360deg); } }
+  .bit-spin { animation: bit-spin 0.75s linear infinite; }
+
+  .bit-score-bar {
+    height: 5px; border-radius: 99px; background: #E8E4D9; overflow: hidden;
+    flex: 1;
+  }
+  .bit-score-fill {
+    height: 100%; border-radius: 99px;
+    transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+  }
+`
+
 export function ResultsPage() {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
@@ -40,20 +56,26 @@ export function ResultsPage() {
   }, [token])
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-ivory">
-      <div className="text-center">
-        <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-warm border-t-accent" />
-        <p className="text-sm text-muted">Loading your results...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9F7F1', fontFamily: "'Inter', sans-serif" }}>
+      <style>{CSS}</style>
+      <div style={{ textAlign: 'center' }}>
+        <div className="bit-spin" style={{ width: 36, height: 36, border: '3px solid #E8E4D9', borderTopColor: '#C9A84C', borderRadius: '50%', margin: '0 auto 16px' }} />
+        <p style={{ fontSize: 14, color: '#6B6B6B' }}>Loading your results...</p>
       </div>
     </div>
   )
 
   if (error || !mentee) return (
-    <div className="flex min-h-screen items-center justify-center bg-ivory px-4">
-      <div className="text-center">
-        <p className="mb-4 text-red-500">{error}</p>
-        <button onClick={() => navigate('/assess')} className="rounded-2xl bg-accent px-6 py-3 text-sm font-semibold text-white">
-          Take Assessment
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", padding: '20px' }}>
+      <style>{CSS}</style>
+      <div style={{ textAlign: 'center' }}>
+        <i className="ti ti-mood-sad" style={{ fontSize: 40, color: '#C8C0B4', display: 'block', marginBottom: 14 }} />
+        <p style={{ marginBottom: 20, color: '#6B6B6B', fontSize: 14 }}>{error}</p>
+        <button
+          onClick={() => navigate('/assess')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#C9A84C', color: '#0F1F3D', border: 'none', borderRadius: 10, padding: '12px 24px', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: "'Inter', sans-serif" }}
+        >
+          <i className="ti ti-arrow-right" style={{ fontSize: 14 }} /> Take Assessment
         </button>
       </div>
     </div>
@@ -62,124 +84,216 @@ export function ResultsPage() {
   const topDomain = DOMAINS.find((d) => d.name === mentee.topMatch) || DOMAINS[0]
   const secondDomain = DOMAINS.find((d) => d.name === mentee.secondMatch)
   const scores = mentee.allScores || {}
-  const maxScore = Math.max(...Object.values(scores))
+  const maxScore = Math.max(...Object.values(scores), 1)
   const rankedScores = Object.entries(scores).sort(([, a], [, b]) => b - a)
   const isConflict = mentee.alignmentStatus === 'conflict' || mentee.alignmentStatus === 'partial'
+  const topPct = Math.round(((scores[topDomain.name] || 0) / maxScore) * 100)
 
   return (
-    <div className="min-h-screen bg-ivory px-4 py-16">
-      <div className="mx-auto max-w-xl">
+    <div style={{ minHeight: '100vh', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", color: '#0F1F3D', padding: '56px 20px 72px' }}>
+      <style>{CSS}</style>
 
-        {/* header */}
-        <div className="mb-10 text-center">
-          <div className="mb-3 text-5xl">{topDomain.icon}</div>
-          <h1 className="font-display mb-3 text-4xl font-black text-text">Your Career Match</h1>
-          <p className="text-muted">Based on your 18 answers, here is where you naturally fit.</p>
-        </div>
+      <div style={{ maxWidth: 580, margin: '0 auto' }}>
 
-        {/* access code */}
-        <div className="mb-5 rounded-2xl border border-teal/20 bg-teal/5 p-6 shadow-warm-sm">
-          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-teal">Your Access Code</p>
-          <div className="flex items-center justify-between gap-4">
-            <p className="font-mono text-2xl font-semibold tracking-widest text-text">{mentee.accessCode}</p>
-            <button
-              onClick={() => { navigator.clipboard.writeText(mentee.accessCode) }}
-              className="rounded-xl border border-teal/20 bg-white px-4 py-2 text-xs font-semibold text-teal shadow-warm-sm transition hover:shadow-warm-md"
-            >
-              Copy
-            </button>
+        {/* ── HEADER ─────────────────────────────────────────────────────── */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 64, height: 64, fontSize: 34, background: topDomain.color + '18',
+            borderRadius: 18, marginBottom: 20,
+          }}>
+            {topDomain.icon}
           </div>
-          <p className="mt-2 text-xs text-teal/70">Use this code to log into your weekly learning dashboard.</p>
+          <h1 style={{
+            fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 900,
+            color: '#0F1F3D', marginBottom: 8, lineHeight: 1.2,
+          }}>
+            Your Career Match
+          </h1>
+          <p style={{ fontSize: 14, color: '#6B6B6B' }}>
+            Based on your {DOMAINS.length + 4} answers, here is where you naturally fit.
+          </p>
         </div>
 
-        {/* alignment */}
-        {mentee.alignmentStatus && (
-          <div className={`mb-5 rounded-2xl border p-5 shadow-warm-sm ${isConflict ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'}`}>
-            <p className={`mb-2 text-xs font-bold uppercase tracking-widest ${isConflict ? 'text-amber-600' : 'text-green-700'}`}>
-              {isConflict ? '⚠ Goal and Aptitude Do Not Fully Match' : '✓ Goal and Aptitude Align'}
+        {/* ── ACCESS CODE ────────────────────────────────────────────────── */}
+        <div style={{
+          background: '#0F1F3D', borderRadius: 14, padding: '22px 24px',
+          marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+        }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: '#F5D87A', marginBottom: 8 }}>
+              <i className="ti ti-key" style={{ fontSize: 11, marginRight: 5 }} />Your Access Code
+            </div>
+            <div style={{ fontFamily: 'monospace', fontSize: 24, fontWeight: 700, letterSpacing: '0.14em', color: '#fff' }}>
+              {mentee.accessCode}
+            </div>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 5 }}>
+              Use this code to log into your weekly learning dashboard.
             </p>
+          </div>
+          <button
+            onClick={() => navigator.clipboard.writeText(mentee.accessCode)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.3)',
+              borderRadius: 8, padding: '9px 16px', fontSize: 12, fontWeight: 700,
+              color: '#F5D87A', cursor: 'pointer', fontFamily: "'Inter', sans-serif",
+              transition: 'background 0.15s', flexShrink: 0,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201,168,76,0.25)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(201,168,76,0.15)')}
+          >
+            <i className="ti ti-copy" style={{ fontSize: 13 }} /> Copy
+          </button>
+        </div>
+
+        {/* ── ALIGNMENT ──────────────────────────────────────────────────── */}
+        {mentee.alignmentStatus && (
+          <div style={{
+            marginBottom: 14,
+            background: isConflict ? '#fffbeb' : '#f0fdf4',
+            border: `1px solid ${isConflict ? '#fde68a' : '#bbf7d0'}`,
+            borderRadius: 12, padding: '16px 20px',
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, marginBottom: mentee.mentorNote ? 8 : 0,
+              fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
+              color: isConflict ? '#b45309' : '#15803d',
+            }}>
+              <i className={`ti ${isConflict ? 'ti-alert-triangle' : 'ti-circle-check'}`} style={{ fontSize: 13 }} />
+              {isConflict ? 'Goal and Aptitude Do Not Fully Match' : 'Goal and Aptitude Align'}
+            </div>
             {mentee.mentorNote && (
-              <p className="text-sm leading-relaxed text-text2">{mentee.mentorNote}</p>
+              <p style={{ fontSize: 13, color: '#3A3A3A', lineHeight: 1.7 }}>{mentee.mentorNote}</p>
             )}
           </div>
         )}
 
-        {/* top match */}
-        <div className="relative mb-4 overflow-hidden rounded-3xl border bg-white p-8 shadow-warm-md" style={{ borderColor: topDomain.color + '40' }}>
-          <div className="absolute left-0 right-0 top-0 h-1 rounded-t-3xl" style={{ background: `linear-gradient(90deg, ${topDomain.color}, ${topDomain.color}80)` }} />
-          <p className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: topDomain.color }}>★ Top Match</p>
-          <div className="mb-5 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl text-3xl" style={{ background: topDomain.color + '18' }}>
+        {/* ── TOP MATCH CARD ─────────────────────────────────────────────── */}
+        <div style={{
+          background: '#fff', border: `1px solid ${topDomain.color}40`,
+          borderRadius: 14, padding: '26px 24px', marginBottom: 14,
+          position: 'relative', overflow: 'hidden',
+          boxShadow: `0 4px 24px ${topDomain.color}14`,
+        }}>
+          {/* Color top bar */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+            background: `linear-gradient(90deg, ${topDomain.color}, ${topDomain.color}70)`,
+          }} />
+
+          <div style={{ marginBottom: 14 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              background: topDomain.color + '14', border: `1px solid ${topDomain.color}30`,
+              borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.07em', textTransform: 'uppercase', color: topDomain.color,
+            }}>
+              <i className="ti ti-star-filled" style={{ fontSize: 10 }} /> Top Match
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 22 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: 14, fontSize: 28,
+              background: topDomain.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
               {topDomain.icon}
             </div>
             <div>
-              <h2 className="font-display text-2xl font-bold text-text">{topDomain.name}</h2>
-              <p className="text-sm text-muted">Your strongest natural fit</p>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 900, color: '#0F1F3D', marginBottom: 3 }}>
+                {topDomain.name}
+              </h2>
+              <p style={{ fontSize: 13, color: '#6B6B6B' }}>Your strongest natural fit</p>
             </div>
           </div>
 
-          {/* match bar */}
-          <div className="mb-6">
-            <div className="mb-2 flex justify-between text-xs text-muted">
+          {/* Match strength bar */}
+          <div style={{ marginBottom: 22 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#8A8070', marginBottom: 8 }}>
               <span>Match strength</span>
-              <span className="font-mono font-semibold" style={{ color: topDomain.color }}>
-                {maxScore > 0 ? Math.round(((scores[topDomain.name] || 0) / maxScore) * 100) : 0}%
-              </span>
+              <span style={{ fontFamily: 'monospace', fontWeight: 700, color: topDomain.color }}>{topPct}%</span>
             </div>
-            <div className="h-2 rounded-full bg-warm">
-              <div
-                className="h-full rounded-full transition-all duration-1000"
-                style={{
-                  width: showBars && maxScore > 0 ? `${((scores[topDomain.name] || 0) / maxScore) * 100}%` : '0%',
-                  background: topDomain.color,
-                }}
-              />
+            <div style={{ height: 6, borderRadius: 99, background: '#F0EBD8', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 99,
+                background: topDomain.color,
+                width: showBars ? `${topPct}%` : '0%',
+                transition: 'width 1s cubic-bezier(0.4,0,0.2,1)',
+              }} />
             </div>
           </div>
 
-          <Link to="/login" className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold text-white shadow-warm-md transition hover:-translate-y-0.5 hover:shadow-warm-lg" style={{ background: topDomain.color }}>
-            Log in to My Dashboard →
+          <Link
+            to="/login"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: topDomain.color, color: '#fff', borderRadius: 10,
+              padding: '13px 22px', fontSize: 14, fontWeight: 700, textDecoration: 'none',
+              transition: 'opacity 0.15s, transform 0.15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.transform = 'none' }}
+          >
+            <i className="ti ti-layout-dashboard" style={{ fontSize: 15 }} />
+            Log in to My Dashboard
           </Link>
         </div>
 
-        {/* second match */}
+        {/* ── SECONDARY MATCH ────────────────────────────────────────────── */}
         {secondDomain && (
-          <div className="mb-5 rounded-2xl border border-border bg-white p-6 shadow-warm-sm">
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted">○ Secondary Match</p>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl text-xl" style={{ background: secondDomain.color + '18' }}>
+          <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 14, padding: '18px 22px', marginBottom: 14 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 12 }}>
+              Secondary Match
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 10, fontSize: 20,
+                background: secondDomain.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
                 {secondDomain.icon}
               </div>
-              <div className="font-display text-xl font-bold text-text">{secondDomain.name}</div>
+              <div>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 900, color: '#0F1F3D' }}>
+                  {secondDomain.name}
+                </div>
+                <div style={{ fontSize: 12, color: '#6B6B6B', marginTop: 2 }}>Your second strongest fit</div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* all scores */}
-        <div className="mb-5 rounded-2xl border border-border bg-white p-6 shadow-warm-sm">
-          <p className="mb-5 text-xs font-bold uppercase tracking-widest text-muted">All domain scores</p>
-          <div className="space-y-3">
+        {/* ── ALL SCORES ─────────────────────────────────────────────────── */}
+        <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 14, padding: '22px 24px', marginBottom: 14 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 16 }}>
+            All Domain Scores
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
             {rankedScores.map(([domain, score]) => {
               const d = DOMAINS.find((x) => x.name === domain)
-              const pct = maxScore > 0 ? (score / maxScore) * 100 : 0
+              const pct = (score / maxScore) * 100
               return (
-                <div key={domain} className="flex items-center gap-3">
-                  <span className="w-5 text-center text-sm">{d?.icon}</span>
-                  <span className="w-44 flex-shrink-0 text-xs text-text2">{domain}</span>
-                  <div className="flex-1 rounded-full bg-warm h-1.5">
-                    <div className="h-full rounded-full transition-all duration-700" style={{ width: showBars ? `${pct}%` : '0%', background: d?.color || '#d4622a' }} />
+                <div key={domain} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 20, textAlign: 'center', fontSize: 14, flexShrink: 0 }}>{d?.icon}</span>
+                  <span style={{ width: 170, flexShrink: 0, fontSize: 11, color: '#3A3A3A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{domain}</span>
+                  <div className="bit-score-bar">
+                    <div className="bit-score-fill" style={{ width: showBars ? `${pct}%` : '0%', background: d?.color || '#C9A84C' }} />
                   </div>
-                  <span className="font-mono w-5 text-right text-xs text-muted">{score}</span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#8A8070', width: 22, textAlign: 'right', flexShrink: 0 }}>{score}</span>
                 </div>
               )
             })}
           </div>
         </div>
 
-        {/* note */}
-        <div className="rounded-2xl border border-border bg-cream px-6 py-5 text-center">
-          <p className="text-sm leading-relaxed text-muted">
-            <strong className="text-text">Share this page with your mentor.</strong>{' '}
+        {/* ── NOTE ───────────────────────────────────────────────────────── */}
+        <div style={{
+          background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 12,
+          padding: '18px 22px', textAlign: 'center',
+        }}>
+          <i className="ti ti-users" style={{ fontSize: 20, color: '#C9A84C', display: 'block', marginBottom: 8 }} />
+          <p style={{ fontSize: 13, color: '#7A5C1E', lineHeight: 1.7 }}>
+            <strong>Share this page with your mentor.</strong>{' '}
             They will build your personal 12-month roadmap and send your weekly tracker access code.
           </p>
         </div>

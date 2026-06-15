@@ -46,7 +46,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Go to cs50.harvard.edu/python and enroll in the free Python course today.',
   },
-
   'Data Analysis': {
     tagline: 'Turn raw data into decisions that drive business growth',
     description: 'Data analysts and analytics engineers help organisations understand what is happening in their business, why it is happening, and what to do about it. Every company that collects data needs someone who can make sense of it.',
@@ -80,7 +79,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Go to mode.com/sql-tutorial and complete the first 2 sections today.',
   },
-
   'Software Engineering': {
     tagline: 'Build the apps, systems, and tools the world runs on',
     description: 'Software engineers design and build the applications that people use every day. From mobile apps to web platforms to backend systems, software engineers are the builders of the digital world. This is the largest and most stable tech career path.',
@@ -114,7 +112,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Go to theodinproject.com and start the Foundations path today. It is completely free.',
   },
-
   'Cloud & Infrastructure': {
     tagline: 'Keep the internet running reliably at scale',
     description: 'Cloud and infrastructure engineers build and manage the systems that keep applications running reliably 24 hours a day. Every app you use runs on infrastructure that someone designed and maintains. This field pays extremely well because downtime costs companies millions.',
@@ -148,10 +145,9 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Set up a free AWS account at aws.amazon.com and complete the Getting Started with EC2 tutorial.',
   },
-
   'Cybersecurity': {
     tagline: 'Protect systems, data, and people from digital threats',
-    description: 'Cybersecurity professionals protect organisations from hackers, data breaches, and digital attacks. With cybercrime costing trillions of dollars globally every year, skilled security professionals are in extremely high demand and short supply. Nigeria\'s growing digital economy needs them urgently.',
+    description: "Cybersecurity professionals protect organisations from hackers, data breaches, and digital attacks. With cybercrime costing trillions of dollars globally every year, skilled security professionals are in extremely high demand and short supply. Nigeria's growing digital economy needs them urgently.",
     whatYouDo: [
       'Find and fix vulnerabilities in systems before attackers do',
       'Monitor networks and systems for signs of attack',
@@ -182,7 +178,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Create a free TryHackMe account at tryhackme.com and start the Pre-Security path today.',
   },
-
   'Product & Design': {
     tagline: 'Shape what gets built and how people experience it',
     description: 'Product managers and UX designers decide what products get built and ensure those products are useful, usable, and loved by the people who use them. You sit at the intersection of business, design, and technology without needing to write code.',
@@ -216,7 +211,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Create a free Figma account at figma.com and complete their beginner tutorial today.',
   },
-
   'Emerging Tech': {
     tagline: 'Build at the frontier of what technology can do',
     description: 'Emerging tech engineers work on the technologies that will define the next decade. Web3, AR/VR, AI agents, robotics, and quantum computing are all growing fast. This path rewards creativity, tolerance for ambiguity, and a desire to work on what does not fully exist yet.',
@@ -250,7 +244,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Pick one emerging field that excites you most and spend one week reading everything you can find about it. Then build something small in it.',
   },
-
   'Virtual Assistant': {
     tagline: 'Support high-performing people and businesses remotely',
     description: 'Virtual assistants provide remote administrative, technical, and creative support to entrepreneurs, executives, and businesses. This is the most accessible entry point into the digital economy. You can start earning within weeks, work from anywhere, and build a thriving freelance business.',
@@ -279,7 +272,7 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     notFor: [
       'You want to build technical products or systems',
-      'You dislike repetitive tasks or working to other people\'s schedules',
+      "You dislike repetitive tasks or working to other people's schedules",
       'You want to avoid client communication entirely',
     ],
     firstStep: 'Create a free Notion account at notion.so and set up your first client management workspace today.',
@@ -317,7 +310,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Complete the Kaggle Python and Pandas courses free at kaggle.com/learn. They take about 5 hours total.',
   },
-
   'Frontend Development': {
     tagline: 'Build the interfaces people see, touch, and fall in love with',
     description: 'Frontend developers build everything a user sees and interacts with in a web browser or app. You turn designs into working interfaces using HTML, CSS, and JavaScript. Great frontend developers combine technical skill with an eye for design and a deep empathy for users.',
@@ -351,7 +343,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Go to theodinproject.com and start the Foundations path today. It is completely free and takes you from zero to your first website.',
   },
-
   'Backend Development': {
     tagline: 'Build the engines that power everything users experience',
     description: 'Backend developers build the servers, APIs, databases, and business logic that make applications work. When a user logs in, places an order, or sends a message, the backend is doing the heavy lifting. This is where the real complexity lives.',
@@ -385,7 +376,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Go to nodejs.org and install Node.js. Then build a simple Express API that returns Hello World. Push it to GitHub today.',
   },
-
   'AI Automation & No-Code': {
     tagline: 'Build powerful automated systems without writing traditional code',
     description: 'AI automation and no-code specialists build workflows, automated systems, and applications using tools like Zapier, Make, Bubble, and AI APIs. This is the fastest growing area in tech because every business needs automation and most cannot afford full engineering teams.',
@@ -419,7 +409,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Create a free Zapier account at zapier.com and build your first automation connecting two apps you already use.',
   },
-
   'DevRel & Technical Writing': {
     tagline: 'Bridge the gap between complex technology and the people who use it',
     description: 'Developer relations professionals and technical writers help developers succeed with technology products. DevRel engineers build communities, create content, give talks, and advocate for developers. Technical writers make complex systems understandable through documentation, tutorials, and guides.',
@@ -453,7 +442,6 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Write one technical tutorial about something you already know and publish it on Hashnode at hashnode.com today. It is completely free.',
   },
-
   'Mobile Development': {
     tagline: 'Build the apps billions of people use on their phones every day',
     description: 'Mobile developers build applications for iOS and Android devices. With React Native and Flutter you can build for both platforms using one codebase. Mobile is where most users in Nigeria and Africa spend their digital time making this one of the most impactful tracks on the platform.',
@@ -489,6 +477,10 @@ const DOMAIN_DETAILS: Record<string, {
   },
 }
 
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
+`
+
 export function DomainPage() {
   const { domainId } = useParams<{ domainId: string }>()
   const decodedDomain = decodeURIComponent(domainId || '')
@@ -497,136 +489,171 @@ export function DomainPage() {
 
   if (!domain || !details) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ivory px-4">
-        <div className="text-center">
-          <p className="mb-4 text-muted">Domain not found.</p>
-          <Link to="/" className="text-accent hover:text-accent/80">← Back to home</Link>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", padding: '20px' }}>
+        <style>{CSS}</style>
+        <div style={{ textAlign: 'center' }}>
+          <i className="ti ti-mood-sad" style={{ fontSize: 40, color: '#C8C0B4', display: 'block', marginBottom: 14 }} />
+          <p style={{ marginBottom: 16, color: '#6B6B6B', fontSize: 14 }}>Domain not found.</p>
+          <Link to="/" style={{ color: '#C9A84C', fontWeight: 700, textDecoration: 'none', fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <i className="ti ti-arrow-left" style={{ fontSize: 13 }} /> Back to home
+          </Link>
         </div>
       </div>
     )
   }
 
+  const domainColor = domain.color
+
   return (
-    <div className="min-h-screen bg-ivory">
-      {/* hero */}
-      <div className="border-b border-border bg-white px-6 py-16">
-        <div className="mx-auto max-w-3xl">
-          <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm text-muted transition hover:text-text">
-            ← Back to all domains
+    <div style={{ minHeight: '100vh', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", color: '#0F1F3D' }}>
+      <style>{CSS}</style>
+
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #E8E4D9', padding: '56px 28px 52px' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <Link
+            to="/"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#8A8070', textDecoration: 'none', marginBottom: 28, transition: 'color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#0F1F3D')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#8A8070')}
+          >
+            <i className="ti ti-arrow-left" style={{ fontSize: 13 }} /> Back to all domains
           </Link>
-          <div className="flex items-center gap-5 mb-6">
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
-              style={{ background: domain.color + '18' }}
-            >
+
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 22, marginBottom: 20, flexWrap: 'wrap' }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: 16, fontSize: 30,
+              background: domainColor + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
               {domain.icon}
             </div>
             <div>
-              <h1 className="font-display text-3xl font-black text-text md:text-4xl">
+              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 34, fontWeight: 900, color: '#0F1F3D', lineHeight: 1.15, marginBottom: 6 }}>
                 {domain.name}
               </h1>
-              <p className="mt-1 text-base font-medium" style={{ color: domain.color }}>
-                {details.tagline}
-              </p>
+              <p style={{ fontSize: 15, fontWeight: 600, color: domainColor }}>{details.tagline}</p>
             </div>
           </div>
-          <p className="text-base leading-relaxed text-text2 mb-8">
+
+          <p style={{ fontSize: 15, lineHeight: 1.8, color: '#4A4A4A', marginBottom: 28, maxWidth: 640 }}>
             {details.description}
           </p>
+
           <Link
             to="/assess"
-            className="inline-flex items-center gap-2 rounded-2xl px-8 py-4 text-base font-semibold text-white shadow-warm-md transition hover:-translate-y-0.5 hover:shadow-warm-lg"
-            style={{ background: domain.color }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: domainColor, color: '#fff', borderRadius: 10,
+              padding: '14px 26px', fontSize: 14, fontWeight: 700, textDecoration: 'none',
+              transition: 'opacity 0.15s, transform 0.15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.transform = 'none' }}
           >
-            Take the Assessment to See If This Fits You →
+            <i className="ti ti-bolt" style={{ fontSize: 15 }} />
+            Take the Assessment to See If This Fits You
           </Link>
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-6 py-16">
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 28px 72px' }}>
 
-        {/* salary */}
-        <div className="mb-10 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-white p-6 shadow-warm-sm">
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted">Salary in Nigeria</p>
-            <p className="font-display text-xl font-bold text-text">{details.salaryNigeria}</p>
-            <p className="mt-1 text-xs text-muted">Based on current market rates for Nigerian companies and remote roles</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-white p-6 shadow-warm-sm">
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted">Global Market (Remote)</p>
-            <p className="font-display text-xl font-bold text-text">{details.salaryGlobal}</p>
-            <p className="mt-1 text-xs text-muted">USA and European companies hiring remotely from Nigeria</p>
-          </div>
+        {/* ── SALARY ─────────────────────────────────────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 36 }}>
+          {[
+            { label: 'Salary in Nigeria', value: details.salaryNigeria, note: 'Based on current market rates for Nigerian companies and remote roles', icon: 'ti ti-building' },
+            { label: 'Global Market (Remote)', value: details.salaryGlobal, note: 'USA and European companies hiring remotely from Nigeria', icon: 'ti ti-world' },
+          ].map(s => (
+            <div key={s.label} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '20px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 10 }}>
+                <i className={s.icon} style={{ fontSize: 12 }} /> {s.label}
+              </div>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 900, color: '#0F1F3D', marginBottom: 5 }}>
+                {s.value}
+              </div>
+              <p style={{ fontSize: 11, color: '#8A8070', lineHeight: 1.6 }}>{s.note}</p>
+            </div>
+          ))}
         </div>
 
-        {/* what you do */}
-        <div className="mb-10">
-          <h2 className="font-display mb-5 text-2xl font-bold text-text">What you actually do day to day</h2>
-          <div className="space-y-3">
+        {/* ── WHAT YOU DO ────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 36 }}>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 900, color: '#0F1F3D', marginBottom: 16 }}>
+            What you actually do day to day
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {details.whatYouDo.map((item, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-xl border border-border bg-white p-4 shadow-warm-sm">
-                <span
-                  className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                  style={{ background: domain.color }}
-                >
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, background: '#fff', border: '1px solid #E8E4D9', borderRadius: 10, padding: '14px 18px' }}>
+                <span style={{
+                  width: 24, height: 24, borderRadius: 99, background: domainColor,
+                  color: '#fff', fontWeight: 700, fontSize: 11, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1,
+                }}>
                   {i + 1}
                 </span>
-                <p className="text-sm leading-relaxed text-text2">{item}</p>
+                <p style={{ fontSize: 14, lineHeight: 1.7, color: '#3A3A3A', margin: 0 }}>{item}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* top roles */}
-        <div className="mb-10">
-          <h2 className="font-display mb-5 text-2xl font-bold text-text">Top career roles</h2>
-          <div className="space-y-3">
+        {/* ── TOP ROLES ──────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 36 }}>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 900, color: '#0F1F3D', marginBottom: 16 }}>
+            Top career roles
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {details.topRoles.map((role, i) => (
-              <div key={i} className="rounded-xl border border-border bg-white p-5 shadow-warm-sm">
-                <div className="mb-1 text-sm font-bold text-text" style={{ color: domain.color }}>
-                  {role.title}
-                </div>
-                <p className="text-sm text-muted">{role.desc}</p>
+              <div key={i} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: domainColor, marginBottom: 4 }}>{role.title}</div>
+                <p style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.6, margin: 0 }}>{role.desc}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* tools */}
-        <div className="mb-10">
-          <h2 className="font-display mb-5 text-2xl font-bold text-text">Tools you will learn</h2>
-          <div className="flex flex-wrap gap-2">
+        {/* ── TOOLS ──────────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 36 }}>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 900, color: '#0F1F3D', marginBottom: 16 }}>
+            Tools you will learn
+          </h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {details.tools.map((tool, i) => (
-              <span
-                key={i}
-                className="rounded-full border px-4 py-2 text-sm font-medium"
-                style={{ background: domain.color + '10', borderColor: domain.color + '30', color: domain.color }}
-              >
+              <span key={i} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                background: domainColor + '10', border: `1px solid ${domainColor}30`,
+                borderRadius: 999, padding: '7px 16px',
+                fontSize: 13, fontWeight: 600, color: domainColor,
+              }}>
                 {tool}
               </span>
             ))}
           </div>
         </div>
 
-        {/* fit check */}
-        <div className="mb-10 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-green-200 bg-green-50 p-6">
-            <h3 className="font-display mb-4 text-lg font-bold text-green-800">This path is perfect for you if</h3>
-            <div className="space-y-2">
+        {/* ── FIT CHECK ──────────────────────────────────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 36 }}>
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '22px 22px' }}>
+            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 900, color: '#15803d', marginBottom: 14 }}>
+              This path is perfect for you if
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {details.perfectFor.map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-green-700">
-                  <span className="mt-0.5 flex-shrink-0 text-green-500">✓</span>
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#166534' }}>
+                  <i className="ti ti-circle-check" style={{ fontSize: 14, color: '#16a34a', flexShrink: 0, marginTop: 1 }} />
                   {item}
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-6">
-            <h3 className="font-display mb-4 text-lg font-bold text-red-800">This path may not fit if</h3>
-            <div className="space-y-2">
+          <div style={{ background: '#fff5f5', border: '1px solid #fecaca', borderRadius: 12, padding: '22px 22px' }}>
+            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 900, color: '#b91c1c', marginBottom: 14 }}>
+              This path may not fit if
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {details.notFor.map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-red-700">
-                  <span className="mt-0.5 flex-shrink-0 text-red-400">✕</span>
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#991b1b' }}>
+                  <i className="ti ti-circle-x" style={{ fontSize: 14, color: '#ef4444', flexShrink: 0, marginTop: 1 }} />
                   {item}
                 </div>
               ))}
@@ -634,21 +661,28 @@ export function DomainPage() {
           </div>
         </div>
 
-        {/* first step */}
-        <div
-          className="rounded-2xl border p-6"
-          style={{ background: domain.color + '08', borderColor: domain.color + '25' }}
-        >
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: domain.color }}>
-            Your first step this week
-          </p>
-          <p className="mb-5 text-base leading-relaxed text-text2">{details.firstStep}</p>
+        {/* ── FIRST STEP ─────────────────────────────────────────────────── */}
+        <div style={{
+          background: domainColor + '08', border: `1px solid ${domainColor}25`,
+          borderRadius: 14, padding: '26px 26px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: domainColor, marginBottom: 12 }}>
+            <i className="ti ti-player-play" style={{ fontSize: 12 }} /> Your first step this week
+          </div>
+          <p style={{ fontSize: 15, lineHeight: 1.8, color: '#3A3A3A', marginBottom: 22 }}>{details.firstStep}</p>
           <Link
             to="/assess"
-            className="inline-flex items-center gap-2 rounded-2xl px-7 py-3.5 text-sm font-semibold text-white shadow-warm-md transition hover:-translate-y-0.5"
-            style={{ background: domain.color }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: domainColor, color: '#fff', borderRadius: 10,
+              padding: '13px 24px', fontSize: 14, fontWeight: 700, textDecoration: 'none',
+              transition: 'opacity 0.15s, transform 0.15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.transform = 'none' }}
           >
-            Take the Free Assessment →
+            <i className="ti ti-bolt" style={{ fontSize: 14 }} />
+            Take the Free Assessment
           </Link>
         </div>
 

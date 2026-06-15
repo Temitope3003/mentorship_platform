@@ -35,6 +35,57 @@ interface SubmissionFormData {
   link: string
 }
 
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
+
+  @keyframes bit-spin { to { transform: rotate(360deg); } }
+  .bit-spin { animation: bit-spin 0.75s linear infinite; }
+
+  .bit-week-btn {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; text-align: left; background: none; border: none;
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.15s;
+  }
+  .bit-week-btn:hover { background: #F9F7F1; }
+  .bit-week-btn.locked { cursor: default; opacity: 0.5; pointer-events: none; }
+
+  .bit-input {
+    width: 100%; border: 1px solid #E8E4D9; border-radius: 9px;
+    padding: 11px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
+    color: #0F1F3D; background: #fff; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s; resize: none; box-sizing: border-box;
+  }
+  .bit-input:focus { border-color: #C9A84C; box-shadow: 0 0 0 3px rgba(201,168,76,0.14); }
+  .bit-input::placeholder { color: #B0A898; }
+
+  .bit-btn-gold {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #C9A84C; color: #0F1F3D; border: none; border-radius: 9px;
+    padding: 12px 24px; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .bit-btn-gold:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+  .bit-btn-gold:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .bit-chevron { transition: transform 0.2s ease; display: inline-block; }
+  .bit-chevron.open { transform: rotate(180deg); }
+
+  .bit-track-select {
+    border: 1px solid #DFC97A; border-radius: 8px; padding: 8px 12px;
+    font-size: 13px; font-family: 'Inter', sans-serif; color: #7A5C1E;
+    background: #fff; outline: none; cursor: pointer;
+  }
+  .bit-track-select:focus { box-shadow: 0 0 0 2px rgba(201,168,76,0.2); }
+  .bit-track-select:disabled { opacity: 0.5; }
+
+  @media (max-width: 640px) {
+    .bit-stats-grid { grid-template-columns: 1fr 1fr !important; }
+    .bit-week-btn { padding: 14px 14px !important; }
+    .bit-week-label { display: none; }
+  }
+`
+
 export function MenteeDashboard() {
   const { user } = useAuthStore()
   const { data: stats, isLoading: statsLoading } = useMenteeStats()
@@ -45,7 +96,7 @@ export function MenteeDashboard() {
   const [submitting, setSubmitting] = useState<number | null>(null)
   const [trackChanging, setTrackChanging] = useState(false)
 
-  const domainColor = DOMAIN_COLORS[user?.domain || ''] || '#d4622a'
+  const domainColor = DOMAIN_COLORS[user?.domain || ''] || '#C9A84C'
   const firstName = user?.name?.split(' ')[0] || 'there'
   const hasSubmissions = (stats?.weeksSubmitted || 0) > 0
 
@@ -61,25 +112,25 @@ export function MenteeDashboard() {
         summary: prev[week]?.summary || '',
         workDone: prev[week]?.workDone || '',
         link: prev[week]?.link || '',
-        [field]: value
-      }
+        [field]: value,
+      },
     }))
   }
 
   async function handleTrackChange(domain: string) {
-  if (domain === user?.domain) return
-  setTrackChanging(true)
-  try {
-    await api.patch('/mentee/me/track', { domain })
-    const { token, setAuth } = useAuthStore.getState()
-    setAuth(token!, { ...user!, domain })
-    toast.success('Track updated. Reloading your curriculum...')
-    setTimeout(() => window.location.reload(), 1500)
-  } catch (err: any) {
-    toast.error(err.response?.data?.error || 'Failed to update track')
+    if (domain === user?.domain) return
+    setTrackChanging(true)
+    try {
+      await api.patch('/mentee/me/track', { domain })
+      const { token, setAuth } = useAuthStore.getState()
+      setAuth(token!, { ...user!, domain })
+      toast.success('Track updated. Reloading your curriculum...')
+      setTimeout(() => window.location.reload(), 1500)
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to update track')
+    }
+    setTrackChanging(false)
   }
-  setTrackChanging(false)
-}
 
   async function handleSubmit(weekNumber: number) {
     const form = forms[weekNumber]
@@ -109,12 +160,14 @@ export function MenteeDashboard() {
     }
   }
 
+  // ── Loading ──────────────────────────────────────────────────────────────────
   if (statsLoading || roadmapLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ivory">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-warm border-t-accent" />
-          <p className="text-sm text-muted">Loading your dashboard...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9F7F1', fontFamily: "'Inter', sans-serif" }}>
+        <style>{CSS}</style>
+        <div style={{ textAlign: 'center' }}>
+          <div className="bit-spin" style={{ width: 36, height: 36, border: '3px solid #E8E4D9', borderTopColor: '#C9A84C', borderRadius: '50%', margin: '0 auto 16px' }} />
+          <p style={{ color: '#6B6B6B', fontSize: 14 }}>Loading your dashboard...</p>
         </div>
       </div>
     )
@@ -123,179 +176,275 @@ export function MenteeDashboard() {
   const weeks = roadmap?.weeks || []
   const currentWeek = stats?.currentWeek || 1
 
+  // ── Main render ──────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-ivory">
-      <div className="mx-auto max-w-4xl px-4 py-12">
+    <div style={{ minHeight: '100vh', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", color: '#0F1F3D' }}>
+      <style>{CSS}</style>
 
-        {/* header */}
-        <div className="mb-10">
-          <div
-            className="mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold uppercase tracking-widest"
-            style={{ background: domainColor + '15', borderColor: domainColor + '30', color: domainColor }}
-          >
-            {user?.domain}
+      <div style={{ maxWidth: 780, margin: '0 auto', padding: '40px 28px 72px' }}>
+
+        {/* ── HEADER ─────────────────────────────────────────────────────── */}
+        <div style={{ marginBottom: 32 }}>
+
+          {/* Domain track pill */}
+          <div style={{ marginBottom: 14 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: domainColor + '14', border: `1px solid ${domainColor}30`,
+              borderRadius: 999, padding: '5px 14px',
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.07em',
+              textTransform: 'uppercase', color: domainColor,
+            }}>
+              <i className="ti ti-route" style={{ fontSize: 12 }} />
+              {user?.domain}
+            </span>
           </div>
-          <h1 className="font-display text-4xl font-black text-text">
+
+          <h1 style={{
+            fontFamily: "'Playfair Display', serif", fontSize: 36,
+            fontWeight: 900, color: '#0F1F3D', lineHeight: 1.15, marginBottom: 6,
+          }}>
             Welcome back, {firstName}
           </h1>
-          <p className="mt-2 text-muted">
-            Week {currentWeek} of 48 · {stats?.currentPhase}
+          <p style={{ fontSize: 14, color: '#6B6B6B' }}>
+            Week {currentWeek} of 48 &middot; {stats?.currentPhase}
           </p>
 
-          {/* track change — only visible before first submission */}
+          {/* Track change — only before first submission */}
           {!hasSubmissions && (
-            <div className="mt-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <span className="text-sm text-amber-700 font-medium">Want to change your track?</span>
+            <div style={{
+              marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 12,
+              background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 10,
+              padding: '12px 16px', flexWrap: 'wrap',
+            }}>
+              <i className="ti ti-route" style={{ fontSize: 16, color: '#C9A84C' }} />
+              <span style={{ fontSize: 13, color: '#7A5C1E', fontWeight: 500 }}>Change your track:</span>
               <select
                 defaultValue={user?.domain || ''}
                 onChange={e => handleTrackChange(e.target.value)}
                 disabled={trackChanging}
-                className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-accent disabled:opacity-50"
+                className="bit-track-select"
               >
                 {DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
-              {trackChanging && <span className="text-xs text-amber-600">Updating...</span>}
+              {trackChanging && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#7A5C1E' }}>
+                  <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 13 }} /> Updating...
+                </span>
+              )}
             </div>
           )}
 
+          {/* Track locked badge */}
           {hasSubmissions && (
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-muted">
-              🔒 Track locked after first submission
+            <div style={{
+              marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: '#F0EBD8', border: '1px solid #E8E4D9', borderRadius: 999,
+              padding: '5px 14px', fontSize: 12, color: '#8A8070',
+            }}>
+              <i className="ti ti-lock" style={{ fontSize: 12 }} />
+              Track locked after first submission
             </div>
           )}
         </div>
 
-        {/* stats row */}
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+        {/* ── STATS ROW ──────────────────────────────────────────────────── */}
+        <div
+          className="bit-stats-grid"
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 16 }}
+        >
           {[
-            { label: 'Current Week', value: stats?.currentWeek || 0, color: domainColor },
-            { label: 'Submitted', value: stats?.weeksSubmitted || 0, color: '#1a7a6e' },
-            { label: 'Remaining', value: stats?.weeksRemaining || 48, color: '#5b4fcf' },
-            { label: 'Complete', value: `${stats?.completionPct || 0}%`, color: '#f59e0b' },
+            { label: 'Current Week', value: stats?.currentWeek ?? 0,           icon: 'ti ti-calendar',      color: '#C9A84C' },
+            { label: 'Submitted',    value: stats?.weeksSubmitted ?? 0,         icon: 'ti ti-circle-check',  color: '#1D4A6E' },
+            { label: 'Remaining',    value: stats?.weeksRemaining ?? 48,        icon: 'ti ti-clock',         color: '#6B6B6B' },
+            { label: 'Complete',     value: `${stats?.completionPct ?? 0}%`,    icon: 'ti ti-chart-bar',     color: '#C9A84C' },
           ].map(stat => (
-            <div key={stat.label} className="rounded-2xl border border-border bg-white p-5 shadow-warm-sm">
-              <div className="font-mono text-3xl font-semibold" style={{ color: stat.color }}>
+            <div key={stat.label} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '18px 20px' }}>
+              <i className={stat.icon} style={{ fontSize: 18, color: stat.color, display: 'block', marginBottom: 10 }} />
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 900, color: stat.color, lineHeight: 1 }}>
                 {stat.value}
               </div>
-              <div className="mt-1 text-xs font-semibold uppercase tracking-widest text-muted">
+              <div style={{ fontSize: 11, color: '#8A8070', marginTop: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 {stat.label}
               </div>
             </div>
           ))}
         </div>
 
-        {/* phase progress */}
-        <div className="mb-8 rounded-2xl border border-border bg-white p-6 shadow-warm-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <span className="text-sm font-semibold text-text">{stats?.currentPhase}</span>
+        {/* ── PHASE PROGRESS ─────────────────────────────────────────────── */}
+        <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '18px 22px', marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <i className="ti ti-map" style={{ fontSize: 15, color: '#C9A84C' }} />
+              <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: '#0F1F3D' }}>
+                {stats?.currentPhase}
+              </span>
             </div>
-            <span className="font-mono text-sm font-semibold" style={{ color: domainColor }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#C9A84C' }}>
               {stats?.phaseProgress || 0}%
             </span>
           </div>
-          <div className="h-2 rounded-full bg-warm">
-            <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${stats?.phaseProgress || 0}%`, background: domainColor }}
-            />
+          <div style={{ height: 6, borderRadius: 99, background: '#F0EBD8', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 99, background: '#C9A84C',
+              width: `${stats?.phaseProgress || 0}%`, transition: 'width 0.7s ease',
+            }} />
           </div>
         </div>
 
-        {/* weeks list */}
-        <div className="mb-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted">
+        {/* ── WEEKLY ASSIGNMENTS LABEL ────────────────────────────────────── */}
+        <div style={{ marginBottom: 12 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 999,
+            padding: '5px 14px', fontSize: 11, fontWeight: 700,
+            letterSpacing: '0.07em', textTransform: 'uppercase', color: '#7A5C1E',
+          }}>
+            <i className="ti ti-list-check" style={{ fontSize: 12 }} />
             Weekly Assignments
-          </p>
+          </span>
         </div>
 
-        <div className="space-y-3">
+        {/* ── WEEK CARDS ─────────────────────────────────────────────────── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {weeks.map((week: any) => {
             const isOpen = openWeek === week.week
             const form = forms[week.week] || { summary: '', workDone: '', link: '' }
-            const statusColor = week.isSubmitted ? '#1a7a6e' : week.isCurrent ? domainColor : week.isLocked ? '#9a8e7e' : '#d97706'
-            const statusLabel = week.isSubmitted ? '✓ Submitted' : week.isCurrent ? 'This week' : week.isLocked ? 'Upcoming' : 'Missed'
-            const statusBg = week.isSubmitted ? '#f0fdf9' : week.isCurrent ? domainColor + '12' : '#faf7f2'
-            const statusBorder = week.isSubmitted ? '#99f6e4' : week.isCurrent ? domainColor + '40' : '#e2d9cc'
+
+            // Status badge config
+            let statusBg     = '#F9F7F1'
+            let statusBorder = '#E8E4D9'
+            let statusColor  = '#8A8070'
+            let statusIcon   = 'ti ti-clock'
+            let statusLabel  = 'Upcoming'
+
+            if (week.isSubmitted) {
+              statusBg = 'rgba(29,74,110,0.07)'; statusBorder = 'rgba(29,74,110,0.2)'
+              statusColor = '#1D4A6E'; statusIcon = 'ti ti-circle-check'; statusLabel = 'Submitted'
+            } else if (week.isCurrent) {
+              statusBg = '#FBF7EC'; statusBorder = '#DFC97A'
+              statusColor = '#7A5C1E'; statusIcon = 'ti ti-pencil'; statusLabel = 'This week'
+            } else if (!week.isLocked) {
+              statusBg = '#FEF9EC'; statusBorder = '#F5D87A'
+              statusColor = '#92681A'; statusIcon = 'ti ti-alert-triangle'; statusLabel = 'Missed'
+            }
 
             return (
               <div
                 key={week.week}
-                className="overflow-hidden rounded-2xl border bg-white shadow-warm-sm"
-                style={{ borderColor: week.isCurrent ? domainColor + '40' : '#e2d9cc' }}
+                style={{
+                  background: '#fff',
+                  border: `1px solid ${week.isCurrent ? '#DFC97A' : '#E8E4D9'}`,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                }}
               >
-                {/* week header */}
+                {/* Row header */}
                 <button
                   onClick={() => !week.isLocked && toggleWeek(week.week)}
-                  className={`flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-cream/50 ${week.isLocked ? 'cursor-default opacity-60' : 'cursor-pointer'}`}
+                  className={`bit-week-btn${week.isLocked ? ' locked' : ''}`}
                 >
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <span
-                      className="font-mono flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold"
-                      style={{ background: domainColor + '15', color: domainColor }}
-                    >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+                    {/* Week badge */}
+                    <span style={{
+                      background: '#0F1F3D', color: '#C9A84C',
+                      borderRadius: 7, padding: '4px 10px',
+                      fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
+                      flexShrink: 0,
+                    }}>
                       W{week.week}
                     </span>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-text">{week.title}</div>
-                      <div className="text-xs text-muted">{week.phase}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#0F1F3D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {week.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#8A8070', marginTop: 2 }}>{week.phase}</div>
                     </div>
                   </div>
-                  <div className="flex flex-shrink-0 items-center gap-3 ml-4">
-                    <span
-                      className="rounded-full border px-3 py-1 text-xs font-semibold"
-                      style={{ background: statusBg, borderColor: statusBorder, color: statusColor }}
-                    >
-                      {statusLabel}
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 14 }}>
+                    {/* Status badge */}
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      background: statusBg, border: `1px solid ${statusBorder}`,
+                      color: statusColor, borderRadius: 999,
+                      padding: '4px 11px', fontSize: 11, fontWeight: 600,
+                    }}>
+                      <i className={statusIcon} style={{ fontSize: 11 }} />
+                      <span className="bit-week-label">{statusLabel}</span>
                     </span>
+
                     {!week.isLocked && (
-                      <svg
-                        width="16" height="16" viewBox="0 0 16 16" fill="none"
-                        className="transition-transform"
-                        style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                      >
-                        <path d="M4 6l4 4 4-4" stroke="#9a8e7e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                      <i
+                        className={`ti ti-chevron-down bit-chevron${isOpen ? ' open' : ''}`}
+                        style={{ fontSize: 16, color: '#8A8070' }}
+                      />
+                    )}
+                    {week.isLocked && (
+                      <i className="ti ti-lock" style={{ fontSize: 14, color: '#C8C0B4' }} />
                     )}
                   </div>
                 </button>
 
-                {/* expanded content */}
+                {/* Expanded panel */}
                 {isOpen && (
-                  <div className="border-t border-border px-5 pb-6 pt-5">
-                    {/* assignment */}
-                    <div className="mb-5 rounded-xl border border-border bg-ivory p-4">
-                      <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted">Assignment</p>
-                      <p className="mb-3 text-sm leading-relaxed text-text2">{week.task}</p>
-                      <div className="space-y-1.5">
-                        {week.resources?.map((r: string, i: number) => (
-                          <div key={i} className="flex items-start gap-2 text-xs text-muted">
-                            <span className="mt-0.5 text-accent">→</span>
-                            <span>{r}</span>
-                          </div>
-                        ))}
+                  <div style={{ borderTop: '1px solid #E8E4D9', padding: '20px 20px 24px' }}>
+
+                    {/* Assignment block */}
+                    <div style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 10, padding: '16px 18px', marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+                        <i className="ti ti-book" style={{ fontSize: 14, color: '#C9A84C' }} />
+                        <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070' }}>
+                          Assignment
+                        </span>
                       </div>
+                      <p style={{ fontSize: 13, color: '#0F1F3D', lineHeight: 1.75, marginBottom: week.resources?.length ? 12 : 0 }}>
+                        {week.task}
+                      </p>
+                      {week.resources?.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {week.resources.map((r: string, i: number) => (
+                            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 12, color: '#6B6B6B' }}>
+                              <i className="ti ti-arrow-right" style={{ fontSize: 12, color: '#C9A84C', marginTop: 1, flexShrink: 0 }} />
+                              <span>{r}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
-                    {/* submitted view */}
+                    {/* Submitted confirmation */}
                     {week.isSubmitted && roadmap?.weeks && (
-                      <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-                        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-green-700">
-                          ✓ You submitted this week
-                        </p>
-                        <p className="text-sm text-text2">Great work. Check your dashboard for mentor feedback.</p>
+                      <div style={{
+                        background: 'rgba(29,74,110,0.05)', border: '1px solid rgba(29,74,110,0.15)',
+                        borderRadius: 10, padding: '14px 18px',
+                        display: 'flex', alignItems: 'flex-start', gap: 10,
+                      }}>
+                        <i className="ti ti-circle-check" style={{ fontSize: 18, color: '#1D4A6E', flexShrink: 0, marginTop: 1 }} />
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#1D4A6E', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 3 }}>
+                            Submitted
+                          </div>
+                          <p style={{ fontSize: 13, color: '#6B6B6B' }}>Great work. Check with your mentor for feedback.</p>
+                        </div>
                       </div>
                     )}
 
-                    {/* submission form */}
+                    {/* Submission form */}
                     {!week.isSubmitted && !week.isLocked && (
-                      <div className="rounded-xl border border-accent/20 bg-accent/5 p-5">
-                        <p className="mb-4 text-xs font-bold uppercase tracking-widest text-accent">
-                          Submit Week {week.week}
-                        </p>
-                        <div className="space-y-4">
+                      <div style={{ background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 10, padding: '18px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 18 }}>
+                          <i className="ti ti-send" style={{ fontSize: 14, color: '#C9A84C' }} />
+                          <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7A5C1E' }}>
+                            Submit Week {week.week}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                          {/* Summary */}
                           <div>
-                            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted">
+                            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#8A8070', marginBottom: 7 }}>
                               What did you learn this week?
                             </label>
                             <textarea
@@ -303,16 +452,18 @@ export function MenteeDashboard() {
                               onChange={e => updateForm(week.week, 'summary', e.target.value)}
                               placeholder="Summarise the key concepts, tools, or ideas you learned. What clicked for you this week?"
                               rows={3}
-                              className="w-full resize-none rounded-xl border border-border bg-white px-4 py-3 text-sm text-text shadow-warm-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+                              className="bit-input"
                             />
-                            <div className="mt-1 text-right">
-                              <span className={`text-xs ${form.summary.length >= 20 ? 'text-teal' : 'text-muted'}`}>
+                            <div style={{ textAlign: 'right', marginTop: 4 }}>
+                              <span style={{ fontSize: 11, color: form.summary.length >= 20 ? '#1D4A6E' : '#8A8070' }}>
                                 {form.summary.length} chars {form.summary.length < 20 ? `(need ${20 - form.summary.length} more)` : '✓'}
                               </span>
                             </div>
                           </div>
+
+                          {/* Work done */}
                           <div>
-                            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted">
+                            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#8A8070', marginBottom: 7 }}>
                               What did you build or do?
                             </label>
                             <textarea
@@ -320,43 +471,62 @@ export function MenteeDashboard() {
                               onChange={e => updateForm(week.week, 'workDone', e.target.value)}
                               placeholder="Describe what you built, practised, or completed. What was hard? What decisions did you make?"
                               rows={3}
-                              className="w-full resize-none rounded-xl border border-border bg-white px-4 py-3 text-sm text-text shadow-warm-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+                              className="bit-input"
                             />
-                            <div className="mt-1 text-right">
-                              <span className={`text-xs ${form.workDone.length >= 20 ? 'text-teal' : 'text-muted'}`}>
+                            <div style={{ textAlign: 'right', marginTop: 4 }}>
+                              <span style={{ fontSize: 11, color: form.workDone.length >= 20 ? '#1D4A6E' : '#8A8070' }}>
                                 {form.workDone.length} chars {form.workDone.length < 20 ? `(need ${20 - form.workDone.length} more)` : '✓'}
                               </span>
                             </div>
                           </div>
+
+                          {/* Link */}
                           <div>
-                            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted">
-                              Link to your work (optional)
+                            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#8A8070', marginBottom: 7 }}>
+                              Link to your work{' '}
+                              <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
                             </label>
                             <input
                               type="url"
                               value={form.link}
                               onChange={e => updateForm(week.week, 'link', e.target.value)}
                               placeholder="https://github.com/yourname/project"
-                              className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-text shadow-warm-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+                              className="bit-input"
                             />
                           </div>
-                          <button
-                            onClick={() => handleSubmit(week.week)}
-                            disabled={submitting === week.week}
-                            className="rounded-2xl px-6 py-3 text-sm font-semibold text-white shadow-warm-md transition hover:-translate-y-0.5 hover:shadow-warm-lg disabled:opacity-40"
-                            style={{ background: domainColor }}
-                          >
-                            {submitting === week.week ? 'Submitting...' : `Submit Week ${week.week} →`}
-                          </button>
+
+                          {/* Submit button */}
+                          <div>
+                            <button
+                              onClick={() => handleSubmit(week.week)}
+                              disabled={submitting === week.week}
+                              className="bit-btn-gold"
+                            >
+                              {submitting === week.week ? (
+                                <>
+                                  <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} />
+                                  Submitting...
+                                </>
+                              ) : (
+                                <>
+                                  <i className="ti ti-send" style={{ fontSize: 14 }} />
+                                  Submit Week {week.week}
+                                </>
+                              )}
+                            </button>
+                          </div>
+
                         </div>
                       </div>
                     )}
+
                   </div>
                 )}
               </div>
             )
           })}
         </div>
+
       </div>
     </div>
   )

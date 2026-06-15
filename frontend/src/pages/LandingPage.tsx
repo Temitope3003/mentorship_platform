@@ -1,286 +1,591 @@
 import { Link } from 'react-router-dom'
 import { DOMAINS } from '../utils/questionData'
 
-const TESTIMONIALS = [
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface Testimonial {
+  name: string
+  role: string
+  avatar: string
+  avatarBg: string
+  avatarColor: string
+  text: string
+}
+
+interface Step {
+  num: string
+  iconClass: string
+  title: string
+  desc: string
+}
+
+interface Feature {
+  iconClass: string
+  title: string
+  desc: string
+}
+
+interface Stat {
+  num: string
+  label: string
+}
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const STATS: Stat[] = [
+  { num: '35+', label: 'Active Mentees' },
+  { num: '14',  label: 'Career Domains' },
+  { num: '48',  label: 'Weeks of Curriculum' },
+  { num: '28',  label: 'Career Paths' },
+]
+
+const STEPS: Step[] = [
+  {
+    num: 'Step 01',
+    iconClass: 'ti ti-pencil',
+    title: 'Tell us your goal',
+    desc: 'Write what you want to build or become in tech. Your own words, no filters. We read it carefully.',
+  },
+  {
+    num: 'Step 02',
+    iconClass: 'ti ti-brain',
+    title: 'Complete the assessment',
+    desc: '24 questions about how you think and work. Takes about 8 minutes.',
+  },
+  {
+    num: 'Step 03',
+    iconClass: 'ti ti-map',
+    title: 'Get your roadmap',
+    desc: 'AI builds your personalised 12-month learning plan matched to your natural strengths.',
+  },
+  {
+    num: 'Step 04',
+    iconClass: 'ti ti-chart-bar',
+    title: 'Track your progress',
+    desc: 'Log in weekly, submit work, and get direct feedback from your mentor every step of the way.',
+  },
+]
+
+const FEATURES: Feature[] = [
+  { iconClass: 'ti ti-bolt',      title: 'Personalised career match',   desc: 'AI assessment across 18 dimensions' },
+  { iconClass: 'ti ti-map',       title: '12-month learning roadmap',   desc: 'Week by week, built for you' },
+  { iconClass: 'ti ti-mail',      title: 'Automatic access code',       desc: 'Emailed instantly after assessment' },
+  { iconClass: 'ti ti-chart-bar', title: 'Weekly progress tracker',     desc: 'Log work, get mentor feedback' },
+  { iconClass: 'ti ti-users',     title: 'Direct mentor support',       desc: '1-on-1 with an experienced engineer' },
+  { iconClass: 'ti ti-book',      title: 'Free course recommendations', desc: 'Curated resources per your domain' },
+]
+
+const TESTIMONIALS: Testimonial[] = [
   {
     name: 'Amara Johnson',
     role: 'Now a Junior ML Engineer',
     avatar: 'AJ',
-    color: '#d4622a',
-    text: 'I had no idea where to start in tech. The assessment told me I was naturally suited for AI and Machine Learning. 12 months later I landed my first job.',
+    avatarBg: '#C9A84C',
+    avatarColor: '#0F1F3D',
+    text: 'I had no idea where to start in tech. The assessment told me I was naturally suited for AI. 12 months later I landed my first job.',
   },
   {
     name: 'Kofi Mensah',
     role: 'Now a Backend Developer',
     avatar: 'KM',
-    color: '#1a7a6e',
-    text: 'The weekly tracker kept me accountable every single week. Having a mentor review my submissions made all the difference.',
+    avatarBg: '#1D4A6E',
+    avatarColor: '#ffffff',
+    text: 'The weekly tracker kept me accountable. Having a mentor review my submissions every week made all the difference.',
   },
   {
     name: 'Fatima Al-Rashid',
     role: 'Now a Data Analyst',
     avatar: 'FA',
-    color: '#5b4fcf',
-    text: 'I was a complete beginner. The roadmap was so detailed I always knew exactly what to do next. No confusion, no guessing.',
+    avatarBg: '#2D5016',
+    avatarColor: '#ffffff',
+    text: 'Complete beginner. The roadmap was so detailed I always knew exactly what to do next. No confusion at all.',
   },
 ]
 
-const STATS = [
-  { num: '35+', label: 'Active Mentees' },
-  { num: '14', label: 'Career Domains' },
-  { num: '48', label: 'Weeks of Curriculum' },
-  { num: '28', label: 'Career Paths' },
+const TRUST_AVATARS = [
+  { initials: 'AJ', bg: '#C9A84C', color: '#0F1F3D' },
+  { initials: 'KM', bg: '#1D4A6E', color: '#ffffff' },
+  { initials: 'FA', bg: '#2D5016', color: '#ffffff' },
+  { initials: 'CO', bg: '#5C3D1A', color: '#ffffff' },
+  { initials: 'NP', bg: '#4A1C6E', color: '#ffffff' },
 ]
 
-const STEPS = [
-  {
-    num: '01',
-    icon: '✍️',
-    title: 'Tell us your goal',
-    desc: 'Write what you want to build, learn, or become in tech. Your own words. No filters. We read it carefully.',
-    color: '#d4622a',
-  },
-  {
-    num: '02',
-    icon: '🧠',
-    title: 'Complete the Assessment',
-    desc: '24 questions about how you think, what excites you, and how you work. Takes about 8 minutes.',
-    color: '#1a7a6e',
-  },
-  {
-    num: '03',
-    icon: '🗺️',
-    title: 'Get your roadmap',
-    desc: 'AI compares your goal with your natural aptitude and builds a personalised 12-month learning plan.',
-    color: '#5b4fcf',
-  },
-  {
-    num: '04',
-    icon: '📈',
-    title: 'Track your progress',
-    desc: 'Log in weekly, submit your work, and get direct feedback from your mentor every step of the way.',
-    color: '#2d6a4f',
-  },
-]
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function GoldPill({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '7px',
+        background: dark ? 'rgba(201,168,76,0.10)' : '#FBF7EC',
+        border: `1px solid ${dark ? 'rgba(201,168,76,0.25)' : '#DFC97A'}`,
+        borderRadius: '999px',
+        padding: '6px 16px',
+        fontSize: '11px',
+        fontWeight: 600,
+        letterSpacing: '0.07em',
+        textTransform: 'uppercase',
+        color: dark ? '#F5D87A' : '#7A5C1E',
+        fontFamily: "'Inter', sans-serif",
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
+function SectionDivider() {
+  return (
+    <div
+      style={{
+        width: '48px',
+        height: '3px',
+        background: '#C9A84C',
+        borderRadius: '2px',
+        margin: '0 auto 20px',
+      }}
+    />
+  )
+}
+
+function StarRow() {
+  return (
+    <div style={{ display: 'flex', gap: '3px', marginBottom: '14px' }}>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <i key={i} className="ti ti-star-filled" style={{ fontSize: '14px', color: '#C9A84C' }} />
+      ))}
+    </div>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export function LandingPage() {
   return (
-    <div className="overflow-hidden bg-ivory">
+    <div style={{ fontFamily: "'Inter', sans-serif", background: '#ffffff', color: '#0F1F3D', overflowX: 'hidden' }}>
 
-      {/* ── HERO ── */}
-      <section className="relative px-6 pb-24 pt-20">
-        {/* decorative blob */}
-        <div className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] -translate-y-1/4 translate-x-1/4 rounded-full bg-gradient-to-br from-accent/10 to-accent2/5 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 left-0 h-96 w-96 -translate-x-1/3 translate-y-1/3 rounded-full bg-teal/5 blur-3xl" />
+      {/* Google Fonts — load once at top of component render */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
 
-        <div className="relative mx-auto max-w-5xl">
-          <div className="max-w-3xl">
-            {/* eyebrow */}
-            <div className="animate-fade-up mb-6 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/8 px-4 py-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-accent">
-                Tech Mentorship Program
-              </span>
+        .bit-nav-link {
+          font-size: 13px;
+          color: rgba(255,255,255,0.6);
+          padding: 8px 14px;
+          cursor: pointer;
+          text-decoration: none;
+          transition: color 0.15s;
+        }
+        .bit-nav-link:hover { color: #ffffff; }
+
+        .bit-domain-card {
+          background: #ffffff;
+          border: 1px solid #E8E4D9;
+          border-radius: 12px;
+          padding: 16px;
+          cursor: pointer;
+          transition: transform 0.15s, box-shadow 0.15s;
+          text-decoration: none;
+          display: block;
+        }
+        .bit-domain-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(15,31,61,0.08);
+        }
+        .bit-domain-card:hover .bit-domain-bar {
+          width: 36px;
+        }
+
+        .bit-domain-bar {
+          height: 2px;
+          width: 20px;
+          border-radius: 2px;
+          background: #C9A84C;
+          margin-top: 8px;
+          transition: width 0.2s;
+        }
+
+        .bit-step-card {
+          background: #ffffff;
+          border: 1px solid #E8E4D9;
+          border-radius: 12px;
+          padding: 26px;
+        }
+
+        .bit-testimonial-card {
+          background: #ffffff;
+          border: 1px solid #E8E4D9;
+          border-radius: 12px;
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .bit-btn-primary {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: #C9A84C;
+          color: #0F1F3D;
+          border: none;
+          border-radius: 9px;
+          padding: 14px 28px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: 'Inter', sans-serif;
+          text-decoration: none;
+          transition: opacity 0.15s, transform 0.15s;
+        }
+        .bit-btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .bit-btn-navy {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: #0F1F3D;
+          color: #F5D87A;
+          border: none;
+          border-radius: 9px;
+          padding: 14px 28px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: 'Inter', sans-serif;
+          text-decoration: none;
+          transition: opacity 0.15s, transform 0.15s;
+        }
+        .bit-btn-navy:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .bit-btn-ghost-dark {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: transparent;
+          color: rgba(255,255,255,0.65);
+          border: 1.5px solid rgba(255,255,255,0.22);
+          border-radius: 9px;
+          padding: 14px 24px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          font-family: 'Inter', sans-serif;
+          text-decoration: none;
+          transition: border-color 0.15s, color 0.15s;
+        }
+        .bit-btn-ghost-dark:hover {
+          border-color: rgba(255,255,255,0.45);
+          color: #ffffff;
+        }
+
+        .bit-btn-ghost-light {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: transparent;
+          color: rgba(255,255,255,0.65);
+          border: 1.5px solid rgba(255,255,255,0.2);
+          border-radius: 9px;
+          padding: 14px 22px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          font-family: 'Inter', sans-serif;
+          text-decoration: none;
+          transition: border-color 0.15s, color 0.15s;
+        }
+        .bit-btn-ghost-light:hover {
+          border-color: rgba(255,255,255,0.45);
+          color: #ffffff;
+        }
+
+        @media (max-width: 640px) {
+          .bit-hero-h1 { font-size: 36px !important; }
+          .bit-stats-grid { grid-template-columns: 1fr 1fr !important; }
+          .bit-steps-grid { grid-template-columns: 1fr !important; }
+          .bit-domains-grid { grid-template-columns: 1fr 1fr !important; }
+          .bit-testimonials-grid { grid-template-columns: 1fr !important; }
+          .bit-features-split { grid-template-columns: 1fr !important; }
+          .bit-nav-links { display: none !important; }
+          .bit-cta-row { flex-direction: column !important; align-items: stretch !important; }
+        }
+      `}</style>
+
+      {/* ── NAV ─────────────────────────────────────────────────────────── */}
+      <nav style={{
+        background: '#0F1F3D',
+        padding: '0 28px',
+        height: '60px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+      }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <div style={{
+            width: '34px', height: '34px', background: '#C9A84C', borderRadius: '8px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '16px', color: '#0F1F3D', fontStyle: 'italic', fontWeight: 900 }}>B</span>
+          </div>
+          <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '16px', fontWeight: 700, color: '#ffffff' }}>
+            Build<span style={{ color: '#C9A84C' }}>InTech</span>
+          </span>
+        </Link>
+
+        <div className="bit-nav-links" style={{ display: 'flex', alignItems: 'center' }}>
+          <Link to="/assess" className="bit-nav-link">Assessment</Link>
+          <Link to="/#domains" className="bit-nav-link">Domains</Link>
+          <Link to="/login" className="bit-nav-link">Login</Link>
+          <Link
+            to="/assess"
+            className="bit-btn-primary"
+            style={{ padding: '9px 20px', fontSize: '13px', marginLeft: '12px' }}
+          >
+            Start Free <i className="ti ti-arrow-right" style={{ fontSize: '13px' }} />
+          </Link>
+        </div>
+      </nav>
+
+      {/* ── HERO ────────────────────────────────────────────────────────── */}
+      <section style={{
+        background: '#0F1F3D',
+        padding: '64px 28px 72px',
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* ambient radial glow */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'radial-gradient(ellipse at 70% 20%, rgba(201,168,76,0.12) 0%, transparent 60%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ position: 'relative', maxWidth: '600px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <GoldPill dark>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#C9A84C', display: 'inline-block' }} />
+              Free · AI-Powered Mentorship
+            </GoldPill>
+          </div>
+
+          <h1
+            className="bit-hero-h1"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: '52px',
+              fontWeight: 900,
+              color: '#ffffff',
+              lineHeight: 1.1,
+              marginBottom: '20px',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Expand Your Career<br />
+            <em style={{ color: '#C9A84C' }}>Opportunities in Tech</em>
+          </h1>
+
+          <p style={{
+            fontSize: '16px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.8,
+            maxWidth: '480px', margin: '0 auto 32px',
+          }}>
+            A free AI platform that matches you to the right tech career, builds your personalised
+            12-month roadmap, and tracks your progress with real mentor support.
+          </p>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '36px' }}>
+            <Link to="/assess" className="bit-btn-primary">
+              Start Free Assessment <i className="ti ti-arrow-right" />
+            </Link>
+            <Link to="/login" className="bit-btn-ghost-dark">
+              I have an access code
+            </Link>
+          </div>
+
+          {/* trust strip */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex' }}>
+              {TRUST_AVATARS.map((a, i) => (
+                <div
+                  key={a.initials}
+                  style={{
+                    width: '34px', height: '34px', borderRadius: '50%',
+                    background: a.bg, border: '2px solid #0F1F3D',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '11px', fontWeight: 700, color: a.color,
+                    marginLeft: i === 0 ? '0' : '-9px',
+                    fontFamily: "'Inter', sans-serif",
+                  }}
+                >
+                  {a.initials}
+                </div>
+              ))}
             </div>
-
-            {/* headline */}
-            <h1 className="animate-fade-up-1 font-display mb-6 text-5xl font-black leading-[1.08] tracking-tight text-text md:text-6xl lg:text-7xl">
-              Your tech career
-              <br />
-              starts with the{' '}
-              <span className="relative italic text-accent">
-                right path
-                <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none">
-                  <path d="M2 9C50 4 100 2 150 5C200 8 250 6 298 3" stroke="#d4622a" strokeWidth="3" strokeLinecap="round" opacity="0.4"/>
-                </svg>
-              </span>
-            </h1>
-
-            {/* subheadline */}
-            <p className="animate-fade-up-2 mb-10 max-w-xl text-lg leading-relaxed text-text2">
-              A free AI-powered platform that matches you to the right tech career, builds your personalised 12-month roadmap, and tracks your weekly progress with mentor support.
-            </p>
-
-            {/* CTA buttons */}
-            <div className="animate-fade-up-3 flex flex-wrap items-center gap-4">
-              <Link
-                to="/assess"
-                className="inline-flex items-center gap-2 rounded-2xl bg-accent px-8 py-4 text-base font-semibold text-white shadow-warm-md transition hover:-translate-y-1 hover:bg-accent/90 hover:shadow-warm-lg"
-              >
-                Start the Free Assessment
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </Link>
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-2 rounded-2xl border border-border bg-white px-8 py-4 text-base font-semibold text-text2 shadow-warm-sm transition hover:-translate-y-0.5 hover:border-accent/30 hover:text-text hover:shadow-warm-md"
-              >
-                I have an access code
-              </Link>
-            </div>
-
-            {/* trust strip */}
-            <div className="animate-fade-up-4 mt-10 flex flex-wrap items-center gap-6">
-              <div className="flex -space-x-2">
-                {['AJ','KM','FA','CO','NP'].map((init, i) => (
-                  <div
-                    key={i}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-ivory text-xs font-bold text-white"
-                    style={{ background: ['#d4622a','#1a7a6e','#5b4fcf','#2d6a4f','#e8954a'][i] }}
-                  >
-                    {init}
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm text-muted">
-                <strong className="font-semibold text-text2">35+ mentees</strong> already building their tech careers
-              </p>
-            </div>
+            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>
+              <strong style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>35+ mentees</strong> already building their careers
+            </span>
           </div>
         </div>
       </section>
 
-      {/* ── STATS STRIP ── */}
-      <section className="border-y border-border bg-cream px-6 py-10">
-        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-6 md:grid-cols-4">
-          {STATS.map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="font-display text-4xl font-black text-accent">{s.num}</div>
-              <div className="mt-1 text-sm font-medium text-muted">{s.label}</div>
+      {/* ── STATS BAND ──────────────────────────────────────────────────── */}
+      <section style={{ background: '#F9F7F1', borderBottom: '1px solid #E8E4D9', padding: '28px' }}>
+        <div
+          className="bit-stats-grid"
+          style={{ maxWidth: '680px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr' }}
+        >
+          {STATS.map((s, i) => (
+            <div
+              key={s.label}
+              style={{
+                textAlign: 'center',
+                padding: '12px 8px',
+                borderRight: i < STATS.length - 1 ? '1px solid #E8E4D9' : 'none',
+              }}
+            >
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '36px', fontWeight: 900, color: '#0F1F3D', lineHeight: 1 }}>
+                {s.num}
+              </div>
+              <div style={{ fontSize: '12px', color: '#8A8070', marginTop: '5px', fontWeight: 500 }}>
+                {s.label}
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="px-6 py-24">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-4 text-center">
-            <span className="text-xs font-bold uppercase tracking-widest text-accent">How it works</span>
+      {/* ── HOW IT WORKS ────────────────────────────────────────────────── */}
+      <section style={{ padding: '60px 28px', background: '#ffffff' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ marginBottom: '18px' }}>
+            <GoldPill>How it works</GoldPill>
           </div>
-          <h2 className="font-display mb-4 text-center text-4xl font-black text-text md:text-5xl">
-            From zero to employed
-            <br />
-            <span className="italic text-accent">in four steps</span>
+          <SectionDivider />
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: '36px', fontWeight: 900, color: '#0F1F3D',
+            marginBottom: '12px', lineHeight: 1.15,
+          }}>
+            From zero to employed<br />
+            <em style={{ color: '#C9A84C' }}>in four steps</em>
           </h2>
-          <p className="mx-auto mb-16 max-w-xl text-center text-lg text-muted">
-            No experience needed. No confusion about where to start. Just a clear, structured path from where you are to where you want to be.
+          <p style={{ fontSize: '14px', color: '#6B6B6B', lineHeight: 1.8, maxWidth: '440px', margin: '0 auto 40px' }}>
+            No experience needed. No confusion about where to start. A clear, structured path to your first tech role.
           </p>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="bit-steps-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', textAlign: 'left' }}>
             {STEPS.map((step) => (
-              <div
-                key={step.num}
-                className="group relative overflow-hidden rounded-3xl border border-border bg-white p-8 shadow-warm-sm transition hover:-translate-y-1 hover:shadow-warm-md"
-              >
-                <div
-                  className="absolute right-0 top-0 h-32 w-32 -translate-y-1/2 translate-x-1/2 rounded-full opacity-10 transition group-hover:opacity-20"
-                  style={{ background: step.color }}
-                />
-                <div className="relative">
-                  <div className="mb-4 flex items-center gap-3">
-                    <span className="text-3xl">{step.icon}</span>
-                    <span
-                      className="font-mono text-xs font-semibold"
-                      style={{ color: step.color }}
-                    >
-                      {step.num}
-                    </span>
-                  </div>
-                  <h3 className="font-display mb-3 text-xl font-bold text-text">{step.title}</h3>
-                  <p className="text-sm leading-relaxed text-muted">{step.desc}</p>
+              <div key={step.num} className="bit-step-card">
+                <div style={{
+                  width: '44px', height: '44px', borderRadius: '10px', background: '#0F1F3D',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px',
+                }}>
+                  <i className={step.iconClass} style={{ fontSize: '20px', color: '#C9A84C' }} />
                 </div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#C9A84C', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  {step.num}
+                </div>
+                <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '19px', fontWeight: 700, color: '#0F1F3D', marginBottom: '8px', lineHeight: 1.3 }}>
+                  {step.title}
+                </h3>
+                <p style={{ fontSize: '13px', color: '#6B6B6B', lineHeight: 1.75 }}>
+                  {step.desc}
+                </p>
               </div>
             ))}
           </div>
 
-          <div className="mt-10 text-center">
-            <Link
-              to="/assess"
-              className="inline-flex items-center gap-2 rounded-2xl bg-accent px-8 py-4 text-base font-semibold text-white shadow-warm-md transition hover:-translate-y-0.5 hover:shadow-warm-lg"
-            >
-              Start Now — It's Free
+          <div style={{ marginTop: '28px' }}>
+            <Link to="/assess" className="bit-btn-navy">
+              Start Now — It's Free <i className="ti ti-arrow-right" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ── 14 DOMAINS ── */}
-      <section className="bg-cream px-6 py-24">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-4 text-center">
-            <span className="text-xs font-bold uppercase tracking-widest text-accent">Career domains</span>
+      {/* ── 14 DOMAINS ──────────────────────────────────────────────────── */}
+      <section id="domains" style={{ padding: '60px 28px', background: '#F9F7F1', borderTop: '1px solid #E8E4D9' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ marginBottom: '18px' }}>
+            <GoldPill>Career domains</GoldPill>
           </div>
-          <h2 className="font-display mb-4 text-center text-4xl font-black text-text md:text-5xl">
-            14 paths. One right fit <span className="italic text-accent">for you.</span>
+          <SectionDivider />
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: '36px', fontWeight: 900, color: '#0F1F3D',
+            marginBottom: '10px', lineHeight: 1.15,
+          }}>
+            14 paths. One right fit{' '}
+            <em style={{ color: '#C9A84C' }}>for you.</em>
           </h2>
-          <p className="mx-auto mb-14 max-w-xl text-center text-lg text-muted">
-            Our assessment matches you to the domain that fits your natural strengths and working style, not just what is popular.
+          <p style={{ fontSize: '14px', color: '#6B6B6B', lineHeight: 1.8, maxWidth: '420px', margin: '0 auto 32px' }}>
+            The assessment matches you to the domain that fits your strengths, not just what is popular.
           </p>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="bit-domains-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', textAlign: 'left' }}>
             {DOMAINS.map((d) => (
               <Link
-                to={`/domain/${encodeURIComponent(d.name)}`}
                 key={d.name}
-                className="group cursor-pointer rounded-2xl border border-border bg-white p-5 shadow-warm-sm transition hover:-translate-y-1 hover:shadow-warm-md"
+                to={`/domain/${encodeURIComponent(d.name)}`}
+                className="bit-domain-card"
               >
-                <div
-                  className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl text-xl transition group-hover:scale-110"
-                  style={{ background: d.color + '18' }}
-                >
-                  {d.icon}
+                <div style={{
+                  width: '38px', height: '38px', borderRadius: '9px',
+                  background: d.color + '18',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px',
+                }}>
+                  <span style={{ fontSize: '18px' }}>{d.icon}</span>
                 </div>
-                <div className="text-sm font-semibold leading-snug text-text">{d.name}</div>
-                <div
-                  className="mt-2 h-0.5 w-8 rounded-full transition group-hover:w-14"
-                  style={{ background: d.color }}
-                />
-                <div className="mt-2 text-xs text-muted opacity-0 transition group-hover:opacity-100">
-                  Learn more →
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#0F1F3D', lineHeight: 1.4 }}>
+                  {d.name}
                 </div>
+                <div className="bit-domain-bar" style={{ background: d.color }} />
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
-      <section className="px-6 py-24">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-4 text-center">
-            <span className="text-xs font-bold uppercase tracking-widest text-accent">Success stories</span>
+      {/* ── TESTIMONIALS ────────────────────────────────────────────────── */}
+      <section style={{ padding: '60px 28px', background: '#ffffff' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ marginBottom: '18px' }}>
+            <GoldPill>Success stories</GoldPill>
           </div>
-          <h2 className="font-display mb-14 text-center text-4xl font-black text-text md:text-5xl">
-            Real results from <span className="italic text-accent">real people</span>
+          <SectionDivider />
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: '36px', fontWeight: 900, color: '#0F1F3D',
+            marginBottom: '36px', lineHeight: 1.15,
+          }}>
+            Real results from <em style={{ color: '#C9A84C' }}>real people</em>
           </h2>
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="bit-testimonials-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', textAlign: 'left' }}>
             {TESTIMONIALS.map((t) => (
-              <div
-                key={t.name}
-                className="flex flex-col rounded-3xl border border-border bg-white p-8 shadow-warm-sm"
-              >
-                {/* stars */}
-                <div className="mb-4 flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} width="14" height="14" viewBox="0 0 14 14" fill="#d4622a">
-                      <path d="M7 1l1.8 3.6L13 5.4l-3 2.9.7 4.1L7 10.4l-3.7 2 .7-4.1-3-2.9 4.2-.8L7 1z"/>
-                    </svg>
-                  ))}
-                </div>
-                <p className="mb-6 flex-1 text-sm leading-relaxed text-text2">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
-                    style={{ background: t.color }}
-                  >
+              <div key={t.name} className="bit-testimonial-card">
+                <StarRow />
+                <p style={{ fontSize: '13px', color: '#444444', lineHeight: 1.75, flex: 1, marginBottom: '18px' }}>
+                  "{t.text}"
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderTop: '1px solid #F0ECE0', paddingTop: '14px' }}>
+                  <div style={{
+                    width: '38px', height: '38px', borderRadius: '50%',
+                    background: t.avatarBg, color: t.avatarColor,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '12px', fontWeight: 700, flexShrink: 0,
+                    fontFamily: "'Inter', sans-serif",
+                  }}>
                     {t.avatar}
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-text">{t.name}</div>
-                    <div className="text-xs text-muted">{t.role}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0F1F3D' }}>{t.name}</div>
+                    <div style={{ fontSize: '11px', color: '#A0AEC0', marginTop: '2px' }}>{t.role}</div>
                   </div>
                 </div>
               </div>
@@ -289,112 +594,132 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── WHAT YOU GET ── */}
-      <section className="bg-cream px-6 py-24">
-        <div className="mx-auto max-w-5xl">
-          <div className="overflow-hidden rounded-3xl border border-border bg-white shadow-warm-md">
-            <div className="grid md:grid-cols-2">
-              {/* left */}
-              <div className="p-10 md:p-14">
-                <div className="mb-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-accent">What you get</span>
-                </div>
-                <h2 className="font-display mb-6 text-3xl font-black text-text md:text-4xl">
-                  Everything you need to
-                  <span className="italic text-accent"> make the switch</span>
-                </h2>
-                <div className="space-y-4">
-                  {[
-                    { icon: '🎯', title: 'Personalised career match', desc: 'AI-powered assessment across 18 dimensions' },
-                    { icon: '🗺️', title: '12-month learning roadmap', desc: 'Week by week, phase by phase, built for you' },
-                    { icon: '📬', title: 'Automatic access code', desc: 'Emailed to you instantly after assessment' },
-                    { icon: '📊', title: 'Weekly progress tracker', desc: 'Log your work and get mentor feedback' },
-                    { icon: '🤝', title: 'Direct mentor support', desc: '1-on-1 sessions with an experienced engineer' },
-                    { icon: '📚', title: 'Free course recommendations', desc: 'Curated resources, mostly free, per your domain' },
-                  ].map((item) => (
-                    <div key={item.title} className="flex gap-4">
-                      <span className="mt-0.5 flex-shrink-0 text-xl">{item.icon}</span>
-                      <div>
-                        <div className="text-sm font-semibold text-text">{item.title}</div>
-                        <div className="text-sm text-muted">{item.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+      {/* ── WHAT YOU GET ────────────────────────────────────────────────── */}
+      <section style={{ padding: '60px 28px', background: '#F9F7F1', borderTop: '1px solid #E8E4D9' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <div
+            className="bit-features-split"
+            style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr',
+              background: '#ffffff', border: '1px solid #E8E4D9',
+              borderRadius: '12px', overflow: 'hidden',
+            }}
+          >
+            {/* Left: feature list */}
+            <div style={{ padding: '36px' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <GoldPill>What you get</GoldPill>
               </div>
+              <h2 style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: '26px', fontWeight: 900,
+                color: '#0F1F3D', lineHeight: 1.2, marginBottom: '24px',
+              }}>
+                Everything you need to{' '}
+                <em style={{ color: '#C9A84C' }}>make the switch</em>
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {FEATURES.map((f) => (
+                  <div key={f.title} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                    <div style={{
+                      width: '32px', height: '32px', background: '#F5F0E0',
+                      borderRadius: '8px', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', flexShrink: 0, marginTop: '1px',
+                    }}>
+                      <i className={f.iconClass} style={{ fontSize: '15px', color: '#7A5C1E' }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#0F1F3D' }}>{f.title}</div>
+                      <div style={{ fontSize: '12px', color: '#8A8070', marginTop: '2px' }}>{f.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-              {/* right — accent panel */}
-              <div className="flex flex-col justify-center bg-accent p-10 md:p-14">
-                <div className="mb-6">
-                  <div className="font-display text-5xl font-black italic text-white/90">Free.</div>
-                  <div className="font-display text-5xl font-black italic text-white/90">Always.</div>
-                </div>
-                <p className="mb-8 text-base leading-relaxed text-white/80">
-                  This program is completely free for all mentees. No subscription. No hidden fees. Just a commitment to showing up every week.
+            {/* Right: free panel */}
+            <div style={{
+              background: '#0F1F3D', padding: '36px',
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            }}>
+              <div>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '58px', color: '#F5D87A', lineHeight: 1.05, fontStyle: 'italic' }}>Free.</div>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '58px', color: '#F5D87A', lineHeight: 1.05, fontStyle: 'italic' }}>Always.</div>
+                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.75, marginTop: '18px' }}>
+                  No subscription. No hidden fees. Just a commitment to showing up every week.
                 </p>
+              </div>
+              <div style={{ marginTop: '28px' }}>
                 <Link
                   to="/assess"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-accent shadow-warm-md transition hover:-translate-y-0.5 hover:shadow-warm-lg"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px',
+                    background: '#C9A84C', color: '#0F1F3D', border: 'none', borderRadius: '9px',
+                    padding: '14px', width: '100%', fontSize: '13px', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: "'Inter', sans-serif", textDecoration: 'none',
+                  }}
                 >
-                  Start the Assessment →
+                  Start the Assessment <i className="ti ti-arrow-right" style={{ fontSize: '13px' }} />
                 </Link>
-                <p className="mt-4 text-center text-xs text-white/60">Takes about 8 minutes</p>
+                <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '10px' }}>
+                  Takes about 8 minutes
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── FINAL CTA ── */}
-      <section className="px-6 py-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <span className="mb-4 inline-block text-xs font-bold uppercase tracking-widest text-accent">
-            Ready to start?
-          </span>
-          <h2 className="font-display mb-6 text-4xl font-black text-text md:text-5xl">
-            Your tech career is
-            <br />
-            <span className="italic text-accent">one assessment away</span>
+      {/* ── FINAL CTA ───────────────────────────────────────────────────── */}
+      <section style={{ background: '#0F1F3D', padding: '64px 28px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '520px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <GoldPill dark>Ready to start?</GoldPill>
+          </div>
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: '40px', fontWeight: 900, color: '#ffffff',
+            marginBottom: '16px', lineHeight: 1.1,
+          }}>
+            Your tech career is<br />
+            <em style={{ color: '#C9A84C' }}>one assessment away</em>
           </h2>
-          <p className="mx-auto mb-10 max-w-md text-lg leading-relaxed text-muted">
-            Find out which tech career fits your natural strengths. Get your personalised roadmap. Start building today.
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, maxWidth: '380px', margin: '0 auto 30px' }}>
+            Find out which tech career fits your strengths. Get your personalised roadmap. Start building today.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to="/assess"
-              className="inline-flex items-center gap-2 rounded-2xl bg-accent px-10 py-4 text-base font-semibold text-white shadow-warm-md transition hover:-translate-y-1 hover:shadow-warm-lg"
-            >
-              Take the Free Assessment
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+          <div className="bit-cta-row" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/assess" className="bit-btn-primary">
+              Take the Free Assessment <i className="ti ti-arrow-right" />
             </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 rounded-2xl border border-border bg-white px-8 py-4 text-base font-semibold text-text2 shadow-warm-sm transition hover:shadow-warm-md"
-            >
+            <Link to="/login" className="bit-btn-ghost-light">
               Mentee Login
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-border bg-cream px-6 py-10">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 md:flex-row">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
-              <span className="font-display text-xs font-bold italic text-white">T</span>
+      {/* ── FOOTER ──────────────────────────────────────────────────────── */}
+      <footer style={{ background: '#0A1628', padding: '22px 28px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{
+          maxWidth: '680px', margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px',
+        }}>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
+            <div style={{
+              width: '28px', height: '28px', background: '#C9A84C',
+              borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '13px', color: '#0F1F3D', fontStyle: 'italic', fontWeight: 900 }}>B</span>
             </div>
-            <span className="font-display text-sm font-semibold text-text">Tech Mentorship</span>
-          </div>
-          <p className="text-xs text-muted">
-            © 2026 Tech Mentorship Program. Empowering the next generation of tech professionals.
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '14px', fontWeight: 700, color: '#ffffff' }}>BuildInTech</span>
+          </Link>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.28)' }}>
+            © 2026 BuildInTech · Empowering the next generation of tech professionals.
           </p>
-          <div className="flex gap-4">
-            <Link to="/assess" className="text-xs text-muted transition hover:text-text">Assessment</Link>
-            <Link to="/login" className="text-xs text-muted transition hover:text-text">Login</Link>
-            <Link to="/mentor/login" className="text-xs text-muted transition hover:text-text">Mentor</Link>
+          <div style={{ display: 'flex', gap: '18px' }}>
+            <Link to="/assess" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Assessment</Link>
+            <Link to="/login"  style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Login</Link>
+            <Link to="/mentor/login" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Mentor</Link>
           </div>
         </div>
       </footer>

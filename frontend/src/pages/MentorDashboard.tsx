@@ -39,6 +39,88 @@ const DOMAIN_COLORS: Record<string, string> = {
 
 type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison'
 
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
+
+  @keyframes bit-spin { to { transform: rotate(360deg); } }
+  .bit-spin { animation: bit-spin 0.75s linear infinite; }
+
+  .bit-input {
+    width: 100%; border: 1px solid #E8E4D9; border-radius: 9px;
+    padding: 11px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
+    color: #0F1F3D; background: #fff; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box;
+  }
+  .bit-input:focus { border-color: #C9A84C; box-shadow: 0 0 0 3px rgba(201,168,76,0.14); }
+  .bit-input::placeholder { color: #B0A898; }
+  .bit-select {
+    border: 1px solid #E8E4D9; border-radius: 9px;
+    padding: 11px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
+    color: #0F1F3D; background: #fff; outline: none; cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .bit-select:focus { border-color: #C9A84C; box-shadow: 0 0 0 3px rgba(201,168,76,0.14); }
+
+  .bit-btn-gold {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #C9A84C; color: #0F1F3D; border: none; border-radius: 9px;
+    padding: 12px 22px; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .bit-btn-gold:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+  .bit-btn-gold:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .bit-btn-ghost {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff; color: #0F1F3D; border: 1px solid #E8E4D9; border-radius: 9px;
+    padding: 11px 20px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .bit-btn-ghost:hover { border-color: #C9A84C; background: #FBF7EC; }
+
+  .bit-btn-danger {
+    background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif; padding: 4px 8px; border-radius: 6px;
+    transition: background 0.12s;
+  }
+  .bit-btn-danger:hover { background: #fef2f2; }
+
+  .bit-tab {
+    padding: 11px 18px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+    border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent;
+    color: #8A8070; transition: color 0.15s, border-color 0.15s;
+  }
+  .bit-tab:hover { color: #0F1F3D; }
+  .bit-tab.active { color: #C9A84C; border-bottom-color: #C9A84C; }
+
+  .bit-table th {
+    padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em; color: #8A8070;
+    border-bottom: 1px solid #E8E4D9; white-space: nowrap;
+  }
+  .bit-table td {
+    padding: 13px 16px; font-size: 13px; color: #0F1F3D; border-bottom: 1px solid #F0EBD8;
+  }
+  .bit-table tr:last-child td { border-bottom: none; }
+  .bit-table tr:hover td { background: #FBF7EC; }
+
+  .bit-domain-select {
+    border: 1px solid #E8E4D9; border-radius: 6px;
+    padding: 5px 8px; font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif;
+    background: #fff; outline: none; cursor: pointer; max-width: 160px;
+    transition: border-color 0.15s;
+  }
+  .bit-domain-select:focus { border-color: #C9A84C; }
+
+  @media (max-width: 768px) {
+    .bit-stats-grid { grid-template-columns: 1fr 1fr !important; }
+    .bit-table-wrap { overflow-x: auto; }
+    .bit-header-row { flex-direction: column !important; align-items: flex-start !important; }
+  }
+`
+
 export function MentorDashboard() {
   const { user } = useAuthStore()
   const [tab, setTab] = useState<Tab>('mentees')
@@ -96,97 +178,126 @@ export function MentorDashboard() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-ivory">
-      <div className="mx-auto max-w-6xl px-4 py-12">
+  const tabs: { id: Tab; label: string; icon: string }[] = [
+    { id: 'mentees',     label: 'All Mentees',      icon: 'ti ti-users' },
+    { id: 'submissions', label: 'Submissions',       icon: 'ti ti-clipboard-list' },
+    { id: 'codes',       label: 'Access Codes',      icon: 'ti ti-key' },
+    { id: 'add',         label: 'Add Mentee',        icon: 'ti ti-user-plus' },
+    { id: 'liaison',     label: 'Liaison Officers',  icon: 'ti ti-shield' },
+  ]
 
-        {/* header */}
-        <div className="mb-10 flex flex-wrap items-start justify-between gap-4">
+  return (
+    <div style={{ minHeight: '100vh', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", color: '#0F1F3D' }}>
+      <style>{CSS}</style>
+
+      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '40px 28px 72px' }}>
+
+        {/* ── HEADER ─────────────────────────────────────────────────────── */}
+        <div className="bit-header-row" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 32, flexWrap: 'wrap' }}>
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-purple-600">
-              Mentor Dashboard
+            <div style={{ marginBottom: 12 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)',
+                borderRadius: 999, padding: '5px 14px',
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.07em',
+                textTransform: 'uppercase', color: '#F5D87A',
+                backgroundColor: '#0F1F3D',
+              }}>
+                <i className="ti ti-chart-dots" style={{ fontSize: 12 }} />
+                Mentor Dashboard
+              </span>
             </div>
-            <h1 className="font-display text-4xl font-black text-text">
+            <h1 style={{
+              fontFamily: "'Playfair Display', serif", fontSize: 34,
+              fontWeight: 900, color: '#0F1F3D', lineHeight: 1.15, marginBottom: 6,
+            }}>
               Program Overview
             </h1>
-            <p className="mt-2 text-muted">Welcome back, {user?.name}</p>
+            <p style={{ fontSize: 14, color: '#6B6B6B' }}>Welcome back, {user?.name}</p>
           </div>
-          <button
-            onClick={() => setTab('add')}
-            className="rounded-2xl border border-border bg-white px-5 py-2.5 text-sm font-semibold text-text shadow-warm-sm transition hover:shadow-warm-md"
-          >
-            + Add Mentee
+
+          <button onClick={() => setTab('add')} className="bit-btn-gold">
+            <i className="ti ti-user-plus" style={{ fontSize: 14 }} />
+            Add Mentee
           </button>
         </div>
 
-        {/* stats */}
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+        {/* ── STATS ──────────────────────────────────────────────────────── */}
+        <div
+          className="bit-stats-grid"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}
+        >
           {[
-            { label: 'Total Mentees', value: stats?.totalMentees || 0, color: '#5b4fcf' },
-            { label: 'Submissions This Week', value: stats?.submissionsThisWeek || 0, color: '#1a7a6e' },
-            { label: 'Engagement Rate', value: `${stats?.engagementRate || 0}%`, color: '#d4622a' },
-            { label: 'At Risk', value: stats?.atRisk || 0, color: '#ef4444' },
+            { label: 'Total Mentees',          value: stats?.totalMentees || 0,         icon: 'ti ti-users',          color: '#C9A84C' },
+            { label: 'Submissions This Week',   value: stats?.submissionsThisWeek || 0,  icon: 'ti ti-clipboard-check', color: '#1D4A6E' },
+            { label: 'Engagement Rate',         value: `${stats?.engagementRate || 0}%`, icon: 'ti ti-chart-bar',       color: '#C9A84C' },
+            { label: 'At Risk',                 value: stats?.atRisk || 0,               icon: 'ti ti-alert-triangle',  color: '#ef4444' },
           ].map(stat => (
-            <div key={stat.label} className="rounded-2xl border border-border bg-white p-5 shadow-warm-sm">
-              <div className="font-mono text-3xl font-semibold" style={{ color: stat.color }}>
+            <div key={stat.label} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '18px 20px' }}>
+              <i className={stat.icon} style={{ fontSize: 18, color: stat.color, display: 'block', marginBottom: 10 }} />
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 900, color: stat.color, lineHeight: 1 }}>
                 {stat.value}
               </div>
-              <div className="mt-1 text-xs font-semibold uppercase tracking-widest text-muted">
+              <div style={{ fontSize: 11, color: '#8A8070', marginTop: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 {stat.label}
               </div>
             </div>
           ))}
         </div>
 
-        {/* at risk banner */}
+        {/* ── AT RISK BANNER ─────────────────────────────────────────────── */}
         {stats?.atRisk > 0 && (
-          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-6 py-4">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">⚠️</span>
-              <div>
-                <p className="text-sm font-semibold text-red-700">
-                  {stats.atRisk} mentee{stats.atRisk > 1 ? 's are' : ' is'} 2+ weeks behind
-                </p>
-                <p className="text-xs text-red-600">Consider sending them a personal check-in message.</p>
-              </div>
+          <div style={{
+            marginBottom: 20, background: '#fff5f5', border: '1px solid #fecaca',
+            borderRadius: 12, padding: '14px 20px',
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            <i className="ti ti-alert-triangle" style={{ fontSize: 18, color: '#ef4444', flexShrink: 0 }} />
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#b91c1c', marginBottom: 2 }}>
+                {stats.atRisk} mentee{stats.atRisk > 1 ? 's are' : ' is'} 2+ weeks behind
+              </p>
+              <p style={{ fontSize: 12, color: '#dc2626' }}>Consider sending them a personal check-in message.</p>
             </div>
           </div>
         )}
 
-        {/* tabs */}
-        <div className="mb-6 flex gap-1 border-b border-border">
-          {([
-            { id: 'mentees', label: 'All Mentees' },
-            { id: 'submissions', label: 'Submissions' },
-            { id: 'codes', label: 'Access Codes' },
-            { id: 'add', label: '+ Add Mentee' },
-            { id: 'liaison', label: 'Liaison Officers' },
-          ] as { id: Tab; label: string }[]).map(t => (
+        {/* ── TABS ───────────────────────────────────────────────────────── */}
+        <div style={{ display: 'flex', borderBottom: '1px solid #E8E4D9', marginBottom: 24, gap: 2, overflowX: 'auto' }}>
+          {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`border-b-2 px-5 py-3 text-sm font-medium transition ${tab === t.id ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-text'}`}
+              className={`bit-tab${tab === t.id ? ' active' : ''}`}
             >
+              <i className={t.icon} style={{ fontSize: 13, marginRight: 6 }} />
               {t.label}
             </button>
           ))}
         </div>
 
-        {/* TAB: ALL MENTEES */}
+        {/* ── TAB: ALL MENTEES ───────────────────────────────────────────── */}
         {tab === 'mentees' && (
           <div>
-            <div className="mb-4 flex flex-wrap gap-3">
-              <input
-                type="text"
-                placeholder="Search by name or email..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-64 rounded-xl border border-border bg-white px-4 py-2.5 text-sm text-text shadow-warm-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
-              />
+            {/* Search / filter */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+              <div style={{ position: 'relative' }}>
+                <i className="ti ti-search" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#8A8070' }} />
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="bit-input"
+                  style={{ paddingLeft: 36, width: 240 }}
+                />
+              </div>
               <select
                 value={domainFilter}
                 onChange={e => setDomainFilter(e.target.value)}
-                className="rounded-xl border border-border bg-white px-4 py-2.5 text-sm text-text shadow-warm-sm outline-none focus:border-accent"
+                className="bit-select"
+                style={{ width: 'auto' }}
               >
                 <option value="">All domains</option>
                 {DOMAINS.map(d => <option key={d}>{d}</option>)}
@@ -194,31 +305,32 @@ export function MentorDashboard() {
             </div>
 
             {menteesLoading ? (
-              <div className="py-12 text-center text-muted">Loading mentees...</div>
+              <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+                <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 24, color: '#C9A84C', display: 'block', margin: '0 auto 10px' }} />
+                Loading mentees...
+              </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-warm-sm">
-                <table className="w-full">
+              <div className="bit-table-wrap" style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, overflow: 'hidden' }}>
+                <table className="bit-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr className="border-b border-border">
+                    <tr>
                       {['Mentee', 'Domain', 'Week', 'Submissions', 'Progress', 'Status', 'Assign', 'Remove'].map(h => (
-                        <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-muted">
-                          {h}
-                        </th>
+                        <th key={h}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredMentees.map((m: any) => {
-                      const color = DOMAIN_COLORS[m.domainTrack] || '#d4622a'
+                      const color = DOMAIN_COLORS[m.domainTrack] || '#C9A84C'
                       const pct = Math.round((m.submissionsCount / 48) * 100)
                       const isAtRisk = m.currentWeek - m.submissionsCount >= 2
                       return (
-                        <tr key={m.id} className="border-b border-border/50 transition hover:bg-cream/30">
-                          <td className="px-4 py-3.5">
-                            <div className="text-sm font-semibold text-text">{m.name}</div>
-                            <div className="font-mono text-xs text-muted">{m.accessCode}</div>
+                        <tr key={m.id}>
+                          <td>
+                            <div style={{ fontWeight: 600, fontSize: 13, color: '#0F1F3D' }}>{m.name}</div>
+                            <div style={{ fontSize: 11, color: '#8A8070', fontFamily: 'monospace', marginTop: 2 }}>{m.accessCode}</div>
                           </td>
-                          <td className="px-4 py-3.5">
+                          <td>
                             <select
                               value={m.domainTrack}
                               onChange={async (e) => {
@@ -230,36 +342,38 @@ export function MentorDashboard() {
                                   toast.error('Failed to update track')
                                 }
                               }}
-                              className="rounded-lg border border-border bg-white px-2 py-1 text-xs font-semibold outline-none focus:border-accent"
+                              className="bit-domain-select"
                               style={{ color }}
                             >
-                              {DOMAINS.map(d => (
-                                <option key={d} value={d}>{d}</option>
-                              ))}
+                              {DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
                             </select>
                           </td>
-                          <td className="px-4 py-3.5">
-                            <span className="font-mono text-sm text-text2">W{m.currentWeek}/48</span>
+                          <td style={{ color: '#6B6B6B', fontFamily: 'monospace', fontSize: 12 }}>
+                            W{m.currentWeek}/48
                           </td>
-                          <td className="px-4 py-3.5">
-                            <span className="font-mono text-sm text-text2">{m.submissionsCount}</span>
+                          <td style={{ color: '#6B6B6B', fontFamily: 'monospace', fontSize: 12 }}>
+                            {m.submissionsCount}
                           </td>
-                          <td className="px-4 py-3.5">
-                            <div className="flex items-center gap-2">
-                              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-warm">
-                                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ height: 5, width: 80, borderRadius: 99, background: '#F0EBD8', overflow: 'hidden', flexShrink: 0 }}>
+                                <div style={{ height: '100%', borderRadius: 99, background: color, width: `${pct}%` }} />
                               </div>
-                              <span className="font-mono text-xs text-muted">{pct}%</span>
+                              <span style={{ fontSize: 11, color: '#8A8070', fontFamily: 'monospace' }}>{pct}%</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3.5">
+                          <td>
                             {isAtRisk ? (
-                              <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600">At Risk</span>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#fff5f5', border: '1px solid #fecaca', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#b91c1c' }}>
+                                <i className="ti ti-alert-triangle" style={{ fontSize: 10 }} /> At Risk
+                              </span>
                             ) : (
-                              <span className="rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">Active</span>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#15803d' }}>
+                                <i className="ti ti-circle-check" style={{ fontSize: 10 }} /> Active
+                              </span>
                             )}
                           </td>
-                          <td className="px-4 py-3.5">
+                          <td>
                             <select
                               defaultValue={m.liaisonOfficerId || ''}
                               onChange={async (e) => {
@@ -271,7 +385,8 @@ export function MentorDashboard() {
                                   toast.error('Failed to assign mentee')
                                 }
                               }}
-                              className="rounded-lg border border-border bg-white px-2 py-1 text-xs outline-none focus:border-accent"
+                              className="bit-domain-select"
+                              style={{ color: '#0F1F3D' }}
                             >
                               <option value="">Unassigned</option>
                               {officers.map((o: any) => (
@@ -279,7 +394,7 @@ export function MentorDashboard() {
                               ))}
                             </select>
                           </td>
-                          <td className="px-4 py-3.5">
+                          <td>
                             <button
                               onClick={async () => {
                                 if (!confirm(`Remove ${m.name} from the program?`)) return
@@ -291,7 +406,7 @@ export function MentorDashboard() {
                                   toast.error('Failed to remove mentee')
                                 }
                               }}
-                              className="text-xs text-red-500 hover:text-red-700 font-medium"
+                              className="bit-btn-danger"
                             >
                               Remove
                             </button>
@@ -302,62 +417,99 @@ export function MentorDashboard() {
                   </tbody>
                 </table>
                 {filteredMentees.length === 0 && (
-                  <div className="py-12 text-center text-muted">No mentees found.</div>
+                  <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+                    <i className="ti ti-users-minus" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
+                    No mentees found.
+                  </div>
                 )}
               </div>
             )}
           </div>
         )}
 
-        {/* TAB: SUBMISSIONS */}
+        {/* ── TAB: SUBMISSIONS ───────────────────────────────────────────── */}
         {tab === 'submissions' && (
-          <div className="space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {subsLoading ? (
-              <div className="py-12 text-center text-muted">Loading submissions...</div>
+              <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070' }}>
+                <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 24, color: '#C9A84C', display: 'block', margin: '0 auto 10px' }} />
+                Loading submissions...
+              </div>
             ) : submissions?.length === 0 ? (
-              <div className="py-12 text-center text-muted">No submissions yet.</div>
+              <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+                <i className="ti ti-clipboard" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
+                No submissions yet.
+              </div>
             ) : submissions?.map((s: any) => {
-              const color = DOMAIN_COLORS[s.mentee?.domainTrack] || '#d4622a'
+              const color = DOMAIN_COLORS[s.mentee?.domainTrack] || '#C9A84C'
               return (
-                <div key={s.id} className="rounded-2xl border border-border bg-white p-6 shadow-warm-sm">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-sm font-bold text-text">{s.mentee?.name}</span>
-                      <span className="rounded-full border px-2.5 py-1 text-xs font-semibold" style={{ background: color + '15', borderColor: color + '30', color }}>
+                <div key={s.id} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '20px 22px' }}>
+                  {/* Submission header */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#0F1F3D' }}>{s.mentee?.name}</span>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        background: color + '14', border: `1px solid ${color}30`,
+                        borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color,
+                      }}>
                         {s.mentee?.domainTrack}
                       </span>
-                      <span className="text-sm font-semibold" style={{ color }}>Week {s.weekNumber}</span>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        background: '#FBF7EC', border: '1px solid #DFC97A',
+                        borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700, color: '#7A5C1E',
+                      }}>
+                        Week {s.weekNumber}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted">
+                    <span style={{ fontSize: 11, color: '#8A8070' }}>
                       {new Date(s.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                  <div className="mb-3 rounded-xl bg-ivory p-4">
-                    <p className="mb-1 text-xs font-bold uppercase tracking-widest text-muted">What they learned</p>
-                    <p className="text-sm leading-relaxed text-text2">{s.summary}</p>
+
+                  {/* Learned */}
+                  <div style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 9, padding: '12px 16px', marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 5 }}>
+                      What they learned
+                    </div>
+                    <p style={{ fontSize: 13, lineHeight: 1.7, color: '#3A3A3A' }}>{s.summary}</p>
                   </div>
-                  <div className="mb-3 rounded-xl bg-ivory p-4">
-                    <p className="mb-1 text-xs font-bold uppercase tracking-widest text-muted">What they built</p>
-                    <p className="text-sm leading-relaxed text-text2">{s.workDone}</p>
+
+                  {/* Built */}
+                  <div style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 9, padding: '12px 16px', marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 5 }}>
+                      What they built
+                    </div>
+                    <p style={{ fontSize: 13, lineHeight: 1.7, color: '#3A3A3A' }}>{s.workDone}</p>
                   </div>
+
                   {s.link && (
-                    <div className="mb-3">
-                      <a href={s.link} target="_blank" rel="noopener noreferrer" className="text-sm text-accent underline transition hover:text-accent/70">
-                        {s.link}
+                    <div style={{ marginBottom: 10 }}>
+                      <a
+                        href={s.link} target="_blank" rel="noopener noreferrer"
+                        style={{ fontSize: 13, color: '#C9A84C', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                      >
+                        <i className="ti ti-external-link" style={{ fontSize: 12 }} /> {s.link}
                       </a>
                     </div>
                   )}
+
                   {s.mentorFeedback ? (
-                    <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-                      <p className="mb-1 text-xs font-bold uppercase tracking-widest text-green-700">✓ Feedback sent</p>
-                      <p className="text-sm text-text2">{s.mentorFeedback}</p>
+                    <div style={{ background: 'rgba(29,74,110,0.06)', border: '1px solid rgba(29,74,110,0.15)', borderRadius: 9, padding: '12px 16px' }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1D4A6E', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <i className="ti ti-circle-check" style={{ fontSize: 11 }} /> Feedback sent
+                      </div>
+                      <p style={{ fontSize: 13, color: '#3A3A3A', lineHeight: 1.7 }}>{s.mentorFeedback}</p>
                     </div>
                   ) : (
                     <button
                       onClick={() => { setFeedbackModal({ id: s.id, week: s.weekNumber, name: s.mentee?.name, summary: s.summary }); setFeedbackText('') }}
-                      className="rounded-xl border border-border bg-ivory px-4 py-2 text-xs font-semibold text-text2 shadow-warm-sm transition hover:shadow-warm-md"
+                      className="bit-btn-ghost"
+                      style={{ fontSize: 12 }}
                     >
-                      + Add Feedback
+                      <i className="ti ti-message-plus" style={{ fontSize: 13 }} />
+                      Add Feedback
                     </button>
                   )}
                 </div>
@@ -366,133 +518,186 @@ export function MentorDashboard() {
           </div>
         )}
 
-        {/* TAB: ACCESS CODES */}
+        {/* ── TAB: ACCESS CODES ──────────────────────────────────────────── */}
         {tab === 'codes' && (
           <div>
-            <p className="mb-4 text-sm text-muted">
+            <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 16 }}>
               Share each code privately with the corresponding mentee. They enter it on the login screen.
             </p>
-            <div className="space-y-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {(codes || []).map((m: any) => {
-                const color = DOMAIN_COLORS[m.domainTrack] || '#d4622a'
+                const color = DOMAIN_COLORS[m.domainTrack] || '#C9A84C'
                 return (
-                  <div key={m.id} className="flex items-center justify-between rounded-2xl border border-border bg-white p-5 shadow-warm-sm">
+                  <div key={m.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '16px 20px', gap: 16
+                  }}>
                     <div>
-                      <div className="font-mono text-lg font-semibold text-purple-600">{m.accessCode}</div>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
-                        <span className="font-semibold text-text2">{m.name}</span>
-                        <span>·</span>
+                      <div style={{ fontFamily: 'monospace', fontSize: 18, fontWeight: 700, color: '#0F1F3D', letterSpacing: '0.12em', marginBottom: 6 }}>
+                        {m.accessCode}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                        <span style={{ fontWeight: 600, color: '#0F1F3D' }}>{m.name}</span>
+                        <span style={{ color: '#C8C0B4' }}>·</span>
                         <span style={{ color }}>{m.domainTrack}</span>
-                        <span>·</span>
-                        <span>{m.email}</span>
+                        <span style={{ color: '#C8C0B4' }}>·</span>
+                        <span style={{ color: '#8A8070' }}>{m.email}</span>
                       </div>
                     </div>
                     <button
                       onClick={() => { navigator.clipboard.writeText(m.accessCode); toast.success('Code copied') }}
-                      className="rounded-xl border border-border bg-ivory px-4 py-2 text-xs font-semibold text-text2 shadow-warm-sm transition hover:shadow-warm-md"
+                      className="bit-btn-ghost"
+                      style={{ flexShrink: 0, fontSize: 12 }}
                     >
+                      <i className="ti ti-copy" style={{ fontSize: 13 }} />
                       Copy
                     </button>
                   </div>
                 )
               })}
+              {(!codes || codes.length === 0) && (
+                <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+                  <i className="ti ti-key" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
+                  No access codes yet.
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* TAB: ADD MENTEE */}
+        {/* ── TAB: ADD MENTEE ────────────────────────────────────────────── */}
         {tab === 'add' && (
-          <div className="mx-auto max-w-md">
-            <h2 className="font-display mb-2 text-2xl font-bold text-text">Add New Mentee</h2>
-            <p className="mb-6 text-sm text-muted">
+          <div style={{ maxWidth: 480, margin: '0 auto' }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 900, color: '#0F1F3D', marginBottom: 6 }}>
+              Add New Mentee
+            </h2>
+            <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 24 }}>
               An access code is generated automatically and the welcome email is sent immediately.
             </p>
-            <div className="rounded-2xl border border-border bg-white p-8 shadow-warm-md">
-              <div className="space-y-5">
+            <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 14, padding: '28px 28px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-muted">Full Name</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 7 }}>
+                    Full Name
+                  </label>
                   <input
                     type="text"
                     value={addForm.name}
                     onChange={e => setAddForm(p => ({ ...p, name: e.target.value }))}
                     placeholder="e.g. Amara Johnson"
-                    className="w-full rounded-xl border border-border bg-ivory px-4 py-3 text-sm text-text shadow-warm-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
+                    className="bit-input"
                   />
                 </div>
+
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-muted">Email</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 7 }}>
+                    Email
+                  </label>
                   <input
                     type="email"
                     value={addForm.email}
                     onChange={e => setAddForm(p => ({ ...p, email: e.target.value }))}
                     placeholder="e.g. amara@email.com"
-                    className="w-full rounded-xl border border-border bg-ivory px-4 py-3 text-sm text-text shadow-warm-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/15"
+                    className="bit-input"
                   />
                 </div>
+
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-muted">Domain Track</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 7 }}>
+                    Domain Track
+                  </label>
                   <select
                     value={addForm.domain}
                     onChange={e => setAddForm(p => ({ ...p, domain: e.target.value }))}
-                    className="w-full rounded-xl border border-border bg-ivory px-4 py-3 text-sm text-text shadow-warm-sm outline-none focus:border-accent"
+                    className="bit-select"
+                    style={{ width: '100%' }}
                   >
                     <option value="">Select a domain</option>
                     {DOMAINS.map(d => <option key={d}>{d}</option>)}
                   </select>
                 </div>
+
                 <button
                   onClick={handleCreateMentee}
                   disabled={createMentee.isPending}
-                  className="w-full rounded-2xl bg-accent py-3.5 text-sm font-semibold text-white shadow-warm-md transition hover:-translate-y-0.5 hover:shadow-warm-lg disabled:opacity-40"
+                  className="bit-btn-gold"
+                  style={{ justifyContent: 'center', width: '100%', paddingTop: 14, paddingBottom: 14, fontSize: 14 }}
                 >
-                  {createMentee.isPending ? 'Adding...' : 'Generate Code and Send Welcome Email →'}
+                  {createMentee.isPending ? (
+                    <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 15 }} /> Adding...</>
+                  ) : (
+                    <><i className="ti ti-send" style={{ fontSize: 15 }} /> Generate Code &amp; Send Welcome Email</>
+                  )}
                 </button>
+
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB: LIAISON OFFICERS */}
+        {/* ── TAB: LIAISON OFFICERS ──────────────────────────────────────── */}
         {tab === 'liaison' && <LiaisonOfficersTab onOfficersChange={setOfficers} />}
 
       </div>
 
-      {/* FEEDBACK MODAL */}
+      {/* ── FEEDBACK MODAL ─────────────────────────────────────────────── */}
       {feedbackModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(15,31,61,0.55)', backdropFilter: 'blur(4px)', padding: 24,
+          }}
           onClick={e => { if (e.target === e.currentTarget) { setFeedbackModal(null); setFeedbackText('') } }}
         >
-          <div className="w-full max-w-lg rounded-3xl border border-border bg-white p-8 shadow-warm-lg">
-            <h2 className="font-display mb-1 text-xl font-bold text-text">Add Feedback</h2>
-            <p className="mb-4 text-sm text-muted">
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '28px 28px',
+            width: '100%', maxWidth: 520, boxShadow: '0 20px 60px rgba(15,31,61,0.18)',
+            fontFamily: "'Inter', sans-serif",
+          }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900, color: '#0F1F3D', marginBottom: 4 }}>
+              Add Feedback
+            </h2>
+            <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 16 }}>
               {feedbackModal.name} — Week {feedbackModal.week}
             </p>
-            <div className="mb-4 rounded-xl bg-ivory p-4">
-              <p className="mb-1 text-xs font-bold uppercase tracking-widest text-muted">Their summary</p>
-              <p className="text-sm text-text2 line-clamp-3">{feedbackModal.summary}</p>
+
+            <div style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 9, padding: '12px 16px', marginBottom: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 5 }}>Their summary</div>
+              <p style={{ fontSize: 13, color: '#3A3A3A', lineHeight: 1.7 }}>{feedbackModal.summary}</p>
             </div>
-            <div className="mb-5">
-              <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-muted">Your Feedback</label>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 7 }}>
+                Your Feedback
+              </label>
               <textarea
                 value={feedbackText}
                 onChange={e => setFeedbackText(e.target.value)}
                 placeholder="Be specific and encouraging. What did they do well? What should they focus on next week?"
                 rows={4}
-                className="w-full resize-none rounded-xl border border-border bg-ivory px-4 py-3 text-sm text-text outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+                className="bit-input"
+                style={{ resize: 'none' }}
               />
             </div>
-            <div className="flex gap-3">
+
+            <div style={{ display: 'flex', gap: 10 }}>
               <button
                 onClick={handleAddFeedback}
                 disabled={addFeedback.isPending}
-                className="flex-1 rounded-2xl bg-accent py-3 text-sm font-semibold text-white shadow-warm-md transition hover:-translate-y-0.5 disabled:opacity-40"
+                className="bit-btn-gold"
+                style={{ flex: 1, justifyContent: 'center', fontSize: 14 }}
               >
-                {addFeedback.isPending ? 'Sending...' : 'Send Feedback →'}
+                {addFeedback.isPending ? (
+                  <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} /> Sending...</>
+                ) : (
+                  <><i className="ti ti-send" style={{ fontSize: 14 }} /> Send Feedback</>
+                )}
               </button>
               <button
                 onClick={() => { setFeedbackModal(null); setFeedbackText('') }}
-                className="rounded-2xl border border-border bg-ivory px-5 py-3 text-sm font-semibold text-text2 shadow-warm-sm transition hover:shadow-warm-md"
+                className="bit-btn-ghost"
               >
                 Cancel
               </button>
@@ -538,53 +743,66 @@ function LiaisonOfficersTab({ onOfficersChange }: { onOfficersChange: (officers:
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-border p-6 shadow-warm-sm">
-        <h3 className="font-semibold text-text mb-1">Add Liaison Officer</h3>
-        <p className="text-sm text-muted mb-4">Liaison officers manage a group of mentees and receive weekly reports every Monday.</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Create form */}
+      <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 14, padding: '22px 24px' }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0F1F3D', marginBottom: 4 }}>Add Liaison Officer</h3>
+        <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 16 }}>
+          Liaison officers manage a group of mentees and receive weekly reports every Monday.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 12 }}>
           <input
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="Full name"
-            className="rounded-xl border border-border bg-ivory px-4 py-2.5 text-sm text-text outline-none focus:border-accent"
+            className="bit-input"
           />
           <input
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="Email address"
-            className="rounded-xl border border-border bg-ivory px-4 py-2.5 text-sm text-text outline-none focus:border-accent"
+            className="bit-input"
           />
           <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="Password"
-            className="rounded-xl border border-border bg-ivory px-4 py-2.5 text-sm text-text outline-none focus:border-accent"
+            className="bit-input"
           />
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-        <button
-          onClick={create}
-          disabled={loading}
-          className="mt-4 bg-accent text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-accent/90 disabled:opacity-50 transition"
-        >
-          {loading ? 'Creating...' : 'Create Officer'}
+        {error && (
+          <p style={{ fontSize: 12, color: '#ef4444', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <i className="ti ti-alert-circle" style={{ fontSize: 12 }} /> {error}
+          </p>
+        )}
+        <button onClick={create} disabled={loading} className="bit-btn-gold">
+          {loading ? (
+            <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 13 }} /> Creating...</>
+          ) : (
+            <><i className="ti ti-shield-plus" style={{ fontSize: 13 }} /> Create Officer</>
+          )}
         </button>
       </div>
 
-      <div className="space-y-3">
+      {/* Officers list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {officers.map(o => (
-          <div key={o.id} className="bg-white rounded-2xl border border-border p-5 flex items-center justify-between shadow-warm-sm">
+          <div key={o.id} style={{
+            background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '18px 22px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap',
+          }}>
             <div>
-              <p className="font-semibold text-text">{o.name}</p>
-              <p className="text-sm text-muted">{o.email}</p>
-              <p className="text-xs text-muted mt-1">Logs in at buildintech.xyz/liaison/login</p>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1F3D', marginBottom: 3 }}>{o.name}</div>
+              <div style={{ fontSize: 12, color: '#6B6B6B', marginBottom: 2 }}>{o.email}</div>
+              <div style={{ fontSize: 11, color: '#8A8070' }}>Logs in at buildintech.xyz/liaison/login</div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-3xl font-bold text-text">{o.menteeCount}</p>
-                <p className="text-xs text-muted">mentees assigned</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 900, color: '#C9A84C', lineHeight: 1 }}>
+                  {o.menteeCount}
+                </div>
+                <div style={{ fontSize: 11, color: '#8A8070', marginTop: 2 }}>mentees</div>
               </div>
               <button
                 onClick={async () => {
@@ -599,7 +817,7 @@ function LiaisonOfficersTab({ onOfficersChange }: { onOfficersChange: (officers:
                     toast.error('Failed to remove officer')
                   }
                 }}
-                className="text-xs text-red-500 hover:text-red-700 font-medium"
+                className="bit-btn-danger"
               >
                 Remove
               </button>
@@ -607,7 +825,8 @@ function LiaisonOfficersTab({ onOfficersChange }: { onOfficersChange: (officers:
           </div>
         ))}
         {officers.length === 0 && (
-          <div className="py-12 text-center text-muted text-sm">
+          <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+            <i className="ti ti-shield" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
             No liaison officers yet. Add one above.
           </div>
         )}
