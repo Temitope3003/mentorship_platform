@@ -166,150 +166,116 @@ export function LandingPage() {
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: '#ffffff', color: '#0F1F3D', overflowX: 'hidden' }}>
 
-      {/* Google Fonts — load once at top of component render */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
 
+        /* ── Nav links ─────────────────────────────────────────────── */
         .bit-nav-link {
-          font-size: 13px;
-          color: rgba(255,255,255,0.6);
-          padding: 8px 14px;
-          cursor: pointer;
-          text-decoration: none;
-          transition: color 0.15s;
+          font-size: 13px; color: rgba(255,255,255,0.6);
+          padding: 8px 14px; cursor: pointer;
+          text-decoration: none; transition: color 0.15s;
         }
         .bit-nav-link:hover { color: #ffffff; }
 
-        .bit-domain-card {
-          background: #ffffff;
-          border: 1px solid #E8E4D9;
-          border-radius: 12px;
-          padding: 16px;
-          cursor: pointer;
-          transition: transform 0.15s, box-shadow 0.15s;
-          text-decoration: none;
-          display: block;
-        }
-        .bit-domain-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(15,31,61,0.08);
-        }
-        .bit-domain-card:hover .bit-domain-bar {
-          width: 36px;
-        }
-
-        .bit-domain-bar {
-          height: 2px;
-          width: 20px;
-          border-radius: 2px;
-          background: #C9A84C;
-          margin-top: 8px;
-          transition: width 0.2s;
-        }
-
-        .bit-step-card {
-          background: #ffffff;
-          border: 1px solid #E8E4D9;
-          border-radius: 12px;
-          padding: 26px;
-        }
-
-        .bit-testimonial-card {
-          background: #ffffff;
-          border: 1px solid #E8E4D9;
-          border-radius: 12px;
-          padding: 24px;
-          display: flex;
-          flex-direction: column;
-        }
-
+        /* ── Buttons ───────────────────────────────────────────────── */
         .bit-btn-primary {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: #C9A84C;
-          color: #0F1F3D;
-          border: none;
-          border-radius: 9px;
-          padding: 14px 28px;
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          font-family: 'Inter', sans-serif;
-          text-decoration: none;
+          display: inline-flex; align-items: center; gap: 8px;
+          background: #C9A84C; color: #0F1F3D; border: none; border-radius: 9px;
+          padding: 14px 28px; font-size: 14px; font-weight: 700; cursor: pointer;
+          font-family: 'Inter', sans-serif; text-decoration: none;
           transition: opacity 0.15s, transform 0.15s;
         }
         .bit-btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
 
         .bit-btn-navy {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: #0F1F3D;
-          color: #F5D87A;
-          border: none;
-          border-radius: 9px;
-          padding: 14px 28px;
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          font-family: 'Inter', sans-serif;
-          text-decoration: none;
+          display: inline-flex; align-items: center; gap: 8px;
+          background: #0F1F3D; color: #F5D87A; border: none; border-radius: 9px;
+          padding: 14px 28px; font-size: 14px; font-weight: 700; cursor: pointer;
+          font-family: 'Inter', sans-serif; text-decoration: none;
           transition: opacity 0.15s, transform 0.15s;
         }
         .bit-btn-navy:hover { opacity: 0.9; transform: translateY(-1px); }
 
         .bit-btn-ghost-dark {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: transparent;
-          color: rgba(255,255,255,0.65);
-          border: 1.5px solid rgba(255,255,255,0.22);
-          border-radius: 9px;
-          padding: 14px 24px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          font-family: 'Inter', sans-serif;
-          text-decoration: none;
+          display: inline-flex; align-items: center; gap: 8px;
+          background: transparent; color: rgba(255,255,255,0.65);
+          border: 1.5px solid rgba(255,255,255,0.22); border-radius: 9px;
+          padding: 14px 24px; font-size: 14px; font-weight: 500; cursor: pointer;
+          font-family: 'Inter', sans-serif; text-decoration: none;
           transition: border-color 0.15s, color 0.15s;
         }
-        .bit-btn-ghost-dark:hover {
-          border-color: rgba(255,255,255,0.45);
-          color: #ffffff;
-        }
+        .bit-btn-ghost-dark:hover { border-color: rgba(255,255,255,0.45); color: #ffffff; }
 
         .bit-btn-ghost-light {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: transparent;
-          color: rgba(255,255,255,0.65);
-          border: 1.5px solid rgba(255,255,255,0.2);
-          border-radius: 9px;
-          padding: 14px 22px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          font-family: 'Inter', sans-serif;
-          text-decoration: none;
+          display: inline-flex; align-items: center; gap: 8px;
+          background: transparent; color: rgba(255,255,255,0.65);
+          border: 1.5px solid rgba(255,255,255,0.2); border-radius: 9px;
+          padding: 14px 22px; font-size: 14px; font-weight: 500; cursor: pointer;
+          font-family: 'Inter', sans-serif; text-decoration: none;
           transition: border-color 0.15s, color 0.15s;
         }
-        .bit-btn-ghost-light:hover {
-          border-color: rgba(255,255,255,0.45);
-          color: #ffffff;
+        .bit-btn-ghost-light:hover { border-color: rgba(255,255,255,0.45); color: #ffffff; }
+
+        /* ── Cards ─────────────────────────────────────────────────── */
+        .bit-domain-card {
+          background: #ffffff; border: 1px solid #E8E4D9; border-radius: 12px;
+          padding: 16px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+          text-decoration: none; display: block;
+        }
+        .bit-domain-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(15,31,61,0.08); }
+        .bit-domain-card:hover .bit-domain-bar { width: 36px; }
+
+        .bit-domain-bar { height: 2px; width: 20px; border-radius: 2px; background: #C9A84C; margin-top: 8px; transition: width 0.2s; }
+        .bit-step-card { background: #ffffff; border: 1px solid #E8E4D9; border-radius: 12px; padding: 26px; }
+        .bit-testimonial-card { background: #ffffff; border: 1px solid #E8E4D9; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; }
+
+        /* ── Desktop grid defaults ─────────────────────────────────── */
+        .bit-hero-layout   { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 64px; align-items: center; }
+        .bit-stats-grid    { display: grid; grid-template-columns: repeat(4, 1fr); }
+        .bit-steps-grid    { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; text-align: left; }
+        .bit-domains-grid  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: left; }
+        .bit-testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: left; }
+        .bit-features-split { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
+        .bit-hero-stats-bento { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* ── Desktop typography ────────────────────────────────────── */
+        .bit-hero-h1    { font-size: 68px; }
+        .bit-section-h2 { font-size: 44px; }
+
+        /* ── Desktop hero text alignment ───────────────────────────── */
+        .bit-hero-text  { text-align: left; }
+        .bit-hero-cta   { justify-content: flex-start; }
+        .bit-hero-trust { justify-content: flex-start; }
+
+        /* ── Hide stats band on desktop (shown in hero bento) ──────── */
+        @media (min-width: 769px) { .bit-stats-band { display: none !important; } }
+
+        /* ── Tablet (769px – 1024px) ───────────────────────────────── */
+        @media (max-width: 1024px) and (min-width: 769px) {
+          .bit-domains-grid      { grid-template-columns: repeat(3, 1fr) !important; }
+          .bit-testimonials-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .bit-steps-grid        { grid-template-columns: repeat(2, 1fr) !important; }
+          .bit-hero-h1           { font-size: 52px !important; }
+          .bit-hero-layout       { gap: 40px !important; }
         }
 
-        @media (max-width: 640px) {
-          .bit-hero-h1 { font-size: 36px !important; }
-          .bit-stats-grid { grid-template-columns: 1fr 1fr !important; }
-          .bit-steps-grid { grid-template-columns: 1fr !important; }
-          .bit-domains-grid { grid-template-columns: 1fr 1fr !important; }
+        /* ── Mobile (≤768px) ───────────────────────────────────────── */
+        @media (max-width: 768px) {
+          .bit-hero-h1           { font-size: 36px !important; }
+          .bit-section-h2        { font-size: 32px !important; }
+          .bit-hero-layout       { grid-template-columns: 1fr !important; gap: 0 !important; }
+          .bit-hero-stats-bento  { display: none !important; }
+          .bit-stats-grid        { grid-template-columns: 1fr 1fr !important; }
+          .bit-steps-grid        { grid-template-columns: 1fr !important; }
+          .bit-domains-grid      { grid-template-columns: 1fr 1fr !important; }
           .bit-testimonials-grid { grid-template-columns: 1fr !important; }
-          .bit-features-split { grid-template-columns: 1fr !important; }
-          .bit-nav-links { display: none !important; }
-          .bit-cta-row { flex-direction: column !important; align-items: stretch !important; }
+          .bit-features-split    { grid-template-columns: 1fr !important; }
+          .bit-nav-links         { display: none !important; }
+          .bit-cta-row           { flex-direction: column !important; align-items: stretch !important; }
+          .bit-hero-text         { text-align: center !important; }
+          .bit-hero-cta          { justify-content: center !important; }
+          .bit-hero-trust        { justify-content: center !important; }
+          .bit-stats-band        { display: block !important; }
         }
       `}</style>
 
@@ -351,93 +317,123 @@ export function LandingPage() {
         </div>
       </nav>
 
-      {/* ── HERO ────────────────────────────────────────────────────────── */}
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section style={{
         background: '#0F1F3D',
-        padding: '64px 28px 72px',
-        textAlign: 'center',
+        padding: '72px 28px 80px',
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* ambient radial glow */}
+        {/* ambient glow */}
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
           background: 'radial-gradient(ellipse at 70% 20%, rgba(201,168,76,0.12) 0%, transparent 60%)',
           pointerEvents: 'none',
         }} />
 
-        <div style={{ position: 'relative', maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <GoldPill dark>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#C9A84C', display: 'inline-block' }} />
-              Free · AI-Powered Mentorship
-            </GoldPill>
-          </div>
+        <div style={{ position: 'relative', maxWidth: '1100px', margin: '0 auto' }}>
+          <div className="bit-hero-layout">
 
-          <h1
-            className="bit-hero-h1"
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: '52px',
-              fontWeight: 900,
-              color: '#ffffff',
-              lineHeight: 1.1,
-              marginBottom: '20px',
-              letterSpacing: '-0.01em',
-            }}
-          >
-            Expand Your Career<br />
-            <em style={{ color: '#C9A84C' }}>Opportunities in Tech</em>
-          </h1>
+            {/* ── Left column ──────────────────────────────────────────── */}
+            <div className="bit-hero-text">
+              <div style={{ marginBottom: '24px' }}>
+                <GoldPill dark>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#C9A84C', display: 'inline-block' }} />
+                  Free · AI-Powered Mentorship
+                </GoldPill>
+              </div>
 
-          <p style={{
-            fontSize: '16px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.8,
-            maxWidth: '480px', margin: '0 auto 32px',
-          }}>
-            A free AI platform that matches you to the right tech career, builds your personalised
-            12-month roadmap, and tracks your progress with real mentor support.
-          </p>
+              <h1
+                className="bit-hero-h1"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontWeight: 900,
+                  color: '#ffffff',
+                  lineHeight: 1.1,
+                  marginBottom: '20px',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                Expand Your Career<br />
+                <em style={{ color: '#C9A84C' }}>Opportunities in Tech</em>
+              </h1>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '36px' }}>
-            <Link to="/assess" className="bit-btn-primary">
-              Start Free Assessment <i className="ti ti-arrow-right" />
-            </Link>
-            <Link to="/login" className="bit-btn-ghost-dark">
-              I have an access code
-            </Link>
-          </div>
+              <p style={{
+                fontSize: '16px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.8,
+                maxWidth: '480px', marginBottom: '32px',
+              }}>
+                A free AI platform that matches you to the right tech career, builds your personalised
+                12-month roadmap, and tracks your progress with real mentor support.
+              </p>
 
-          {/* trust strip */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex' }}>
-              {TRUST_AVATARS.map((a, i) => (
+              <div className="bit-hero-cta" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '36px' }}>
+                <Link to="/assess" className="bit-btn-primary">
+                  Start Free Assessment <i className="ti ti-arrow-right" />
+                </Link>
+                <Link to="/login" className="bit-btn-ghost-dark">
+                  I have an access code
+                </Link>
+              </div>
+
+              {/* trust strip */}
+              <div className="bit-hero-trust" style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex' }}>
+                  {TRUST_AVATARS.map((a, i) => (
+                    <div
+                      key={a.initials}
+                      style={{
+                        width: '34px', height: '34px', borderRadius: '50%',
+                        background: a.bg, border: '2px solid #0F1F3D',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '11px', fontWeight: 700, color: a.color,
+                        marginLeft: i === 0 ? '0' : '-9px',
+                        fontFamily: "'Inter', sans-serif",
+                      }}
+                    >
+                      {a.initials}
+                    </div>
+                  ))}
+                </div>
+                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>
+                  <strong style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>35+ mentees</strong> already building their careers
+                </span>
+              </div>
+            </div>
+
+            {/* ── Right column: stats bento ─────────────────────────── */}
+            <div className="bit-hero-stats-bento">
+              {STATS.map((s) => (
                 <div
-                  key={a.initials}
+                  key={s.label}
                   style={{
-                    width: '34px', height: '34px', borderRadius: '50%',
-                    background: a.bg, border: '2px solid #0F1F3D',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '11px', fontWeight: 700, color: a.color,
-                    marginLeft: i === 0 ? '0' : '-9px',
-                    fontFamily: "'Inter', sans-serif",
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.10)',
+                    borderRadius: '16px',
+                    padding: '32px 24px',
                   }}
                 >
-                  {a.initials}
+                  <div style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: '52px', fontWeight: 900, color: '#F5D87A', lineHeight: 1,
+                  }}>
+                    {s.num}
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '10px', fontWeight: 500, lineHeight: 1.4 }}>
+                    {s.label}
+                  </div>
                 </div>
               ))}
             </div>
-            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>
-              <strong style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>35+ mentees</strong> already building their careers
-            </span>
+
           </div>
         </div>
       </section>
 
-      {/* ── STATS BAND ──────────────────────────────────────────────────── */}
-      <section style={{ background: '#F9F7F1', borderBottom: '1px solid #E8E4D9', padding: '28px' }}>
+      {/* ── STATS BAND (mobile only — hidden on desktop) ─────────────────── */}
+      <section className="bit-stats-band" style={{ background: '#F9F7F1', borderBottom: '1px solid #E8E4D9', padding: '28px' }}>
         <div
           className="bit-stats-grid"
-          style={{ maxWidth: '680px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr' }}
+          style={{ maxWidth: '1100px', margin: '0 auto' }}
         >
           {STATS.map((s, i) => (
             <div
@@ -459,26 +455,29 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ────────────────────────────────────────────────── */}
-      <section style={{ padding: '60px 28px', background: '#ffffff' }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
+      {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
+      <section style={{ padding: '72px 28px', background: '#ffffff' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '18px' }}>
             <GoldPill>How it works</GoldPill>
           </div>
           <SectionDivider />
-          <h2 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: '36px', fontWeight: 900, color: '#0F1F3D',
-            marginBottom: '12px', lineHeight: 1.15,
-          }}>
+          <h2
+            className="bit-section-h2"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontWeight: 900, color: '#0F1F3D',
+              marginBottom: '12px', lineHeight: 1.15,
+            }}
+          >
             From zero to employed<br />
             <em style={{ color: '#C9A84C' }}>in four steps</em>
           </h2>
-          <p style={{ fontSize: '14px', color: '#6B6B6B', lineHeight: 1.8, maxWidth: '440px', margin: '0 auto 40px' }}>
+          <p style={{ fontSize: '14px', color: '#6B6B6B', lineHeight: 1.8, maxWidth: '440px', margin: '0 auto 48px' }}>
             No experience needed. No confusion about where to start. A clear, structured path to your first tech role.
           </p>
 
-          <div className="bit-steps-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', textAlign: 'left' }}>
+          <div className="bit-steps-grid">
             {STEPS.map((step) => (
               <div key={step.num} className="bit-step-card">
                 <div style={{
@@ -500,7 +499,7 @@ export function LandingPage() {
             ))}
           </div>
 
-          <div style={{ marginTop: '28px' }}>
+          <div style={{ marginTop: '36px' }}>
             <Link to="/assess" className="bit-btn-navy">
               Start Now — It's Free <i className="ti ti-arrow-right" />
             </Link>
@@ -508,26 +507,29 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── 14 DOMAINS ──────────────────────────────────────────────────── */}
-      <section id="domains" style={{ padding: '60px 28px', background: '#F9F7F1', borderTop: '1px solid #E8E4D9' }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
+      {/* ── 14 DOMAINS ───────────────────────────────────────────────────── */}
+      <section id="domains" style={{ padding: '72px 28px', background: '#F9F7F1', borderTop: '1px solid #E8E4D9' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '18px' }}>
             <GoldPill>Career domains</GoldPill>
           </div>
           <SectionDivider />
-          <h2 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: '36px', fontWeight: 900, color: '#0F1F3D',
-            marginBottom: '10px', lineHeight: 1.15,
-          }}>
+          <h2
+            className="bit-section-h2"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontWeight: 900, color: '#0F1F3D',
+              marginBottom: '10px', lineHeight: 1.15,
+            }}
+          >
             14 paths. One right fit{' '}
             <em style={{ color: '#C9A84C' }}>for you.</em>
           </h2>
-          <p style={{ fontSize: '14px', color: '#6B6B6B', lineHeight: 1.8, maxWidth: '420px', margin: '0 auto 32px' }}>
+          <p style={{ fontSize: '14px', color: '#6B6B6B', lineHeight: 1.8, maxWidth: '420px', margin: '0 auto 40px' }}>
             The assessment matches you to the domain that fits your strengths, not just what is popular.
           </p>
 
-          <div className="bit-domains-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', textAlign: 'left' }}>
+          <div className="bit-domains-grid">
             {DOMAINS.map((d) => (
               <Link
                 key={d.name}
@@ -551,22 +553,25 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ────────────────────────────────────────────────── */}
-      <section style={{ padding: '60px 28px', background: '#ffffff' }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
+      {/* ── TESTIMONIALS ─────────────────────────────────────────────────── */}
+      <section style={{ padding: '72px 28px', background: '#ffffff' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '18px' }}>
             <GoldPill>Success stories</GoldPill>
           </div>
           <SectionDivider />
-          <h2 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: '36px', fontWeight: 900, color: '#0F1F3D',
-            marginBottom: '36px', lineHeight: 1.15,
-          }}>
+          <h2
+            className="bit-section-h2"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontWeight: 900, color: '#0F1F3D',
+              marginBottom: '40px', lineHeight: 1.15,
+            }}
+          >
             Real results from <em style={{ color: '#C9A84C' }}>real people</em>
           </h2>
 
-          <div className="bit-testimonials-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', textAlign: 'left' }}>
+          <div className="bit-testimonials-grid">
             {TESTIMONIALS.map((t) => (
               <div key={t.name} className="bit-testimonial-card">
                 <StarRow />
@@ -594,31 +599,31 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── WHAT YOU GET ────────────────────────────────────────────────── */}
-      <section style={{ padding: '60px 28px', background: '#F9F7F1', borderTop: '1px solid #E8E4D9' }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+      {/* ── WHAT YOU GET ─────────────────────────────────────────────────── */}
+      <section style={{ padding: '72px 28px', background: '#F9F7F1', borderTop: '1px solid #E8E4D9' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div
             className="bit-features-split"
             style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr',
-              background: '#ffffff', border: '1px solid #E8E4D9',
-              borderRadius: '12px', overflow: 'hidden',
+              background: '#ffffff',
+              border: '1px solid #E8E4D9',
+              borderRadius: '12px',
             }}
           >
             {/* Left: feature list */}
-            <div style={{ padding: '36px' }}>
+            <div style={{ padding: '48px' }}>
               <div style={{ marginBottom: '16px' }}>
                 <GoldPill>What you get</GoldPill>
               </div>
               <h2 style={{
                 fontFamily: "'Playfair Display', serif",
-                fontSize: '26px', fontWeight: 900,
-                color: '#0F1F3D', lineHeight: 1.2, marginBottom: '24px',
+                fontSize: '30px', fontWeight: 900,
+                color: '#0F1F3D', lineHeight: 1.2, marginBottom: '28px',
               }}>
                 Everything you need to{' '}
                 <em style={{ color: '#C9A84C' }}>make the switch</em>
               </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                 {FEATURES.map((f) => (
                   <div key={f.title} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                     <div style={{
@@ -639,17 +644,17 @@ export function LandingPage() {
 
             {/* Right: free panel */}
             <div style={{
-              background: '#0F1F3D', padding: '36px',
+              background: '#0F1F3D', padding: '48px',
               display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
             }}>
               <div>
-                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '58px', color: '#F5D87A', lineHeight: 1.05, fontStyle: 'italic' }}>Free.</div>
-                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '58px', color: '#F5D87A', lineHeight: 1.05, fontStyle: 'italic' }}>Always.</div>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '64px', color: '#F5D87A', lineHeight: 1.05, fontStyle: 'italic' }}>Free.</div>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '64px', color: '#F5D87A', lineHeight: 1.05, fontStyle: 'italic' }}>Always.</div>
                 <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.75, marginTop: '18px' }}>
                   No subscription. No hidden fees. Just a commitment to showing up every week.
                 </p>
               </div>
-              <div style={{ marginTop: '28px' }}>
+              <div style={{ marginTop: '36px' }}>
                 <Link
                   to="/assess"
                   style={{
@@ -657,6 +662,7 @@ export function LandingPage() {
                     background: '#C9A84C', color: '#0F1F3D', border: 'none', borderRadius: '9px',
                     padding: '14px', width: '100%', fontSize: '13px', fontWeight: 700,
                     cursor: 'pointer', fontFamily: "'Inter', sans-serif", textDecoration: 'none',
+                    boxSizing: 'border-box',
                   }}
                 >
                   Start the Assessment <i className="ti ti-arrow-right" style={{ fontSize: '13px' }} />
@@ -670,21 +676,21 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── FINAL CTA ───────────────────────────────────────────────────── */}
-      <section style={{ background: '#0F1F3D', padding: '64px 28px', textAlign: 'center' }}>
-        <div style={{ maxWidth: '520px', margin: '0 auto' }}>
+      {/* ── FINAL CTA ────────────────────────────────────────────────────── */}
+      <section style={{ background: '#0F1F3D', padding: '72px 28px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ marginBottom: '20px' }}>
             <GoldPill dark>Ready to start?</GoldPill>
           </div>
           <h2 style={{
             fontFamily: "'Playfair Display', serif",
-            fontSize: '40px', fontWeight: 900, color: '#ffffff',
+            fontSize: '44px', fontWeight: 900, color: '#ffffff',
             marginBottom: '16px', lineHeight: 1.1,
           }}>
             Your tech career is<br />
             <em style={{ color: '#C9A84C' }}>one assessment away</em>
           </h2>
-          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, maxWidth: '380px', margin: '0 auto 30px' }}>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, maxWidth: '420px', margin: '0 auto 30px' }}>
             Find out which tech career fits your strengths. Get your personalised roadmap. Start building today.
           </p>
           <div className="bit-cta-row" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -698,11 +704,11 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── FOOTER ──────────────────────────────────────────────────────── */}
-      <footer style={{ background: '#0A1628', padding: '22px 28px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* ── FOOTER ───────────────────────────────────────────────────────── */}
+      <footer style={{ background: '#0A1628', padding: '28px 28px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
         <div style={{
-          maxWidth: '680px', margin: '0 auto',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px',
+          maxWidth: '1100px', margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
         }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
             <div style={{
@@ -717,8 +723,8 @@ export function LandingPage() {
             © 2026 BuildInTech · Empowering the next generation of tech professionals.
           </p>
           <div style={{ display: 'flex', gap: '18px' }}>
-            <Link to="/assess" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Assessment</Link>
-            <Link to="/login"  style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Login</Link>
+            <Link to="/assess"       style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Assessment</Link>
+            <Link to="/login"        style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Login</Link>
             <Link to="/mentor/login" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Mentor</Link>
           </div>
         </div>

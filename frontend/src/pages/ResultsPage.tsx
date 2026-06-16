@@ -30,6 +30,10 @@ const CSS = `
     height: 100%; border-radius: 99px;
     transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
   }
+  @media (max-width: 480px) {
+    .bit-access-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+    .bit-score-domain { width: 100px !important; }
+  }
 `
 
 export function ResultsPage() {
@@ -275,7 +279,7 @@ export function ResultsPage() {
               return (
                 <div key={domain} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 20, textAlign: 'center', fontSize: 14, flexShrink: 0 }}>{d?.icon}</span>
-                  <span style={{ width: 170, flexShrink: 0, fontSize: 11, color: '#3A3A3A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{domain}</span>
+                  <span style={{ width: 140, flexShrink: 0, fontSize: 11, color: '#3A3A3A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{domain}</span>
                   <div className="bit-score-bar">
                     <div className="bit-score-fill" style={{ width: showBars ? `${pct}%` : '0%', background: d?.color || '#C9A84C' }} />
                   </div>

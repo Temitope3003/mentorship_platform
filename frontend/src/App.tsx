@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { Navbar } from './components/ui/Navbar'
 import { ProtectedRoute } from './components/ui/ProtectedRoute'
 import { LandingPage } from './pages/LandingPage'
@@ -12,10 +12,16 @@ import { DomainPage } from './pages/DomainPage'
 import { LiaisonLoginPage } from './pages/LiaisonLoginPage'
 import { LiaisonDashboard } from './pages/LiaisonDashboard'
 
+// Pages that have their own built-in navigation
+const NO_NAVBAR_ROUTES = ['/', '/liaison/dashboard']
+
 export default function App() {
+  const location = useLocation()
+  const showNavbar = !NO_NAVBAR_ROUTES.includes(location.pathname)
+
   return (
-    <div className="min-h-screen bg-bg">
-      <Navbar />
+    <div style={{ minHeight: '100vh' }}>
+      {showNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/assess" element={<AssessmentPage />} />

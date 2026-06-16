@@ -479,6 +479,10 @@ const DOMAIN_DETAILS: Record<string, {
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
+
+  @media (max-width: 640px) {
+    .bit-domain-2col { grid-template-columns: 1fr !important; }
+  }
 `
 
 export function DomainPage() {
@@ -559,7 +563,7 @@ export function DomainPage() {
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 28px 72px' }}>
 
         {/* ── SALARY ─────────────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 36 }}>
+        <div className="bit-domain-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 36 }}>
           {[
             { label: 'Salary in Nigeria', value: details.salaryNigeria, note: 'Based on current market rates for Nigerian companies and remote roles', icon: 'ti ti-building' },
             { label: 'Global Market (Remote)', value: details.salaryGlobal, note: 'USA and European companies hiring remotely from Nigeria', icon: 'ti ti-world' },
@@ -632,7 +636,7 @@ export function DomainPage() {
         </div>
 
         {/* ── FIT CHECK ──────────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 36 }}>
+        <div className="bit-domain-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 36 }}>
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '22px 22px' }}>
             <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 900, color: '#15803d', marginBottom: 14 }}>
               This path is perfect for you if
