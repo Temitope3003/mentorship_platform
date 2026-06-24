@@ -6,6 +6,7 @@ import { AssessmentPage } from './pages/AssessmentPage'
 import { ResultsPage } from './pages/ResultsPage'
 import { MenteeLoginPage } from './pages/MenteeLoginPage'
 import { MentorLoginPage } from './pages/MentorLoginPage'
+import { MentorRegisterPage } from './pages/MentorRegisterPage'
 import { MenteeDashboard } from './pages/MenteeDashboard'
 import { MentorDashboard } from './pages/MentorDashboard'
 import { DomainPage } from './pages/DomainPage'
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/results/:token" element={<ResultsPage />} />
         <Route path="/login" element={<MenteeLoginPage />} />
         <Route path="/mentor/login" element={<MentorLoginPage />} />
+        <Route path="/mentor/register" element={<MentorRegisterPage />} />
         <Route path="/domains" element={<CareerDomainsPage />} />
         <Route path="/domain/:domainId" element={<DomainPage />} />
         <Route path="/liaison/login" element={<LiaisonLoginPage />} />

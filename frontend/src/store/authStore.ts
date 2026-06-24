@@ -7,6 +7,7 @@ interface User {
   email?: string
   domain?: string
   role: 'mentee' | 'mentor'
+  isSuperAdmin?: boolean
 }
 
 interface AuthState {

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { requireMentor } from '../middleware/auth'
+import { requireMentor, requireSuperAdmin } from '../middleware/auth'
 import {
   getAllMentees,
   getMentee,
@@ -14,11 +14,21 @@ import {
   assignMenteeToOfficer,
   deactivateMentee,
   deactivateLiaisonOfficer,
+  registerMentor,
+  getApplications,
+  approveApplication,
+  rejectApplication,
 } from '../controllers/mentorController'
 
 export const mentorRouter = Router()
 
+mentorRouter.post('/register', registerMentor)
+
 mentorRouter.use(requireMentor)
+
+mentorRouter.get('/applications', requireSuperAdmin, getApplications)
+mentorRouter.patch('/applications/:id/approve', requireSuperAdmin, approveApplication)
+mentorRouter.patch('/applications/:id/reject', requireSuperAdmin, rejectApplication)
 
 mentorRouter.get('/mentees', getAllMentees)
 mentorRouter.post('/mentees', createMentee)

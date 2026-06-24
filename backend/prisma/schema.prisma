@@ -8,12 +8,17 @@ datasource db {
 }
 
 model Mentor {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  createdAt    DateTime @default(now())
-  mentees      Mentee[]
+  id               String    @id @default(uuid())
+  email            String    @unique
+  passwordHash     String
+  name             String
+  createdAt        DateTime  @default(now())
+  status           String    @default("PENDING")
+  isSuperAdmin     Boolean   @default(false)
+  applicationNote  String?
+  appliedAt        DateTime  @default(now())
+  reviewedAt       DateTime?
+  mentees          Mentee[]
 }
 
 model Mentee {

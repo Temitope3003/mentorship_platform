@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../models/prisma';
 
 interface AuthRequest extends Request {
   menteeId?: string;
@@ -59,6 +60,31 @@ export function requireMentor(
     next();
   } catch {
     return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
+export async function requireSuperAdmin(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    if (!req.mentorId) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const mentor = await prisma.mentor.findUnique({
+      where: { id: req.mentorId },
+      select: { isSuperAdmin: true },
+    });
+
+    if (!mentor || !mentor.isSuperAdmin) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    next();
+  } catch {
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
 

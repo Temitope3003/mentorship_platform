@@ -37,7 +37,7 @@ const DOMAIN_COLORS: Record<string, string> = {
   'Mobile Development': '#06b6d4',
 }
 
-type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison'
+type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications'
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
@@ -184,6 +184,7 @@ export function MentorDashboard() {
     { id: 'codes',       label: 'Access Codes',      icon: 'ti ti-key' },
     { id: 'add',         label: 'Add Mentee',        icon: 'ti ti-user-plus' },
     { id: 'liaison',     label: 'Liaison Officers',  icon: 'ti ti-shield' },
+    ...(user?.isSuperAdmin ? [{ id: 'applications' as Tab, label: 'Applications', icon: 'ti ti-user-check' }] : []),
   ]
 
   return (
@@ -639,6 +640,9 @@ export function MentorDashboard() {
         {/* ── TAB: LIAISON OFFICERS ──────────────────────────────────────── */}
         {tab === 'liaison' && <LiaisonOfficersTab onOfficersChange={setOfficers} />}
 
+        {/* ── TAB: APPLICATIONS (super-admin only) ───────────────────────── */}
+        {tab === 'applications' && user?.isSuperAdmin && <ApplicationsTab />}
+
       </div>
 
       {/* ── FEEDBACK MODAL ─────────────────────────────────────────────── */}
@@ -828,6 +832,123 @@ function LiaisonOfficersTab({ onOfficersChange }: { onOfficersChange: (officers:
           <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
             <i className="ti ti-shield" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
             No liaison officers yet. Add one above.
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ApplicationsTab() {
+  const [applications, setApplications] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [actingId, setActingId] = useState<string | null>(null)
+
+  const load = async () => {
+    try {
+      const res = await api.get('/mentor/applications')
+      setApplications(res.data)
+    } catch {
+      toast.error('Failed to load applications')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function handleApprove(id: string, name: string) {
+    setActingId(id)
+    try {
+      await api.patch(`/mentor/applications/${id}/approve`)
+      toast.success(`${name} approved. Welcome email sent.`)
+      setApplications(prev => prev.filter(a => a.id !== id))
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to approve application')
+    } finally {
+      setActingId(null)
+    }
+  }
+
+  async function handleReject(id: string, name: string) {
+    if (!confirm(`Reject ${name}'s mentor application?`)) return
+    setActingId(id)
+    try {
+      await api.patch(`/mentor/applications/${id}/reject`)
+      toast.success(`${name} rejected.`)
+      setApplications(prev => prev.filter(a => a.id !== id))
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to reject application')
+    } finally {
+      setActingId(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070' }}>
+        <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 24, color: '#C9A84C', display: 'block', margin: '0 auto 10px' }} />
+        Loading applications...
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 16 }}>
+        Pending mentor applications. Approving sends a welcome email with their login link; rejecting sends a polite notice.
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {applications.map(a => (
+          <div key={a.id} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '20px 22px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#0F1F3D', marginBottom: 3 }}>{a.name}</div>
+                <div style={{ fontSize: 13, color: '#6B6B6B' }}>{a.email}</div>
+              </div>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: '#FBF7EC', border: '1px solid #DFC97A',
+                borderRadius: 999, padding: '4px 11px', fontSize: 11, fontWeight: 700, color: '#7A5C1E', flexShrink: 0,
+              }}>
+                <i className="ti ti-calendar" style={{ fontSize: 11 }} />
+                Applied {new Date(a.appliedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            </div>
+
+            {a.applicationNote && (
+              <div style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 9, padding: '12px 16px', marginBottom: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 5 }}>
+                  Why they want to mentor
+                </div>
+                <p style={{ fontSize: 13, lineHeight: 1.7, color: '#3A3A3A' }}>{a.applicationNote}</p>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => handleApprove(a.id, a.name)}
+                disabled={actingId === a.id}
+                className="bit-btn-gold"
+                style={{ fontSize: 12 }}
+              >
+                <i className="ti ti-check" style={{ fontSize: 13 }} /> Approve
+              </button>
+              <button
+                onClick={() => handleReject(a.id, a.name)}
+                disabled={actingId === a.id}
+                className="bit-btn-ghost"
+                style={{ fontSize: 12, color: '#ef4444', borderColor: '#fecaca' }}
+              >
+                <i className="ti ti-x" style={{ fontSize: 13 }} /> Reject
+              </button>
+            </div>
+          </div>
+        ))}
+        {applications.length === 0 && (
+          <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+            <i className="ti ti-user-check" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
+            No pending applications.
           </div>
         )}
       </div>

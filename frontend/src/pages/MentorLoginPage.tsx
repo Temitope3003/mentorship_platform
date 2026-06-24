@@ -138,7 +138,15 @@ export function MentorLoginPage() {
               )}
             </button>
 
-            <div style={{ marginTop: 16, textAlign: 'center' }}>
+            <div style={{ marginTop: 16, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Link
+                to="/mentor/register"
+                style={{ fontSize: 12, color: '#C9A84C', textDecoration: 'none', fontWeight: 600 }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                Apply to become a mentor →
+              </Link>
               <Link
                 to="/login"
                 style={{ fontSize: 12, color: '#8A8070', textDecoration: 'none' }}

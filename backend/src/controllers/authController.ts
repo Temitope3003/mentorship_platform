@@ -82,6 +82,13 @@ export async function loginMentor(req: Request, res: Response) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    if (mentor.status !== 'APPROVED') {
+      if (mentor.status === 'REJECTED') {
+        return res.status(403).json({ error: 'Your application was not approved.' });
+      }
+      return res.status(403).json({ error: 'Your application is still under review.' });
+    }
+
     const token = jwt.sign(
       {
         sub: mentor.id,
@@ -97,6 +104,7 @@ export async function loginMentor(req: Request, res: Response) {
         id: mentor.id,
         name: mentor.name,
         email: mentor.email,
+        isSuperAdmin: mentor.isSuperAdmin,
       },
     });
   } catch (error) {

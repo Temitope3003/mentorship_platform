@@ -6,11 +6,12 @@ interface SendEmailOptions {
   to: string
   subject: string
   html: string
+  from?: string
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailOptions) {
+export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
   const result = await resend.emails.send({
-    from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
+    from: from || `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
     to,
     subject,
     html,

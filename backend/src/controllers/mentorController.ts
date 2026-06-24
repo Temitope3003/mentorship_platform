@@ -4,6 +4,9 @@ import { sendFeedbackEmail } from '../emails/feedbackEmail'
 import { sendMentorAlertEmail } from '../emails/mentorAlertEmail'
 import { generateAccessCode } from '../services/assessmentService'
 import { sendWelcomeEmail } from '../emails/welcomeEmail'
+import { sendMentorApplicationAlertEmail } from '../emails/mentorApplicationAlertEmail'
+import { sendMentorApprovalEmail } from '../emails/mentorApprovalEmail'
+import { sendMentorRejectionEmail } from '../emails/mentorRejectionEmail'
 import bcrypt from 'bcryptjs'
 
 interface AuthRequest extends Request {
@@ -296,6 +299,108 @@ export async function deactivateLiaisonOfficer(req: AuthRequest, res: Response) 
     return res.json({ message: 'Liaison officer deactivated', officer })
   } catch (error) {
     console.error('Deactivate liaison officer error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function registerMentor(req: Request, res: Response) {
+  try {
+    const { name, email, password, applicationNote } = req.body
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' })
+    }
+
+    if (String(password).length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' })
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim()
+    const existing = await prisma.mentor.findUnique({ where: { email: normalizedEmail } })
+    if (existing) {
+      return res.status(400).json({ error: 'A mentor account with this email already exists' })
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12)
+    const mentor = await prisma.mentor.create({
+      data: {
+        name,
+        email: normalizedEmail,
+        passwordHash,
+        applicationNote: applicationNote || null,
+        status: 'PENDING',
+      },
+    })
+
+    sendMentorApplicationAlertEmail({
+      name: mentor.name,
+      email: mentor.email,
+      applicationNote: mentor.applicationNote,
+    }).catch(err => console.error('Mentor application alert email error:', err.message))
+
+    return res.status(201).json({
+      message: 'Your application has been submitted and is under review. We will email you once a decision has been made.',
+    })
+  } catch (error) {
+    console.error('Register mentor error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getApplications(req: AuthRequest, res: Response) {
+  try {
+    const applications = await prisma.mentor.findMany({
+      where: { status: 'PENDING' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        applicationNote: true,
+        appliedAt: true,
+      },
+      orderBy: { appliedAt: 'asc' },
+    })
+    return res.json(applications)
+  } catch (error) {
+    console.error('Get applications error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function approveApplication(req: AuthRequest, res: Response) {
+  try {
+    const mentor = await prisma.mentor.update({
+      where: { id: String(req.params.id) },
+      data: { status: 'APPROVED', reviewedAt: new Date() },
+    })
+
+    sendMentorApprovalEmail({
+      name: mentor.name,
+      email: mentor.email,
+    }).catch(err => console.error('Mentor approval email error:', err.message))
+
+    return res.json({ message: 'Application approved', mentor: { id: mentor.id, name: mentor.name, email: mentor.email, status: mentor.status } })
+  } catch (error) {
+    console.error('Approve application error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function rejectApplication(req: AuthRequest, res: Response) {
+  try {
+    const mentor = await prisma.mentor.update({
+      where: { id: String(req.params.id) },
+      data: { status: 'REJECTED', reviewedAt: new Date() },
+    })
+
+    sendMentorRejectionEmail({
+      name: mentor.name,
+      email: mentor.email,
+    }).catch(err => console.error('Mentor rejection email error:', err.message))
+
+    return res.json({ message: 'Application rejected', mentor: { id: mentor.id, name: mentor.name, email: mentor.email, status: mentor.status } })
+  } catch (error) {
+    console.error('Reject application error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
