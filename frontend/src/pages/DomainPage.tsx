@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { DOMAINS } from '../utils/questionData'
 
-const DOMAIN_DETAILS: Record<string, {
+export interface DomainDetail {
   tagline: string
   description: string
   whatYouDo: string[]
@@ -12,7 +12,9 @@ const DOMAIN_DETAILS: Record<string, {
   perfectFor: string[]
   notFor: string[]
   firstStep: string
-}> = {
+}
+
+export const DOMAIN_DETAILS: Record<string, DomainDetail> = {
   'AI & Machine Learning': {
     tagline: 'Build intelligent systems that learn from data',
     description: 'AI and Machine Learning engineers design, build, and deploy systems that learn patterns from data and make predictions or decisions automatically. This is one of the fastest growing and highest paying fields in tech.',
@@ -79,38 +81,38 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Go to mode.com/sql-tutorial and complete the first 2 sections today.',
   },
-  'Software Engineering': {
-    tagline: 'Build the apps, systems, and tools the world runs on',
-    description: 'Software engineers design and build the applications that people use every day. From mobile apps to web platforms to backend systems, software engineers are the builders of the digital world. This is the largest and most stable tech career path.',
+  'Full Stack Engineering': {
+    tagline: 'Own features end to end, from the database to the browser',
+    description: 'Full stack engineers work across the entire web stack, building both the user-facing interface and the server-side logic that powers it. You are the generalist who can take a feature from idea to working product without waiting on another team. Startups and small companies prize full stack engineers because one person can ship a complete feature alone.',
     whatYouDo: [
-      'Write clean, maintainable code in languages like JavaScript, Python, or Go',
-      'Build APIs that connect frontend apps to databases and services',
-      'Design systems that handle thousands of users reliably',
-      'Review other engineers code and collaborate on solutions',
-      'Debug problems and improve performance of existing systems',
+      'Build user interfaces with React and connect them to your own APIs',
+      'Design databases and write the backend logic that powers app features',
+      'Take a feature from a Figma design to a deployed, working product alone',
+      'Move fluidly between frontend bugs, backend bugs, and database issues',
+      'Make architecture decisions that span the whole application',
     ],
-    salaryNigeria: '₦700,000 – ₦3,000,000 per month (junior to senior)',
-    salaryGlobal: '$70,000 – $180,000 per year (USA/Europe)',
+    salaryNigeria: '₦700,000 – ₦3,200,000 per month (junior to senior)',
+    salaryGlobal: '$75,000 – $185,000 per year (USA/Europe)',
     topRoles: [
-      { title: 'Frontend Engineer', desc: 'Builds the user interfaces that people see and interact with in browsers and apps' },
-      { title: 'Backend Engineer', desc: 'Builds the servers, APIs, and databases that power applications' },
-      { title: 'Full Stack Engineer', desc: 'Works across both frontend and backend to build complete features' },
-      { title: 'Mobile Engineer', desc: 'Builds iOS and Android applications for phones and tablets' },
-      { title: 'Platform Engineer', desc: 'Builds internal tools and systems that other engineers use to build products' },
+      { title: 'Full Stack Engineer', desc: 'Builds and ships complete features spanning frontend, backend, and database' },
+      { title: 'Startup Engineer', desc: 'Wears multiple hats at an early-stage company, often the first or only engineer' },
+      { title: 'Founding Engineer', desc: 'Joins a startup pre-product-market-fit and builds the first version of the product' },
+      { title: 'Technical Co-Founder', desc: 'Uses full stack skills to build and validate a startup idea from scratch' },
+      { title: 'Solutions Engineer', desc: 'Builds custom integrations and demos that span the full technology stack' },
     ],
-    tools: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'PostgreSQL', 'Docker', 'Git', 'REST APIs', 'AWS'],
+    tools: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'PostgreSQL', 'Prisma', 'Docker', 'Git', 'Vercel'],
     perfectFor: [
-      'You enjoy building things and seeing them work',
-      'You like solving logical problems step by step',
-      'You want many job options across all industries',
-      'You are patient with debugging and troubleshooting',
+      'You want to understand and build every layer of an application',
+      'You enjoy variety over specialising in one narrow area',
+      'You want maximum flexibility in job options and startup opportunities',
+      'You like owning a feature completely rather than handing it off',
     ],
     notFor: [
-      'You expect results without deep practice',
-      'You want to avoid writing code entirely',
-      'You strongly dislike sitting with a difficult problem for hours',
+      'You want to become a deep specialist in one specific layer',
+      'You prefer focused, narrow problems over switching contexts often',
+      'You want a highly structured role with clearly defined boundaries',
     ],
-    firstStep: 'Go to theodinproject.com and start the Foundations path today. It is completely free.',
+    firstStep: 'Go to theodinproject.com and start the Full Stack JavaScript path today. It takes you from zero through both frontend and backend for free.',
   },
   'Cloud & Infrastructure': {
     tagline: 'Keep the internet running reliably at scale',
@@ -178,9 +180,9 @@ const DOMAIN_DETAILS: Record<string, {
     ],
     firstStep: 'Create a free TryHackMe account at tryhackme.com and start the Pre-Security path today.',
   },
-  'Product & Design': {
-    tagline: 'Shape what gets built and how people experience it',
-    description: 'Product managers and UX designers decide what products get built and ensure those products are useful, usable, and loved by the people who use them. You sit at the intersection of business, design, and technology without needing to write code.',
+  'Product, Design & UX': {
+    tagline: 'Shape what gets built and craft how people experience it',
+    description: 'Product managers and UX/UI designers decide what products get built and ensure those products are useful, usable, and loved by the people who use them. You sit at the intersection of business, design, and technology without needing to write code.',
     whatYouDo: [
       'Research user needs through interviews, surveys, and data',
       'Define product features and write clear specifications',

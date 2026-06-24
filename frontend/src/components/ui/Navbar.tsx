@@ -107,6 +107,9 @@ export function Navbar() {
           <div className="bit-desktop-links" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {!isLoggedIn ? (
               <>
+                <Link to="/domains" className="bit-nav-link">
+                  <i className="ti ti-compass" style={{ fontSize: 13 }} /> Domains
+                </Link>
                 <Link to="/assess" className="bit-nav-link">
                   <i className="ti ti-bolt" style={{ fontSize: 13 }} /> Take Assessment
                 </Link>
@@ -174,6 +177,9 @@ export function Navbar() {
           <div className="bit-mobile-menu">
             {!isLoggedIn ? (
               <>
+                <Link to="/domains" className="bit-mobile-link" onClick={() => setMenuOpen(false)}>
+                  <i className="ti ti-compass" style={{ fontSize: 14, color: '#C9A84C' }} /> Domains
+                </Link>
                 <Link to="/assess" className="bit-mobile-link" onClick={() => setMenuOpen(false)}>
                   <i className="ti ti-bolt" style={{ fontSize: 14, color: '#C9A84C' }} /> Take Assessment
                 </Link>

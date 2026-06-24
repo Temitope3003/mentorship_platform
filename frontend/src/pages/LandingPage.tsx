@@ -305,7 +305,7 @@ export function LandingPage() {
 
         <div className="bit-nav-links" style={{ display: 'flex', alignItems: 'center' }}>
           <Link to="/assess" className="bit-nav-link">Assessment</Link>
-          <Link to="/#domains" className="bit-nav-link">Domains</Link>
+          <Link to="/domains" className="bit-nav-link">Domains</Link>
           <Link to="/login" className="bit-nav-link">Login</Link>
           <Link
             to="/assess"
@@ -550,6 +550,20 @@ export function LandingPage() {
               </Link>
             ))}
           </div>
+
+          <Link
+            to="/domains"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '7px',
+              marginTop: '32px', fontSize: '14px', fontWeight: 700, color: '#0F1F3D',
+              textDecoration: 'none', borderBottom: '2px solid #C9A84C', paddingBottom: '3px',
+              transition: 'opacity 0.15s',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.7' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
+          >
+            View All Domains <i className="ti ti-arrow-right" style={{ fontSize: '13px' }} />
+          </Link>
         </div>
       </section>
 
