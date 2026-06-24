@@ -477,6 +477,39 @@ export const DOMAIN_DETAILS: Record<string, DomainDetail> = {
     ],
     firstStep: 'Install Expo Go on your phone from the app store. Then go to docs.expo.dev and build your first React Native app today. It runs on your actual phone in minutes.',
   },
+  'DevSecOps': {
+    tagline: 'Build security directly into the pipelines that ship software',
+    description: 'DevSecOps engineers integrate security into every stage of the software delivery pipeline, from the first commit to production deployment. Instead of security being a final checkpoint that blocks releases, DevSecOps makes it automatic, fast, and built into the tools developers already use. This is one of the most in-demand specialisations in tech because every company shipping software needs it.',
+    whatYouDo: [
+      'Build CI/CD pipelines with automated security scanning at every stage',
+      'Configure SAST, DAST, and dependency scanning tools to catch vulnerabilities before release',
+      'Harden containers, Kubernetes clusters, and cloud infrastructure against attacks',
+      'Manage secrets, access controls, and policy as code across environments',
+      'Respond to security incidents and lead remediation in cloud and CI/CD systems',
+    ],
+    salaryNigeria: '₦900,000 – ₦4,200,000 per month (junior to senior)',
+    salaryGlobal: '$95,000 – $210,000 per year (USA/Europe)',
+    topRoles: [
+      { title: 'DevSecOps Engineer', desc: 'Builds and maintains secure CI/CD pipelines and embeds security tooling into the development workflow' },
+      { title: 'Security Automation Engineer', desc: 'Automates vulnerability scanning, compliance checks, and remediation across systems' },
+      { title: 'Cloud Security Engineer', desc: 'Secures cloud infrastructure, identity, and access across AWS, GCP, or Azure environments' },
+      { title: 'Application Security Engineer', desc: 'Finds and fixes vulnerabilities in application code before it reaches production' },
+      { title: 'Platform Security Engineer', desc: 'Builds internal security tooling and guardrails that other engineering teams rely on' },
+    ],
+    tools: ['Docker', 'Kubernetes', 'Terraform', 'GitHub Actions', 'HashiCorp Vault', 'Snyk', 'SonarQube', 'Trivy', 'Open Policy Agent', 'AWS'],
+    perfectFor: [
+      'You enjoy both security thinking and infrastructure or automation work',
+      'You want to build the guardrails that let teams ship fast without breaking things',
+      'You are comfortable in the command line and enjoy systems thinking',
+      'You want one of the highest paid and most in-demand specialisations in tech',
+    ],
+    notFor: [
+      'You only want to focus on either pure security or pure infrastructure, not both',
+      'You dislike automation and prefer manual, one-off tasks',
+      'You want quick visible results without learning multiple tools deeply',
+    ],
+    firstStep: 'Create a free OverTheWire account at overthewire.org and complete the first 10 levels of the Bandit wargame today.',
+  },
 }
 
 const CSS = `

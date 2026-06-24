@@ -31,6 +31,7 @@ export const DOMAINS: Domain[] = [
   { name: 'AI Automation & No-Code', color: '#f97316', icon: '⚡' },
   { name: 'DevRel & Technical Writing', color: '#8b5cf6', icon: '✍️' },
   { name: 'Mobile Development', color: '#06b6d4', icon: '📱' },
+  { name: 'DevSecOps', color: '#334155', icon: '🛡️' },
 ]
 
 export const QUESTIONS: Question[] = [
@@ -41,7 +42,7 @@ export const QUESTIONS: Question[] = [
       { text: 'Break it into data and look for patterns', scores: { 'AI & Machine Learning': 3, 'Data Analysis': 3, 'Data Science & Engineering': 4 } },
       { text: 'Build something step by step and test it', scores: { 'Full Stack Engineering': 3, 'Frontend Development': 2, 'Backend Development': 3, 'Mobile Development': 2 } },
       { text: 'Think about the user experience and how it should feel', scores: { 'Product, Design & UX': 4, 'Frontend Development': 3 } },
-      { text: 'Look for security gaps or things that could go wrong', scores: { 'Cybersecurity': 4, 'Cloud & Infrastructure': 2 } },
+      { text: 'Look for security gaps or things that could go wrong', scores: { 'Cybersecurity': 4, 'Cloud & Infrastructure': 2, 'DevSecOps': 4 } },
     ],
   },
   {
@@ -51,7 +52,7 @@ export const QUESTIONS: Question[] = [
       { text: 'Writing code and building features', scores: { 'Full Stack Engineering': 3, 'Frontend Development': 3, 'Backend Development': 3, 'Mobile Development': 3 } },
       { text: 'Analysing data and drawing insights', scores: { 'Data Analysis': 4, 'Data Science & Engineering': 4 } },
       { text: 'Designing interfaces and user flows', scores: { 'Product, Design & UX': 4, 'Frontend Development': 3 } },
-      { text: 'Automating repetitive tasks and building workflows', scores: { 'AI Automation & No-Code': 5, 'Cloud & Infrastructure': 2 } },
+      { text: 'Automating repetitive tasks and building workflows', scores: { 'AI Automation & No-Code': 5, 'Cloud & Infrastructure': 2, 'DevSecOps': 3 } },
     ],
   },
   {
@@ -61,7 +62,7 @@ export const QUESTIONS: Question[] = [
     options: [
       { text: 'I learn by reading documentation and writing things down', scores: { 'DevRel & Technical Writing': 4, 'Data Analysis': 2 } },
       { text: 'I learn by building projects and seeing results', scores: { 'Full Stack Engineering': 3, 'Mobile Development': 3, 'Frontend Development': 3, 'Backend Development': 3 } },
-      { text: 'I learn by experimenting and testing hypotheses', scores: { 'AI & Machine Learning': 4, 'Data Science & Engineering': 4, 'Cybersecurity': 3 } },
+      { text: 'I learn by experimenting and testing hypotheses', scores: { 'AI & Machine Learning': 4, 'Data Science & Engineering': 4, 'Cybersecurity': 3, 'DevSecOps': 3 } },
       { text: 'I learn by watching how users interact with things', scores: { 'Product, Design & UX': 4 } },
       { text: 'I learn by exploring new tools and platforms', scores: { 'Emerging Tech': 4, 'AI Automation & No-Code': 3, 'Virtual Assistant': 2 } },
       { text: 'I learn by organising, scheduling, and supporting others', scores: { 'Virtual Assistant': 5 } },
@@ -86,7 +87,7 @@ export const QUESTIONS: Question[] = [
       { text: 'A dashboard that visualises real business data', scores: { 'Data Analysis': 4, 'Data Science & Engineering': 3, 'Frontend Development': 2 } },
       { text: 'A machine learning model that makes predictions', scores: { 'AI & Machine Learning': 5, 'Data Science & Engineering': 4 } },
       { text: 'A beautifully designed website or app interface', scores: { 'Frontend Development': 5, 'Product, Design & UX': 4 } },
-      { text: 'An automated system that saves hours of manual work', scores: { 'AI Automation & No-Code': 5, 'Backend Development': 3, 'Cloud & Infrastructure': 3 } },
+      { text: 'An automated system that saves hours of manual work', scores: { 'AI Automation & No-Code': 5, 'Backend Development': 3, 'Cloud & Infrastructure': 3, 'DevSecOps': 3 } },
     ],
   },
   {
@@ -97,7 +98,7 @@ export const QUESTIONS: Question[] = [
       { text: 'Figma, design systems, and user research', scores: { 'Product, Design & UX': 5, 'Frontend Development': 2 } },
       { text: 'APIs, databases, and server architecture', scores: { 'Backend Development': 5, 'Full Stack Engineering': 3 } },
       { text: 'React, CSS, and browser performance', scores: { 'Frontend Development': 5, 'Full Stack Engineering': 2 } },
-      { text: 'Docker, Kubernetes, and cloud platforms', scores: { 'Cloud & Infrastructure': 5 } },
+      { text: 'Docker, Kubernetes, and cloud platforms', scores: { 'Cloud & Infrastructure': 5, 'DevSecOps': 4 } },
       { text: 'Zapier, Make, Bubble, or Webflow', scores: { 'AI Automation & No-Code': 5, 'Virtual Assistant': 2 } },
     ],
   },
@@ -115,9 +116,9 @@ export const QUESTIONS: Question[] = [
     id: 8,
     text: 'When you think about your ideal work environment, which fits best?',
     options: [
-      { text: 'Deep focus work alone on complex technical problems', scores: { 'AI & Machine Learning': 4, 'Backend Development': 4, 'Data Science & Engineering': 4, 'Cybersecurity': 3 } },
+      { text: 'Deep focus work alone on complex technical problems', scores: { 'AI & Machine Learning': 4, 'Backend Development': 4, 'Data Science & Engineering': 4, 'Cybersecurity': 3, 'DevSecOps': 3 } },
       { text: 'Collaborative work with designers, PMs, and engineers', scores: { 'Frontend Development': 4, 'Product, Design & UX': 4, 'Full Stack Engineering': 3 } },
-      { text: 'Building and maintaining infrastructure that keeps things running', scores: { 'Cloud & Infrastructure': 5, 'Backend Development': 3 } },
+      { text: 'Building and maintaining infrastructure that keeps things running', scores: { 'Cloud & Infrastructure': 5, 'Backend Development': 3, 'DevSecOps': 4 } },
       { text: 'Flexible remote work supporting clients and teams', scores: { 'Virtual Assistant': 5, 'DevRel & Technical Writing': 3 } },
     ],
   },
@@ -127,7 +128,7 @@ export const QUESTIONS: Question[] = [
     options: [
       { text: 'Building AI products that solve real world problems', scores: { 'AI & Machine Learning': 5, 'AI Automation & No-Code': 4, 'Data Science & Engineering': 3 } },
       { text: 'Creating apps millions of people use on their phones', scores: { 'Mobile Development': 5, 'Frontend Development': 3, 'Full Stack Engineering': 3 } },
-      { text: 'Protecting organisations from cyber attacks', scores: { 'Cybersecurity': 5 } },
+      { text: 'Protecting organisations from cyber attacks', scores: { 'Cybersecurity': 5, 'DevSecOps': 4 } },
       { text: 'Helping developers succeed with tools and documentation', scores: { 'DevRel & Technical Writing': 5 } },
     ],
   },
@@ -136,7 +137,7 @@ export const QUESTIONS: Question[] = [
     text: 'How comfortable are you with ambiguity and undefined problems?',
     options: [
       { text: 'I thrive in ambiguity and enjoy defining problems', scores: { 'Product, Design & UX': 4, 'Emerging Tech': 4, 'AI Automation & No-Code': 3 } },
-      { text: 'I prefer clear specifications before I start', scores: { 'Backend Development': 4, 'Cloud & Infrastructure': 3, 'Data Analysis': 3 } },
+      { text: 'I prefer clear specifications before I start', scores: { 'Backend Development': 4, 'Cloud & Infrastructure': 3, 'Data Analysis': 3, 'DevSecOps': 2 } },
       { text: 'I can handle some ambiguity but like structure', scores: { 'Full Stack Engineering': 3, 'Frontend Development': 3, 'Mobile Development': 3 } },
       { text: 'I like following proven processes and best practices', scores: { 'Virtual Assistant': 4, 'DevRel & Technical Writing': 3, 'Data Science & Engineering': 2 } },
     ],
@@ -147,7 +148,7 @@ export const QUESTIONS: Question[] = [
     multi: true,
     options: [
       { text: 'Build a small app or script to solve a personal problem', scores: { 'Full Stack Engineering': 3, 'Backend Development': 3, 'Frontend Development': 3, 'Mobile Development': 3 } },
-      { text: 'Try to hack a practice target on TryHackMe', scores: { 'Cybersecurity': 5 } },
+      { text: 'Try to hack a practice target on TryHackMe', scores: { 'Cybersecurity': 5, 'DevSecOps': 4 } },
       { text: 'Explore a new AI tool or no-code platform', scores: { 'AI Automation & No-Code': 4, 'Emerging Tech': 3, 'Virtual Assistant': 2 } },
       { text: 'Redesign an app interface in Figma', scores: { 'Product, Design & UX': 5, 'Frontend Development': 3 } },
       { text: 'Write a blog post or tutorial about something you learned', scores: { 'DevRel & Technical Writing': 5 } },
@@ -161,7 +162,7 @@ export const QUESTIONS: Question[] = [
       { text: 'How fast it loads and how smooth the animations are', scores: { 'Mobile Development': 5, 'Frontend Development': 4 } },
       { text: 'How the data is structured and where it comes from', scores: { 'Backend Development': 4, 'Data Science & Engineering': 3 } },
       { text: 'How intuitive and easy it is to navigate', scores: { 'Product, Design & UX': 5 } },
-      { text: 'What security vulnerabilities it might have', scores: { 'Cybersecurity': 5 } },
+      { text: 'What security vulnerabilities it might have', scores: { 'Cybersecurity': 5, 'DevSecOps': 4 } },
     ],
   },
   {
@@ -170,7 +171,7 @@ export const QUESTIONS: Question[] = [
     options: [
       { text: 'I love it and want to build pipelines and models with it', scores: { 'Data Science & Engineering': 5, 'AI & Machine Learning': 4 } },
       { text: 'I enjoy analysing it and presenting insights', scores: { 'Data Analysis': 5, 'Data Science & Engineering': 3 } },
-      { text: 'I would rather build the systems that collect and store it', scores: { 'Backend Development': 4, 'Cloud & Infrastructure': 4 } },
+      { text: 'I would rather build the systems that collect and store it', scores: { 'Backend Development': 4, 'Cloud & Infrastructure': 4, 'DevSecOps': 2 } },
       { text: 'I prefer working with people and processes over raw data', scores: { 'Virtual Assistant': 4, 'Product, Design & UX': 3, 'DevRel & Technical Writing': 3 } },
     ],
   },
@@ -181,7 +182,7 @@ export const QUESTIONS: Question[] = [
       { text: 'Machine learning algorithms and neural networks', scores: { 'AI & Machine Learning': 5, 'Data Science & Engineering': 4 } },
       { text: 'REST APIs, databases, and authentication systems', scores: { 'Backend Development': 5, 'Full Stack Engineering': 3 } },
       { text: 'Component architecture, animations, and responsive design', scores: { 'Frontend Development': 5, 'Mobile Development': 3 } },
-      { text: 'Infrastructure as code and deployment pipelines', scores: { 'Cloud & Infrastructure': 5 } },
+      { text: 'Infrastructure as code and deployment pipelines', scores: { 'Cloud & Infrastructure': 5, 'DevSecOps': 5 } },
     ],
   },
   {
@@ -189,7 +190,7 @@ export const QUESTIONS: Question[] = [
     text: 'What motivates you most about working in tech?',
     options: [
       { text: 'Building products that directly improve people\'s lives', scores: { 'Mobile Development': 3, 'Full Stack Engineering': 3, 'Product, Design & UX': 4 } },
-      { text: 'Solving complex technical problems at scale', scores: { 'Backend Development': 4, 'Cloud & Infrastructure': 4, 'Data Science & Engineering': 4 } },
+      { text: 'Solving complex technical problems at scale', scores: { 'Backend Development': 4, 'Cloud & Infrastructure': 4, 'Data Science & Engineering': 4, 'DevSecOps': 3 } },
       { text: 'Staying at the frontier of new technology', scores: { 'Emerging Tech': 5, 'AI & Machine Learning': 3, 'AI Automation & No-Code': 3 } },
       { text: 'Teaching and helping other people grow in tech', scores: { 'DevRel & Technical Writing': 5, 'Virtual Assistant': 2 } },
     ],
@@ -199,7 +200,7 @@ export const QUESTIONS: Question[] = [
     text: 'How do you prefer to work with other people?',
     options: [
       { text: 'I lead and facilitate, keeping teams organised and moving', scores: { 'Product, Design & UX': 4, 'Virtual Assistant': 4, 'DevRel & Technical Writing': 3 } },
-      { text: 'I prefer deep individual work with minimal meetings', scores: { 'AI & Machine Learning': 3, 'Backend Development': 4, 'Data Science & Engineering': 3, 'Cybersecurity': 3 } },
+      { text: 'I prefer deep individual work with minimal meetings', scores: { 'AI & Machine Learning': 3, 'Backend Development': 4, 'Data Science & Engineering': 3, 'Cybersecurity': 3, 'DevSecOps': 3 } },
       { text: 'I collaborate closely with designers and PMs to ship features', scores: { 'Frontend Development': 4, 'Full Stack Engineering': 3, 'Mobile Development': 3 } },
       { text: 'I work independently with clients remotely', scores: { 'Virtual Assistant': 5, 'DevRel & Technical Writing': 3 } },
     ],
@@ -210,7 +211,7 @@ export const QUESTIONS: Question[] = [
     options: [
       { text: 'Why is this ML model performing poorly on new data', scores: { 'AI & Machine Learning': 5, 'Data Science & Engineering': 4 } },
       { text: 'Why does this page load slowly on mobile networks', scores: { 'Frontend Development': 4, 'Mobile Development': 4 } },
-      { text: 'How do we automate this 3-hour manual process', scores: { 'AI Automation & No-Code': 5, 'Cloud & Infrastructure': 3 } },
+      { text: 'How do we automate this 3-hour manual process', scores: { 'AI Automation & No-Code': 5, 'Cloud & Infrastructure': 3, 'DevSecOps': 3 } },
       { text: 'How do we explain this complex API to developers clearly', scores: { 'DevRel & Technical Writing': 5 } },
     ],
   },
@@ -253,7 +254,7 @@ export const QUESTIONS: Question[] = [
       { text: 'React Native or Flutter', scores: { 'Mobile Development': 5 } },
       { text: 'Zapier, Make, or n8n', scores: { 'AI Automation & No-Code': 5, 'Virtual Assistant': 3 } },
       { text: 'Figma and user research tools', scores: { 'Product, Design & UX': 5, 'Frontend Development': 2 } },
-      { text: 'Node.js, PostgreSQL, and Docker', scores: { 'Backend Development': 5, 'Full Stack Engineering': 3 } },
+      { text: 'Node.js, PostgreSQL, and Docker', scores: { 'Backend Development': 5, 'Full Stack Engineering': 3, 'DevSecOps': 3 } },
       { text: 'dbt, Spark, or Airflow', scores: { 'Data Science & Engineering': 5, 'Data Analysis': 3 } },
     ],
   },
@@ -262,8 +263,8 @@ export const QUESTIONS: Question[] = [
     text: 'How important is it to you to see your work used by real people quickly?',
     options: [
       { text: 'Very important, I want fast visible results', scores: { 'Frontend Development': 4, 'Mobile Development': 4, 'AI Automation & No-Code': 4, 'Virtual Assistant': 3 } },
-      { text: 'Important but I am willing to work on long term projects', scores: { 'Backend Development': 3, 'Cloud & Infrastructure': 3, 'Data Science & Engineering': 3 } },
-      { text: 'I prefer deep foundational work even if results take time', scores: { 'AI & Machine Learning': 4, 'Cybersecurity': 3, 'Data Science & Engineering': 3 } },
+      { text: 'Important but I am willing to work on long term projects', scores: { 'Backend Development': 3, 'Cloud & Infrastructure': 3, 'Data Science & Engineering': 3, 'DevSecOps': 3 } },
+      { text: 'I prefer deep foundational work even if results take time', scores: { 'AI & Machine Learning': 4, 'Cybersecurity': 3, 'Data Science & Engineering': 3, 'DevSecOps': 3 } },
       { text: 'I want to influence decisions more than build directly', scores: { 'Product, Design & UX': 4, 'DevRel & Technical Writing': 3 } },
     ],
   },
@@ -271,8 +272,8 @@ export const QUESTIONS: Question[] = [
     id: 23,
     text: 'What is your honest relationship with the command line and servers?',
     options: [
-      { text: 'I love it and want to live in the terminal', scores: { 'Cloud & Infrastructure': 5, 'Backend Development': 4, 'Cybersecurity': 4 } },
-      { text: 'I use it when I need to but prefer GUIs', scores: { 'Full Stack Engineering': 3, 'Data Analysis': 2, 'Frontend Development': 2 } },
+      { text: 'I love it and want to live in the terminal', scores: { 'Cloud & Infrastructure': 5, 'Backend Development': 4, 'Cybersecurity': 4, 'DevSecOps': 5 } },
+      { text: 'I use it when I need to but prefer GUIs', scores: { 'Full Stack Engineering': 3, 'Data Analysis': 2, 'Frontend Development': 2, 'DevSecOps': 1 } },
       { text: 'I avoid it where possible', scores: { 'AI Automation & No-Code': 3, 'Virtual Assistant': 3, 'Product, Design & UX': 2 } },
       { text: 'I am learning to get comfortable with it', scores: { 'Data Science & Engineering': 3, 'Mobile Development': 2 } },
     ],

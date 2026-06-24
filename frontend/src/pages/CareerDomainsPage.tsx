@@ -76,7 +76,7 @@ export function CareerDomainsPage() {
             borderRadius: 999, padding: '6px 16px', fontSize: 11, fontWeight: 600,
             letterSpacing: '0.07em', textTransform: 'uppercase', color: '#F5D87A', marginBottom: 22,
           }}>
-            14 career paths
+            15 career paths
           </span>
           <h1 style={{
             fontFamily: "'Playfair Display', serif", fontWeight: 900, color: '#ffffff',
@@ -86,7 +86,7 @@ export function CareerDomainsPage() {
           </h1>
           <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.62)', lineHeight: 1.8, marginBottom: 32, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
             Every domain below leads to a real tech career with mentorship, a 12-month roadmap, and real salary potential.
-            Browse all 14 and find where you naturally fit, or take the free assessment to get matched instantly.
+            Browse all 15 and find where you naturally fit, or take the free assessment to get matched instantly.
           </p>
 
           <div style={{ position: 'relative', maxWidth: 440, margin: '0 auto' }}>

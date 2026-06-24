@@ -13,6 +13,7 @@ export const DOMAINS = [
   { name: 'AI Automation & No-Code', color: '#f97316', icon: '⚡' },
   { name: 'DevRel & Technical Writing', color: '#8b5cf6', icon: '✍️' },
   { name: 'Mobile Development', color: '#06b6d4', icon: '📱' },
+  { name: 'DevSecOps', color: '#334155', icon: '🛡️' },
 ]
 
 export const QUESTIONS = [

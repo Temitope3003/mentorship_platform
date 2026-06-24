@@ -34,7 +34,7 @@ interface Stat {
 
 const STATS: Stat[] = [
   { num: '35+', label: 'Active Mentees' },
-  { num: '14',  label: 'Career Domains' },
+  { num: '15',  label: 'Career Domains' },
   { num: '48',  label: 'Weeks of Curriculum' },
   { num: '28',  label: 'Career Paths' },
 ]
@@ -507,7 +507,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── 14 DOMAINS ───────────────────────────────────────────────────── */}
+      {/* ── 15 DOMAINS ───────────────────────────────────────────────────── */}
       <section id="domains" style={{ padding: '72px 28px', background: '#F9F7F1', borderTop: '1px solid #E8E4D9' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '18px' }}>
@@ -522,7 +522,7 @@ export function LandingPage() {
               marginBottom: '10px', lineHeight: 1.15,
             }}
           >
-            14 paths. One right fit{' '}
+            15 paths. One right fit{' '}
             <em style={{ color: '#C9A84C' }}>for you.</em>
           </h2>
           <p style={{ fontSize: '14px', color: '#6B6B6B', lineHeight: 1.8, maxWidth: '420px', margin: '0 auto 40px' }}>
