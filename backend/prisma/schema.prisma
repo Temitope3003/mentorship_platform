@@ -48,6 +48,16 @@ model Mentee {
   pauseReason      String?
   totalPausedDays  Int                @default(0)
   pauseCount       Int                @default(0)
+  plan             String             @default("FREE")
+  planExpiresAt    DateTime?
+  premiumActivatedBy String?
+  premiumActivatedAt DateTime?
+  paymentReference String?
+  pendingPaymentPlan String?
+  pendingPaymentSubmittedAt DateTime?
+  hasReceivedCertificate Boolean      @default(false)
+  certificateIssuedAt DateTime?
+  certificateCode  String?
   emailLogs        EmailLog[]
   liaisonOfficer   LiaisonOfficer?    @relation(fields: [liaisonOfficerId], references: [id])
   mentor           Mentor?            @relation(fields: [mentorId], references: [id])

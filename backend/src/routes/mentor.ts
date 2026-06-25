@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { requireMentor, requireSuperAdmin } from '../middleware/auth'
+import { requireMentor, requireSuperAdmin, requireMentorOrLiaison } from '../middleware/auth'
 import {
   getAllMentees,
   getMentee,
@@ -20,11 +20,21 @@ import {
   rejectApplication,
   changePassword,
   getAnalytics,
+  getPendingPayments,
+  confirmPayment,
+  rejectPayment,
+  issueCertificate,
+  issueRecommendationLetter,
 } from '../controllers/mentorController'
 
 export const mentorRouter = Router()
 
 mentorRouter.post('/register', registerMentor)
+
+// Dual-auth routes (mentor OR liaison officer) — must stay before the blanket requireMentor below
+mentorRouter.get('/pending-payments', requireMentorOrLiaison, getPendingPayments)
+mentorRouter.patch('/mentees/:id/confirm-payment', requireMentorOrLiaison, confirmPayment)
+mentorRouter.patch('/mentees/:id/reject-payment', requireMentorOrLiaison, rejectPayment)
 
 mentorRouter.use(requireMentor)
 
@@ -47,3 +57,5 @@ mentorRouter.post('/liaison-officers', createLiaisonOfficer)
 mentorRouter.patch('/mentees/:id/assign', assignMenteeToOfficer)
 mentorRouter.patch('/mentees/:id/deactivate', deactivateMentee)
 mentorRouter.patch('/liaison-officers/:id/deactivate', deactivateLiaisonOfficer)
+mentorRouter.post('/mentees/:id/issue-certificate', issueCertificate)
+mentorRouter.post('/mentees/:id/issue-recommendation-letter', issueRecommendationLetter)

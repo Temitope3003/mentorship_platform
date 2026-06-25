@@ -9,6 +9,10 @@ import {
 import { analyseGoalAlignment } from '../services/goalAnalysisService';
 import { sendWelcomeEmail } from '../emails/welcomeEmail';
 import { sendMentorAlertEmail } from '../emails/mentorAlertEmail';
+import { DOMAINS } from '../utils/questionData';
+import { getCurriculumForDomain } from '../utils/curriculum';
+import { DOMAIN_PREVIEW_DETAILS } from '../utils/domainDetails';
+import { changeMenteeTrack, TrackChangeError } from '../services/menteeTrackService';
 
 export async function startSession(req: Request, res: Response) {
   try {
@@ -268,6 +272,99 @@ export async function getResults(req: Request, res: Response) {
     });
   } catch (error) {
     console.error('Get results error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function getRoadmapPreview(req: Request, res: Response) {
+  try {
+    const domain = decodeURIComponent(String(req.params.domain));
+
+    const domainEntry = DOMAINS.find((d) => d.name === domain);
+    if (!domainEntry) {
+      return res.status(404).json({ error: 'Domain not found' });
+    }
+
+    const details = DOMAIN_PREVIEW_DETAILS[domain];
+    const curriculum = getCurriculumForDomain(domain);
+
+    const VISIBLE_WEEKS = 4;
+    const TOTAL_WEEKS = 48;
+
+    const visibleWeeks = curriculum
+      .filter((w) => w.week <= VISIBLE_WEEKS)
+      .map((w) => ({
+        week: w.week,
+        phase: w.phase,
+        title: w.title,
+        task: w.task,
+      }));
+
+    const lockedWeeks = curriculum
+      .filter((w) => w.week > VISIBLE_WEEKS)
+      .map((w) => ({
+        week: w.week,
+        phase: w.phase,
+        title: w.title,
+      }));
+
+    return res.json({
+      domain: domainEntry.name,
+      color: domainEntry.color,
+      icon: domainEntry.icon,
+      tagline: details?.tagline || '',
+      salaryNigeria: details?.salaryNigeria || '',
+      salaryGlobal: details?.salaryGlobal || '',
+      totalWeeks: TOTAL_WEEKS,
+      lockedWeeksCount: lockedWeeks.length,
+      visibleWeeks,
+      lockedWeeks,
+    });
+  } catch (error) {
+    console.error('Get roadmap preview error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function chooseTrack(req: Request, res: Response) {
+  try {
+    const token = String(req.params.token);
+    const { domain } = req.body;
+
+    if (!domain) {
+      return res.status(400).json({ error: 'Domain is required' });
+    }
+
+    const isValidDomain = DOMAINS.some((d) => d.name === domain);
+    if (!isValidDomain) {
+      return res.status(404).json({ error: 'Domain not found' });
+    }
+
+    const session = await prisma.assessmentSession.findUnique({
+      where: { sessionToken: token },
+    });
+
+    if (!session || !session.completed || !session.menteeId) {
+      return res.status(404).json({ error: 'Results not found' });
+    }
+
+    const updated = await changeMenteeTrack(session.menteeId, domain);
+
+    return res.json({
+      message: 'Track updated successfully',
+      mentee: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        accessCode: updated.accessCode,
+        domainTrack: updated.domainTrack,
+      },
+    });
+  } catch (error) {
+    if (error instanceof TrackChangeError) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    console.error('Choose track error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

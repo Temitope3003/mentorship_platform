@@ -86,7 +86,6 @@ export function ResultsPage() {
   )
 
   const topDomain = DOMAINS.find((d) => d.name === mentee.topMatch) || DOMAINS[0]
-  const secondDomain = DOMAINS.find((d) => d.name === mentee.secondMatch)
   const scores = mentee.allScores || {}
   const maxScore = Math.max(...Object.values(scores), 1)
   const rankedScores = Object.entries(scores).sort(([, a], [, b]) => b - a)
@@ -229,7 +228,7 @@ export function ResultsPage() {
           </div>
 
           <Link
-            to="/login"
+            to={`/roadmap-preview/${encodeURIComponent(topDomain.name)}?token=${token}`}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: topDomain.color, color: '#fff', borderRadius: 10,
@@ -239,30 +238,47 @@ export function ResultsPage() {
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.transform = 'none' }}
           >
-            <i className="ti ti-layout-dashboard" style={{ fontSize: 15 }} />
-            Log in to My Dashboard
+            <i className="ti ti-map" style={{ fontSize: 15 }} />
+            See My Roadmap
           </Link>
         </div>
 
-        {/* ── SECONDARY MATCH ────────────────────────────────────────────── */}
-        {secondDomain && (
-          <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 14, padding: '18px 22px', marginBottom: 14 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 12 }}>
-              Secondary Match
+        {/* ── SECONDARY MATCHES ──────────────────────────────────────────── */}
+        {rankedScores.length > 1 && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 10, paddingLeft: 2 }}>
+              Other Strong Matches — Compare Before You Commit
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 10, fontSize: 20,
-                background: secondDomain.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                {secondDomain.icon}
-              </div>
-              <div>
-                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 900, color: '#0F1F3D' }}>
-                  {secondDomain.name}
-                </div>
-                <div style={{ fontSize: 12, color: '#6B6B6B', marginTop: 2 }}>Your second strongest fit</div>
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+              {rankedScores.slice(1, 4).map(([domainName]) => {
+                const d = DOMAINS.find((x) => x.name === domainName)
+                if (!d) return null
+                return (
+                  <Link
+                    key={domainName}
+                    to={`/roadmap-preview/${encodeURIComponent(domainName)}?token=${token}`}
+                    style={{
+                      display: 'block', background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12,
+                      padding: '14px 16px', textDecoration: 'none', transition: 'border-color 0.15s, transform 0.15s',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = d.color; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#E8E4D9'; (e.currentTarget as HTMLElement).style.transform = 'none' }}
+                  >
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 9, fontSize: 16,
+                      background: d.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10,
+                    }}>
+                      {d.icon}
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0F1F3D', marginBottom: 6, lineHeight: 1.3 }}>
+                      {domainName}
+                    </div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: d.color }}>
+                      See roadmap <i className="ti ti-arrow-right" style={{ fontSize: 10 }} />
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           </div>
         )}

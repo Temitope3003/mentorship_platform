@@ -169,6 +169,10 @@ export async function getLiaisonMentees(req: AuthRequest, res: Response) {
         pausedAt: m.pausedAt,
         pauseReason: m.pauseReason,
         status: getMenteeStatusLabel(m, lastSubmittedWeek),
+        plan: m.plan,
+        planExpiresAt: m.planExpiresAt,
+        pendingPaymentPlan: m.pendingPaymentPlan,
+        hasReceivedCertificate: m.hasReceivedCertificate,
       }
     })
 

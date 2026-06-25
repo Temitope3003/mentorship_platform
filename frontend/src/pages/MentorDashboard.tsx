@@ -27,7 +27,29 @@ const STATUS_BADGES: Record<string, { bg: string; border: string; color: string;
   ON_TRACK:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: 'ti ti-circle-check',    label: 'On Track' },
 }
 
-type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications'
+type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications' | 'payments'
+
+async function extractBlobError(err: any, fallback: string): Promise<string> {
+  try {
+    if (err.response?.data instanceof Blob) {
+      const text = await err.response.data.text()
+      const json = JSON.parse(text)
+      return json.error || fallback
+    }
+  } catch {}
+  return err.response?.data?.error || fallback
+}
+
+function downloadBlob(data: Blob, filename: string) {
+  const url = window.URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
@@ -120,6 +142,10 @@ export function MentorDashboard() {
   const [feedbackText, setFeedbackText] = useState('')
   const [addForm, setAddForm] = useState({ name: '', email: '', domain: '' })
   const [officers, setOfficers] = useState<any[]>([])
+  const [issuingCertId, setIssuingCertId] = useState<string | null>(null)
+  const [letterModal, setLetterModal] = useState<{ id: string; name: string } | null>(null)
+  const [letterContent, setLetterContent] = useState('')
+  const [issuingLetter, setIssuingLetter] = useState(false)
 
   const { data: stats } = useMentorStats()
   const { data: mentees, isLoading: menteesLoading } = useMentees()
@@ -168,8 +194,47 @@ export function MentorDashboard() {
     }
   }
 
+  async function handleIssueCertificate(id: string, name: string) {
+    setIssuingCertId(id)
+    try {
+      const res = await api.post(`/mentor/mentees/${id}/issue-certificate`, {}, { responseType: 'blob' })
+      downloadBlob(res.data, `BuildInTech-Certificate-${name.replace(/\s+/g, '-')}.pdf`)
+      toast.success(`Certificate issued for ${name}`)
+      queryClient.invalidateQueries({ queryKey: ['mentor'] })
+    } catch (err: any) {
+      toast.error(await extractBlobError(err, 'Failed to issue certificate'))
+    } finally {
+      setIssuingCertId(null)
+    }
+  }
+
+  async function handleIssueLetter() {
+    if (!letterModal) return
+    if (!letterContent.trim() || letterContent.trim().length < 50) {
+      toast.error('Letter content must be at least 50 characters')
+      return
+    }
+    setIssuingLetter(true)
+    try {
+      const res = await api.post(
+        `/mentor/mentees/${letterModal.id}/issue-recommendation-letter`,
+        { letterContent: letterContent.trim() },
+        { responseType: 'blob' }
+      )
+      downloadBlob(res.data, `BuildInTech-Recommendation-${letterModal.name.replace(/\s+/g, '-')}.pdf`)
+      toast.success(`Recommendation letter issued for ${letterModal.name}`)
+      setLetterModal(null)
+      setLetterContent('')
+    } catch (err: any) {
+      toast.error(await extractBlobError(err, 'Failed to issue recommendation letter'))
+    } finally {
+      setIssuingLetter(false)
+    }
+  }
+
   const tabs: { id: Tab; label: string; icon: string }[] = [
     { id: 'mentees',     label: 'All Mentees',      icon: 'ti ti-users' },
+    { id: 'payments',    label: 'Pending Payments', icon: 'ti ti-cash' },
     { id: 'submissions', label: 'Submissions',       icon: 'ti ti-clipboard-list' },
     { id: 'codes',       label: 'Access Codes',      icon: 'ti ti-key' },
     { id: 'add',         label: 'Add Mentee',        icon: 'ti ti-user-plus' },
@@ -307,11 +372,11 @@ export function MentorDashboard() {
                 Loading mentees...
               </div>
             ) : (
-              <div className="bit-table-wrap" style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, overflow: 'hidden' }}>
+              <div className="bit-table-wrap" style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, overflowX: 'auto' }}>
                 <table className="bit-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      {['Mentee', 'Domain', 'Week', 'Submissions', 'Progress', 'Status', 'Assign', 'Remove'].map(h => (
+                      {['Mentee', 'Domain', 'Week', 'Submissions', 'Progress', 'Status', 'Plan', 'Assign', 'Actions'].map(h => (
                         <th key={h}>{h}</th>
                       ))}
                     </tr>
@@ -365,6 +430,22 @@ export function MentorDashboard() {
                             </span>
                           </td>
                           <td>
+                            {m.plan === 'PREMIUM' ? (
+                              <span
+                                title={m.planExpiresAt ? `Expires ${new Date(m.planExpiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0F1F3D', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700, color: '#F5D87A' }}
+                              >
+                                <i className="ti ti-crown" style={{ fontSize: 10 }} /> Premium
+                              </span>
+                            ) : m.pendingPaymentPlan ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#7A5C1E' }}>
+                                <i className="ti ti-clock-hour-4" style={{ fontSize: 10 }} /> Pending
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: 11, color: '#8A8070' }}>Free</span>
+                            )}
+                          </td>
+                          <td>
                             <select
                               defaultValue={m.liaisonOfficerId || ''}
                               onChange={async (e) => {
@@ -386,21 +467,46 @@ export function MentorDashboard() {
                             </select>
                           </td>
                           <td>
-                            <button
-                              onClick={async () => {
-                                if (!confirm(`Remove ${m.name} from the program?`)) return
-                                try {
-                                  await api.patch(`/mentor/mentees/${m.id}/deactivate`)
-                                  toast.success(`${m.name} removed`)
-                                  queryClient.invalidateQueries({ queryKey: ['mentor'] })
-                                } catch {
-                                  toast.error('Failed to remove mentee')
-                                }
-                              }}
-                              className="bit-btn-danger"
-                            >
-                              Remove
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                              {m.submissionsCount >= 48 && !m.hasReceivedCertificate && (
+                                <button
+                                  onClick={() => handleIssueCertificate(m.id, m.name)}
+                                  disabled={issuingCertId === m.id}
+                                  className="bit-btn-ghost"
+                                  style={{ fontSize: 11, padding: '5px 10px' }}
+                                >
+                                  {issuingCertId === m.id ? (
+                                    <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 12 }} />
+                                  ) : (
+                                    <><i className="ti ti-certificate" style={{ fontSize: 12 }} /> Issue Cert</>
+                                  )}
+                                </button>
+                              )}
+                              {m.submissionsCount >= 48 && m.hasReceivedCertificate && m.plan === 'PREMIUM' && (
+                                <button
+                                  onClick={() => { setLetterModal({ id: m.id, name: m.name }); setLetterContent('') }}
+                                  className="bit-btn-ghost"
+                                  style={{ fontSize: 11, padding: '5px 10px' }}
+                                >
+                                  <i className="ti ti-mail" style={{ fontSize: 12 }} /> Write Letter
+                                </button>
+                              )}
+                              <button
+                                onClick={async () => {
+                                  if (!confirm(`Remove ${m.name} from the program?`)) return
+                                  try {
+                                    await api.patch(`/mentor/mentees/${m.id}/deactivate`)
+                                    toast.success(`${m.name} removed`)
+                                    queryClient.invalidateQueries({ queryKey: ['mentor'] })
+                                  } catch {
+                                    toast.error('Failed to remove mentee')
+                                  }
+                                }}
+                                className="bit-btn-danger"
+                              >
+                                Remove
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       )
@@ -627,6 +733,9 @@ export function MentorDashboard() {
           </div>
         )}
 
+        {/* ── TAB: PENDING PAYMENTS ───────────────────────────────────────── */}
+        {tab === 'payments' && <PendingPaymentsTab />}
+
         {/* ── TAB: LIAISON OFFICERS ──────────────────────────────────────── */}
         {tab === 'liaison' && <LiaisonOfficersTab onOfficersChange={setOfficers} />}
 
@@ -634,6 +743,71 @@ export function MentorDashboard() {
         {tab === 'applications' && user?.isSuperAdmin && <ApplicationsTab />}
 
       </div>
+
+      {/* ── RECOMMENDATION LETTER MODAL ─────────────────────────────────── */}
+      {letterModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(15,31,61,0.55)', backdropFilter: 'blur(4px)', padding: 24,
+          }}
+          onClick={e => { if (e.target === e.currentTarget) { setLetterModal(null); setLetterContent('') } }}
+        >
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '28px 28px',
+            width: '100%', maxWidth: 560, boxShadow: '0 20px 60px rgba(15,31,61,0.18)',
+            fontFamily: "'Inter', sans-serif",
+          }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900, color: '#0F1F3D', marginBottom: 4 }}>
+              Write Recommendation Letter
+            </h2>
+            <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 18 }}>
+              For {letterModal.name} — this will be generated as a PDF, emailed to them, and downloaded here.
+            </p>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 7 }}>
+                Letter Content
+              </label>
+              <textarea
+                value={letterContent}
+                onChange={e => setLetterContent(e.target.value)}
+                placeholder="It is my pleasure to recommend... Speak to their growth, strengths, and what they're capable of next."
+                rows={8}
+                className="bit-input"
+                style={{ resize: 'none' }}
+              />
+              <div style={{ textAlign: 'right', marginTop: 4 }}>
+                <span style={{ fontSize: 11, color: letterContent.trim().length >= 50 ? '#1D4A6E' : '#8A8070' }}>
+                  {letterContent.trim().length} chars {letterContent.trim().length < 50 ? `(need ${50 - letterContent.trim().length} more)` : '✓'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={handleIssueLetter}
+                disabled={issuingLetter}
+                className="bit-btn-gold"
+                style={{ flex: 1, justifyContent: 'center', fontSize: 14 }}
+              >
+                {issuingLetter ? (
+                  <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} /> Generating...</>
+                ) : (
+                  <><i className="ti ti-send" style={{ fontSize: 14 }} /> Issue Letter</>
+                )}
+              </button>
+              <button
+                onClick={() => { setLetterModal(null); setLetterContent('') }}
+                className="bit-btn-ghost"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── FEEDBACK MODAL ─────────────────────────────────────────────── */}
       {feedbackModal && (
@@ -699,6 +873,128 @@ export function MentorDashboard() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function PendingPaymentsTab() {
+  const [payments, setPayments] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [actingId, setActingId] = useState<string | null>(null)
+
+  const load = async () => {
+    try {
+      const res = await api.get('/mentor/pending-payments')
+      setPayments(res.data)
+    } catch {
+      toast.error('Failed to load pending payments')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function handleConfirm(id: string, name: string) {
+    setActingId(id)
+    try {
+      await api.patch(`/mentor/mentees/${id}/confirm-payment`)
+      toast.success(`${name} upgraded to Premium`)
+      setPayments(prev => prev.filter(p => p.id !== id))
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to confirm payment')
+    } finally {
+      setActingId(null)
+    }
+  }
+
+  async function handleReject(id: string, name: string) {
+    if (!confirm(`Reject ${name}'s payment claim?`)) return
+    setActingId(id)
+    try {
+      await api.patch(`/mentor/mentees/${id}/reject-payment`)
+      toast.success(`${name}'s payment claim rejected`)
+      setPayments(prev => prev.filter(p => p.id !== id))
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to reject payment')
+    } finally {
+      setActingId(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070' }}>
+        <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 24, color: '#C9A84C', display: 'block', margin: '0 auto 10px' }} />
+        Loading pending payments...
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 16 }}>
+        Payment claims awaiting confirmation. Verify the reference against your PalmPay account before confirming.
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {payments.map(p => (
+          <div key={p.id} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '20px 22px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#0F1F3D', marginBottom: 3 }}>{p.name}</div>
+                <div style={{ fontSize: 13, color: '#6B6B6B' }}>{p.domainTrack} &middot; {p.email}</div>
+              </div>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: '#FBF7EC', border: '1px solid #DFC97A',
+                borderRadius: 999, padding: '4px 11px', fontSize: 11, fontWeight: 700, color: '#7A5C1E', flexShrink: 0,
+              }}>
+                {p.pendingPaymentPlan === 'YEARLY' ? 'Yearly — ₦200,000' : 'Monthly — ₦20,000'}
+              </span>
+            </div>
+
+            <div style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 9, padding: '12px 16px', marginBottom: 16 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 4 }}>Reference</div>
+                  <p style={{ fontSize: 13, color: '#0F1F3D', fontFamily: 'monospace' }}>{p.paymentReference}</p>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 4 }}>Submitted</div>
+                  <p style={{ fontSize: 13, color: '#0F1F3D' }}>
+                    {p.pendingPaymentSubmittedAt ? new Date(p.pendingPaymentSubmittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => handleConfirm(p.id, p.name)}
+                disabled={actingId === p.id}
+                className="bit-btn-gold"
+                style={{ fontSize: 12 }}
+              >
+                <i className="ti ti-check" style={{ fontSize: 13 }} /> Confirm Payment
+              </button>
+              <button
+                onClick={() => handleReject(p.id, p.name)}
+                disabled={actingId === p.id}
+                className="bit-btn-ghost"
+                style={{ fontSize: 12, color: '#ef4444', borderColor: '#fecaca' }}
+              >
+                <i className="ti ti-x" style={{ fontSize: 13 }} /> Reject
+              </button>
+            </div>
+          </div>
+        ))}
+        {payments.length === 0 && (
+          <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+            <i className="ti ti-cash" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
+            No pending payments.
+          </div>
+        )}
+      </div>
     </div>
   )
 }

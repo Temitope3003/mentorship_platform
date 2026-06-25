@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ui/ProtectedRoute'
 import { LandingPage } from './pages/LandingPage'
 import { AssessmentPage } from './pages/AssessmentPage'
 import { ResultsPage } from './pages/ResultsPage'
+import { RoadmapPreviewPage } from './pages/RoadmapPreviewPage'
 import { MenteeLoginPage } from './pages/MenteeLoginPage'
 import { MentorLoginPage } from './pages/MentorLoginPage'
 import { MentorRegisterPage } from './pages/MentorRegisterPage'
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/assess" element={<AssessmentPage />} />
         <Route path="/results/:token" element={<ResultsPage />} />
+        <Route path="/roadmap-preview/:domain" element={<RoadmapPreviewPage />} />
         <Route path="/login" element={<MenteeLoginPage />} />
         <Route path="/mentor/login" element={<MentorLoginPage />} />
         <Route path="/mentor/register" element={<MentorRegisterPage />} />

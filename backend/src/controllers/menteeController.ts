@@ -4,9 +4,85 @@ import { getCurriculumForDomain, getWeekForDomain } from '../utils/curriculum'
 import { sendConfirmationEmail } from '../emails/confirmationEmail'
 import { sendMenteePauseResumeAlertEmail } from '../emails/menteePauseResumeAlertEmail'
 import { getCurrentWeek } from '../utils/menteeStatus'
+import { changeMenteeTrack, TrackChangeError } from '../services/menteeTrackService'
+import { sendPaymentClaimAlertEmail } from '../emails/paymentClaimAlertEmail'
+import { sendMenteeRequestAlertEmail } from '../emails/menteeRequestAlertEmail'
+import { generateCertificatePdf } from '../services/certificateService'
 
 interface AuthRequest extends Request {
   menteeId?: string
+}
+
+async function notifyAboutPaymentClaim(mentee: {
+  name: string
+  domainTrack: string
+  liaisonOfficerId: string | null
+  paymentReference: string | null
+  pendingPaymentPlan: string | null
+}) {
+  try {
+    const recipients: { name: string; email: string }[] = []
+
+    if (mentee.liaisonOfficerId) {
+      const officer = await prisma.liaisonOfficer.findUnique({ where: { id: mentee.liaisonOfficerId } })
+      if (officer) recipients.push({ name: officer.name, email: officer.email })
+    }
+
+    const mentors = await prisma.mentor.findMany({
+      where: { status: 'APPROVED' },
+      select: { name: true, email: true },
+    })
+    recipients.push(...mentors)
+
+    await Promise.all(
+      recipients.map((r) =>
+        sendPaymentClaimAlertEmail({
+          recipientName: r.name,
+          recipientEmail: r.email,
+          menteeName: mentee.name,
+          menteeTrack: mentee.domainTrack,
+          paymentReference: mentee.paymentReference || '',
+          plan: mentee.pendingPaymentPlan || '',
+        }).catch((err) => console.error('Payment claim email error:', err.message))
+      )
+    )
+  } catch (err: any) {
+    console.error('Payment claim notification error:', err.message)
+  }
+}
+
+async function notifyAboutMenteeRequest(
+  mentee: { name: string; domainTrack: string; liaisonOfficerId: string | null },
+  requestType: 'certificate' | 'recommendation-letter'
+) {
+  try {
+    const recipients: { name: string; email: string }[] = []
+
+    if (mentee.liaisonOfficerId) {
+      const officer = await prisma.liaisonOfficer.findUnique({ where: { id: mentee.liaisonOfficerId } })
+      if (officer) recipients.push({ name: officer.name, email: officer.email })
+    }
+
+    const mentors = await prisma.mentor.findMany({
+      where: { status: 'APPROVED' },
+      select: { name: true, email: true },
+    })
+    recipients.push(...mentors)
+
+    await Promise.all(
+      recipients.map((r) =>
+        sendMenteeRequestAlertEmail({
+          recipientName: r.name,
+          recipientEmail: r.email,
+          menteeName: mentee.name,
+          menteeTrack: mentee.domainTrack,
+          requestType,
+        }).catch((err) => console.error('Mentee request email error:', err.message))
+      )
+    )
+  } catch (err: any) {
+    console.error('Mentee request notification error:', err.message)
+  }
 }
 
 async function notifyAboutPauseResume(
@@ -184,6 +260,16 @@ export async function getStats(req: AuthRequest, res: Response) {
     })
     if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
 
+    const planFields = {
+      plan: mentee.plan,
+      planExpiresAt: mentee.planExpiresAt,
+      pendingPaymentPlan: mentee.pendingPaymentPlan,
+      paymentReference: mentee.paymentReference,
+      pendingPaymentSubmittedAt: mentee.pendingPaymentSubmittedAt,
+      hasReceivedCertificate: mentee.hasReceivedCertificate,
+      certificateIssuedAt: mentee.certificateIssuedAt,
+    }
+
     if (!mentee.hasStarted) {
       return res.json({
         hasStarted: false,
@@ -196,6 +282,7 @@ export async function getStats(req: AuthRequest, res: Response) {
         currentPhase: null,
         phaseProgress: 0,
         domain: mentee.domainTrack,
+        ...planFields,
       })
     }
 
@@ -233,6 +320,7 @@ export async function getStats(req: AuthRequest, res: Response) {
       currentPhase: phaseNames[phaseNum - 1],
       phaseProgress: Math.max(0, phaseProgress),
       domain: mentee.domainTrack,
+      ...planFields,
     })
   } catch (error) {
     console.error('Get stats error:', error)
@@ -247,24 +335,13 @@ export async function updateTrack(req: Request, res: Response) {
 
     if (!domain) return res.status(400).json({ error: 'Domain is required' })
 
-    const mentee = await prisma.mentee.findUnique({
-      where: { id: menteeId },
-      include: { submissions: { select: { id: true }, take: 1 } },
-    })
-
-    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
-
-    if (mentee.submissions.length > 0) {
-      return res.status(403).json({ error: 'Track cannot be changed after you have started submitting work' })
-    }
-
-    const updated = await prisma.mentee.update({
-      where: { id: menteeId },
-      data: { domainTrack: domain, topMatch: domain },
-    })
+    const updated = await changeMenteeTrack(menteeId, domain)
 
     return res.json({ message: 'Track updated successfully', mentee: updated })
   } catch (error) {
+    if (error instanceof TrackChangeError) {
+      return res.status(error.status).json({ error: error.message })
+    }
     console.error('Update track error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
@@ -353,6 +430,130 @@ export async function resumeJourney(req: AuthRequest, res: Response) {
     return res.json({ message: 'Welcome back. Your journey has resumed.', mentee: updated })
   } catch (error) {
     console.error('Resume journey error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function submitPayment(req: AuthRequest, res: Response) {
+  try {
+    const { paymentReference, pendingPaymentPlan } = req.body
+
+    if (!paymentReference || !paymentReference.trim()) {
+      return res.status(400).json({ error: 'Payment reference is required' })
+    }
+    if (pendingPaymentPlan !== 'MONTHLY' && pendingPaymentPlan !== 'YEARLY') {
+      return res.status(400).json({ error: 'Plan must be MONTHLY or YEARLY' })
+    }
+
+    const mentee = await prisma.mentee.findUnique({ where: { id: req.menteeId } })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    const daysUntilExpiry = mentee.planExpiresAt
+      ? Math.ceil((new Date(mentee.planExpiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+      : null
+    const isRenewalWindow = daysUntilExpiry !== null && daysUntilExpiry <= 7
+
+    if (mentee.plan === 'PREMIUM' && !isRenewalWindow) {
+      return res.status(400).json({ error: 'You already have an active premium plan' })
+    }
+    if (mentee.pendingPaymentPlan) {
+      return res.status(400).json({ error: 'You already have a payment claim awaiting confirmation' })
+    }
+
+    const updated = await prisma.mentee.update({
+      where: { id: req.menteeId },
+      data: {
+        paymentReference: paymentReference.trim(),
+        pendingPaymentPlan,
+        pendingPaymentSubmittedAt: new Date(),
+      },
+    })
+
+    notifyAboutPaymentClaim(updated).catch((err) => console.error('Payment claim notification error:', err.message))
+
+    return res.json({
+      message: 'Payment submitted. Awaiting confirmation from your mentor or liaison officer.',
+      mentee: updated,
+    })
+  } catch (error) {
+    console.error('Submit payment error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getCertificate(req: AuthRequest, res: Response) {
+  try {
+    const mentee = await prisma.mentee.findUnique({ where: { id: req.menteeId } })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    if (!mentee.hasReceivedCertificate || !mentee.certificateCode) {
+      return res.status(404).json({ error: 'No certificate has been issued yet' })
+    }
+
+    const pdfBuffer = await generateCertificatePdf({
+      menteeName: mentee.name,
+      domainTrack: mentee.domainTrack,
+      completionDate: mentee.certificateIssuedAt || new Date(),
+      certificateCode: mentee.certificateCode,
+    })
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="BuildInTech-Certificate-${mentee.certificateCode}.pdf"`)
+    return res.send(pdfBuffer)
+  } catch (error) {
+    console.error('Get certificate error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function requestCertificate(req: AuthRequest, res: Response) {
+  try {
+    const mentee = await prisma.mentee.findUnique({
+      where: { id: req.menteeId },
+      include: { submissions: { select: { id: true } } },
+    })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    if (mentee.hasReceivedCertificate) {
+      return res.status(400).json({ error: 'You already have a certificate. Download it from your dashboard.' })
+    }
+    if (!mentee.hasStarted || mentee.submissions.length < 48) {
+      return res.status(400).json({ error: 'You need to complete all 48 weeks before requesting your certificate' })
+    }
+
+    notifyAboutMenteeRequest(mentee, 'certificate').catch((err) =>
+      console.error('Certificate request notification error:', err.message)
+    )
+
+    return res.json({ message: 'Your mentor has been notified. Your certificate will be issued shortly.' })
+  } catch (error) {
+    console.error('Request certificate error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function requestRecommendationLetter(req: AuthRequest, res: Response) {
+  try {
+    const mentee = await prisma.mentee.findUnique({
+      where: { id: req.menteeId },
+      include: { submissions: { select: { id: true } } },
+    })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    if (mentee.plan !== 'PREMIUM') {
+      return res.status(403).json({ error: 'Recommendation letters are a premium-only benefit' })
+    }
+    if (!mentee.hasStarted || mentee.submissions.length < 48) {
+      return res.status(400).json({ error: 'You need to complete all 48 weeks before requesting a recommendation letter' })
+    }
+
+    notifyAboutMenteeRequest(mentee, 'recommendation-letter').catch((err) =>
+      console.error('Recommendation letter request notification error:', err.message)
+    )
+
+    return res.json({ message: 'Your mentor has been notified and will write your recommendation letter soon.' })
+  } catch (error) {
+    console.error('Request recommendation letter error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

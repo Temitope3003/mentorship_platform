@@ -4,6 +4,7 @@ import { sendReminderEmail } from '../emails/reminderEmail'
 import { sendWelcomeEmail } from '../emails/welcomeEmail'
 import { getCurriculumForDomain } from '../utils/curriculum'
 import { getCurrentWeek, getMenteeStatusLabel } from '../utils/menteeStatus'
+import { sendPremiumExpiredEmail } from '../emails/premiumExpiredEmail'
 
 function getDayInCurrentWeek(startDate: Date): number {
   const diffMs = Date.now() - new Date(startDate).getTime()
@@ -478,6 +479,34 @@ cron.schedule('0 8 */4 * *', async () => {
     console.log('[Scheduler] Supabase keep-alive ping sent')
   } catch (error) {
     console.error('[Scheduler] Keep-alive ping failed:', error)
+  }
+})
+
+// ─────────────────────────────────────────────
+// JOB: Premium Expiry Check
+// Runs every day at 6am server time — reverts expired Premium mentees to Free
+// ─────────────────────────────────────────────
+cron.schedule('0 6 * * *', async () => {
+  console.log('[Scheduler] Running premium expiry check...')
+  try {
+    const expired = await prisma.mentee.findMany({
+      where: { plan: 'PREMIUM', planExpiresAt: { lt: new Date() } },
+    })
+
+    for (const mentee of expired) {
+      await prisma.mentee.update({
+        where: { id: mentee.id },
+        data: { plan: 'FREE', planExpiresAt: null },
+      })
+
+      await sendPremiumExpiredEmail({ name: mentee.name, email: mentee.email }).catch(err =>
+        console.error('Premium expired email error:', err.message)
+      )
+
+      console.log(`[Scheduler] Premium expired for ${mentee.email}, reverted to FREE`)
+    }
+  } catch (error) {
+    console.error('[Scheduler] Premium expiry check error:', error)
   }
 })
 

@@ -10,6 +10,10 @@ import {
   startJourney,
   pauseJourney,
   resumeJourney,
+  submitPayment,
+  getCertificate,
+  requestCertificate,
+  requestRecommendationLetter,
 } from '../controllers/menteeController'
 
 
@@ -31,3 +35,7 @@ menteeRouter.patch('/me/track', updateTrack)
 menteeRouter.post('/me/start', startJourney)
 menteeRouter.post('/me/pause', pauseJourney)
 menteeRouter.post('/me/resume', resumeJourney)
+menteeRouter.post('/me/submit-payment', submitPayment)
+menteeRouter.get('/me/certificate', getCertificate)
+menteeRouter.post('/me/request-certificate', requestCertificate)
+menteeRouter.post('/me/request-recommendation-letter', requestRecommendationLetter)

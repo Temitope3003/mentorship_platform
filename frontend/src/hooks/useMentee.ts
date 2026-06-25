@@ -67,3 +67,42 @@ export function useResumeJourney() {
     },
   })
 }
+
+export function useSubmitPayment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { paymentReference: string; pendingPaymentPlan: 'MONTHLY' | 'YEARLY' }) =>
+      api.post('/mentee/me/submit-payment', data).then(r => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentee'] })
+    },
+  })
+}
+
+export function useRequestCertificate() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.post('/mentee/me/request-certificate').then(r => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentee'] })
+    },
+  })
+}
+
+export function useRequestRecommendationLetter() {
+  return useMutation({
+    mutationFn: () => api.post('/mentee/me/request-recommendation-letter').then(r => r.data),
+  })
+}
+
+export async function downloadMyCertificate() {
+  const res = await api.get('/mentee/me/certificate', { responseType: 'blob' })
+  const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'BuildInTech-Certificate-of-Completion.pdf'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}

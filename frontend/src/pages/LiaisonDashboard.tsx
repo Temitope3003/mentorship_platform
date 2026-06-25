@@ -64,22 +64,26 @@ export function LiaisonDashboard() {
   const [officer] = useLocalStorage<any>('liaison_officer', null)
   const [data, setData] = useState<any>(null)
   const [mentees, setMentees] = useState<any[]>([])
-  const [tab, setTab] = useState<'week' | 'mentees'>('week')
+  const [payments, setPayments] = useState<any[]>([])
+  const [tab, setTab] = useState<'week' | 'mentees' | 'payments'>('week')
   const [loading, setLoading] = useState(false)
   const [checkinLoading, setCheckinLoading] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
+  const [actingPaymentId, setActingPaymentId] = useState<string | null>(null)
 
   const headers = { Authorization: `Bearer ${token}` }
 
   const load = async () => {
     setLoading(true)
     try {
-      const [d, m] = await Promise.all([
+      const [d, m, p] = await Promise.all([
         axios.get(`${API}/liaison/dashboard`, { headers }),
         axios.get(`${API}/liaison/mentees`, { headers }),
+        axios.get(`${API}/mentor/pending-payments`, { headers }),
       ])
       setData(d.data)
       setMentees(m.data)
+      setPayments(p.data)
       const n: Record<string, string> = {}
       m.data.forEach((m: any) => { n[m.id] = m.notes || '' })
       setNotes(n)
@@ -87,6 +91,31 @@ export function LiaisonDashboard() {
       navigate('/liaison/login')
     }
     setLoading(false)
+  }
+
+  const confirmPayment = async (id: string, name: string) => {
+    setActingPaymentId(id)
+    try {
+      await axios.patch(`${API}/mentor/mentees/${id}/confirm-payment`, {}, { headers })
+      setPayments(prev => prev.filter(p => p.id !== id))
+      alert(`${name} upgraded to Premium`)
+    } catch {
+      alert('Failed to confirm payment')
+    }
+    setActingPaymentId(null)
+  }
+
+  const rejectPayment = async (id: string, name: string) => {
+    if (!confirm(`Reject ${name}'s payment claim?`)) return
+    setActingPaymentId(id)
+    try {
+      await axios.patch(`${API}/mentor/mentees/${id}/reject-payment`, {}, { headers })
+      setPayments(prev => prev.filter(p => p.id !== id))
+      alert(`${name}'s payment claim rejected`)
+    } catch {
+      alert('Failed to reject payment')
+    }
+    setActingPaymentId(null)
   }
 
   useEffect(() => { if (token) load() }, [])
@@ -212,6 +241,10 @@ export function LiaisonDashboard() {
             <i className="ti ti-users" style={{ fontSize: 12, marginRight: 6 }} />
             All Mentees
           </button>
+          <button onClick={() => setTab('payments')} className={`bit-tab${tab === 'payments' ? ' active' : ''}`}>
+            <i className="ti ti-cash" style={{ fontSize: 12, marginRight: 6 }} />
+            Pending Payments{payments.length > 0 ? ` (${payments.length})` : ''}
+          </button>
         </div>
 
         {/* ── TAB: THIS WEEK ─────────────────────────────────────────────── */}
@@ -302,6 +335,19 @@ export function LiaisonDashboard() {
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 999, padding: '2px 9px', fontSize: 10, fontWeight: 600, color: sc.color }}>
                           <i className={sc.icon} style={{ fontSize: 9 }} /> {sc.label}
                         </span>
+                        {m.plan === 'PREMIUM' && (
+                          <span
+                            title={m.planExpiresAt ? `Expires ${new Date(m.planExpiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0F1F3D', borderRadius: 999, padding: '2px 9px', fontSize: 10, fontWeight: 700, color: '#F5D87A' }}
+                          >
+                            <i className="ti ti-crown" style={{ fontSize: 9 }} /> Premium
+                          </span>
+                        )}
+                        {m.plan !== 'PREMIUM' && m.pendingPaymentPlan && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 999, padding: '2px 9px', fontSize: 10, fontWeight: 600, color: '#7A5C1E' }}>
+                            <i className="ti ti-clock-hour-4" style={{ fontSize: 9 }} /> Pending
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: 12, color: '#6B6B6B', marginBottom: 4 }}>{m.domainTrack}</div>
                       <div style={{ fontSize: 11, color: '#8A8070', marginBottom: 10 }}>
@@ -347,6 +393,63 @@ export function LiaisonDashboard() {
               <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
                 <i className="ti ti-users" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
                 No mentees assigned yet.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── TAB: PENDING PAYMENTS ───────────────────────────────────────── */}
+        {tab === 'payments' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 4 }}>
+              Payment claims from your assigned mentees, awaiting confirmation.
+            </p>
+            {payments.map((p: any) => (
+              <div key={p.id} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '18px 20px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1F3D', marginBottom: 3 }}>{p.name}</div>
+                    <div style={{ fontSize: 12, color: '#6B6B6B' }}>{p.domainTrack} &middot; {p.email}</div>
+                  </div>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    background: '#FBF7EC', border: '1px solid #DFC97A',
+                    borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 700, color: '#7A5C1E', flexShrink: 0,
+                  }}>
+                    {p.pendingPaymentPlan === 'YEARLY' ? 'Yearly — ₦200,000' : 'Monthly — ₦20,000'}
+                  </span>
+                </div>
+
+                <div style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 9, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#0F1F3D' }}>
+                  Reference: <span style={{ fontFamily: 'monospace' }}>{p.paymentReference}</span>
+                  {p.pendingPaymentSubmittedAt && (
+                    <span style={{ color: '#8A8070' }}> &middot; Submitted {new Date(p.pendingPaymentSubmittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    onClick={() => confirmPayment(p.id, p.name)}
+                    disabled={actingPaymentId === p.id}
+                    className="bit-btn-gold"
+                  >
+                    <i className="ti ti-check" style={{ fontSize: 12 }} /> Confirm Payment
+                  </button>
+                  <button
+                    onClick={() => rejectPayment(p.id, p.name)}
+                    disabled={actingPaymentId === p.id}
+                    className="bit-btn-gold"
+                    style={{ background: '#fff', color: '#ef4444', border: '1px solid #fecaca' }}
+                  >
+                    <i className="ti ti-x" style={{ fontSize: 12 }} /> Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+            {payments.length === 0 && (
+              <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+                <i className="ti ti-cash" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
+                No pending payments.
               </div>
             )}
           </div>

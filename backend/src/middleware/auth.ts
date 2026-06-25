@@ -88,6 +88,41 @@ export async function requireSuperAdmin(
   }
 }
 
+/**
+ * Accepts either a mentor token or a liaison officer token. Sets req.mentorId
+ * or req.liaisonId accordingly so the controller can branch on scope
+ * (mentors see everything, liaison officers see only their assigned mentees).
+ */
+export function requireMentorOrLiaison(
+  req: AuthRequest & { liaisonId?: string },
+  res: Response,
+  next: NextFunction
+) {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    if (decoded.role === 'mentor') {
+      req.mentorId = decoded.sub;
+      return next();
+    }
+
+    if (decoded.liaisonId) {
+      req.liaisonId = decoded.liaisonId;
+      return next();
+    }
+
+    return res.status(403).json({ error: 'Access denied' });
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
 export async function requireLiaison(req: any, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization

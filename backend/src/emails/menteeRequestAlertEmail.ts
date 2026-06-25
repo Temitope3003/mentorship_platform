@@ -1,0 +1,53 @@
+import { sendEmail } from './sender'
+
+interface MenteeRequestAlertData {
+  recipientName: string
+  recipientEmail: string
+  menteeName: string
+  menteeTrack: string
+  requestType: 'certificate' | 'recommendation-letter'
+}
+
+export async function sendMenteeRequestAlertEmail(data: MenteeRequestAlertData) {
+  const recipientFirstName = data.recipientName.split(' ')[0]
+  const isLetter = data.requestType === 'recommendation-letter'
+  const title = isLetter ? 'Recommendation Letter Requested' : 'Certificate Requested'
+  const action = isLetter ? 'write and issue their recommendation letter' : 'issue their certificate of completion'
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F9F7F1;font-family:Arial,sans-serif;color:#0F1F3D;">
+  <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+    <div style="background:#0F1F3D;border-radius:16px 16px 0 0;padding:32px 40px;">
+      <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:800;">${title}</h1>
+      <p style="margin:8px 0 0;color:#C9A84C;font-size:14px;">Build In Tech — Action Requested</p>
+    </div>
+
+    <div style="background:#ffffff;border-radius:0 0 16px 16px;padding:40px;border:1px solid #E8E4D9;border-top:none;">
+
+      <p style="margin:0 0 24px;color:#4A4A4A;font-size:15px;line-height:1.7;">
+        Hi ${recipientFirstName}, <strong>${data.menteeName}</strong> (${data.menteeTrack}) has completed all 48 weeks and requested that you ${action}.
+      </p>
+
+      <a href="${process.env.FRONTEND_URL}/mentor/login"
+         style="display:inline-block;background:#C9A84C;color:#0F1F3D;padding:14px 28px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700;">
+        Go to Mentor Dashboard →
+      </a>
+
+      <div style="border-top:1px solid #E8E4D9;padding-top:20px;margin-top:28px;text-align:center;">
+        <p style="margin:0;font-size:12px;color:#8A8070;">Build In Tech — Free AI Mentorship Platform</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>`
+
+  await sendEmail({
+    to: data.recipientEmail,
+    subject: `${data.menteeName} requested their ${isLetter ? 'recommendation letter' : 'certificate'}`,
+    html,
+  })
+}

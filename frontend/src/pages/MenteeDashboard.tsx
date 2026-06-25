@@ -7,6 +7,10 @@ import {
   useStartJourney,
   usePauseJourney,
   useResumeJourney,
+  useSubmitPayment,
+  useRequestCertificate,
+  useRequestRecommendationLetter,
+  downloadMyCertificate,
 } from '../hooks/useMentee'
 import toast from 'react-hot-toast'
 import { api } from '../utils/api'
@@ -114,10 +118,19 @@ const CSS = `
   .bit-textarea:focus { border-color: #C9A84C; background: #fff; box-shadow: 0 0 0 3px rgba(201,168,76,0.14); }
   .bit-textarea::placeholder { color: #B0A898; }
 
+  .bit-plan-btn {
+    flex: 1; border: 1px solid #E8E4D9; border-radius: 9px; background: #fff;
+    padding: 12px 14px; font-size: 13px; font-weight: 700; color: #8A8070;
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; text-align: center;
+  }
+  .bit-plan-btn.active { background: #0F1F3D; color: #F5D87A; border-color: #0F1F3D; }
+  .bit-plan-btn:not(.active):hover { border-color: #C9A84C; color: #0F1F3D; }
+
   @media (max-width: 640px) {
     .bit-stats-grid { grid-template-columns: 1fr 1fr !important; }
     .bit-week-btn { padding: 14px 14px !important; }
     .bit-week-label { display: none; }
+    .bit-upgrade-grid { grid-template-columns: 1fr !important; }
   }
 `
 
@@ -129,6 +142,9 @@ export function MenteeDashboard() {
   const startJourney = useStartJourney()
   const pauseJourney = usePauseJourney()
   const resumeJourney = useResumeJourney()
+  const submitPayment = useSubmitPayment()
+  const requestCertificate = useRequestCertificate()
+  const requestRecommendationLetter = useRequestRecommendationLetter()
   const [openWeek, setOpenWeek] = useState<number | null>(null)
   const [forms, setForms] = useState<Record<number, SubmissionFormData>>({})
   const [submitting, setSubmitting] = useState<number | null>(null)
@@ -138,6 +154,14 @@ export function MenteeDashboard() {
   const [resuming, setResuming] = useState(false)
   const [pauseModalOpen, setPauseModalOpen] = useState(false)
   const [pauseReason, setPauseReason] = useState('')
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
+  const [paymentPlan, setPaymentPlan] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY')
+  const [paymentReference, setPaymentReference] = useState('')
+  const [submittingPayment, setSubmittingPayment] = useState(false)
+  const [requestingCert, setRequestingCert] = useState(false)
+  const [requestingLetter, setRequestingLetter] = useState(false)
+  const [downloadingCert, setDownloadingCert] = useState(false)
+  const [letterRequested, setLetterRequested] = useState(false)
 
   const domainColor = DOMAIN_COLORS[user?.domain || ''] || '#C9A84C'
   const firstName = user?.name?.split(' ')[0] || 'there'
@@ -241,6 +265,60 @@ export function MenteeDashboard() {
     }
   }
 
+  async function handleSubmitPayment() {
+    if (!paymentReference.trim()) {
+      toast.error('Please enter your PalmPay transaction reference')
+      return
+    }
+    setSubmittingPayment(true)
+    try {
+      await submitPayment.mutateAsync({ paymentReference: paymentReference.trim(), pendingPaymentPlan: paymentPlan })
+      toast.success('Payment submitted. Awaiting confirmation from your mentor or liaison officer.')
+      setShowPaymentForm(false)
+      setPaymentReference('')
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to submit payment')
+    } finally {
+      setSubmittingPayment(false)
+    }
+  }
+
+  async function handleRequestCertificate() {
+    setRequestingCert(true)
+    try {
+      const res = await requestCertificate.mutateAsync()
+      toast.success(res.message || 'Your mentor has been notified.')
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to request certificate')
+    } finally {
+      setRequestingCert(false)
+    }
+  }
+
+  async function handleRequestLetter() {
+    setRequestingLetter(true)
+    try {
+      const res = await requestRecommendationLetter.mutateAsync()
+      toast.success(res.message || 'Your mentor has been notified.')
+      setLetterRequested(true)
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to request recommendation letter')
+    } finally {
+      setRequestingLetter(false)
+    }
+  }
+
+  async function handleDownloadCertificate() {
+    setDownloadingCert(true)
+    try {
+      await downloadMyCertificate()
+    } catch {
+      toast.error('Failed to download certificate')
+    } finally {
+      setDownloadingCert(false)
+    }
+  }
+
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (statsLoading || roadmapLoading) {
     return (
@@ -299,7 +377,7 @@ export function MenteeDashboard() {
         <div style={{ marginBottom: 32 }}>
 
           {/* Domain track pill */}
-          <div style={{ marginBottom: 14 }}>
+          <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               background: domainColor + '14', border: `1px solid ${domainColor}30`,
@@ -310,6 +388,17 @@ export function MenteeDashboard() {
               <i className="ti ti-route" style={{ fontSize: 12 }} />
               {user?.domain}
             </span>
+            {stats?.plan === 'PREMIUM' && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: '#0F1F3D', borderRadius: 999, padding: '5px 14px',
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.07em',
+                textTransform: 'uppercase', color: '#F5D87A',
+              }}>
+                <i className="ti ti-crown" style={{ fontSize: 12 }} />
+                Premium
+              </span>
+            )}
           </div>
 
           <h1 style={{
@@ -359,6 +448,43 @@ export function MenteeDashboard() {
             </div>
           )}
         </div>
+
+        {/* ── PREMIUM / PAYMENT ───────────────────────────────────────────── */}
+        {stats?.plan === 'PREMIUM' ? (
+          <PremiumStatusCard expiresAt={stats?.planExpiresAt} />
+        ) : stats?.pendingPaymentPlan ? (
+          <PendingPaymentCard
+            plan={stats.pendingPaymentPlan}
+            reference={stats.paymentReference}
+            submittedAt={stats.pendingPaymentSubmittedAt}
+          />
+        ) : (
+          <UpgradeToPremiumSection
+            showForm={showPaymentForm}
+            onToggleForm={() => setShowPaymentForm(v => !v)}
+            plan={paymentPlan}
+            onPlanChange={setPaymentPlan}
+            reference={paymentReference}
+            onReferenceChange={setPaymentReference}
+            onSubmit={handleSubmitPayment}
+            submitting={submittingPayment}
+          />
+        )}
+
+        {/* ── CERTIFICATE & RECOMMENDATION LETTER ─────────────────────────── */}
+        {(stats?.weeksSubmitted ?? 0) >= 48 && (
+          <CertificateSection
+            isPremium={stats?.plan === 'PREMIUM'}
+            hasReceivedCertificate={!!stats?.hasReceivedCertificate}
+            onRequestCertificate={handleRequestCertificate}
+            requestingCert={requestingCert}
+            onDownloadCertificate={handleDownloadCertificate}
+            downloadingCert={downloadingCert}
+            onRequestLetter={handleRequestLetter}
+            requestingLetter={requestingLetter}
+            letterRequested={letterRequested}
+          />
+        )}
 
         {isPaused && (
           <PausedBanner
@@ -777,6 +903,289 @@ function PausedBanner({
           <><i className="ti ti-player-play" style={{ fontSize: 14 }} /> Resume My Journey</>
         )}
       </button>
+    </div>
+  )
+}
+
+function PremiumStatusCard({ expiresAt }: { expiresAt?: string | null }) {
+  if (!expiresAt) return null
+  const expiry = new Date(expiresAt)
+  const daysLeft = Math.ceil((expiry.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+  const expiryFormatted = expiry.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  const showRenewPrompt = daysLeft <= 7
+
+  return (
+    <div style={{
+      background: showRenewPrompt ? '#FBF7EC' : '#0F1F3D',
+      border: showRenewPrompt ? '1px solid #DFC97A' : 'none',
+      borderRadius: 14, padding: '18px 22px', marginBottom: 20,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <i className="ti ti-crown" style={{ fontSize: 22, color: showRenewPrompt ? '#C9A84C' : '#F5D87A' }} />
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: showRenewPrompt ? '#7A5C1E' : '#fff' }}>
+            {showRenewPrompt
+              ? `Premium expires in ${daysLeft <= 0 ? 'less than a day' : `${daysLeft} day${daysLeft === 1 ? '' : 's'}`}`
+              : 'You are on Premium'}
+          </div>
+          <div style={{ fontSize: 12, color: showRenewPrompt ? '#92681A' : 'rgba(255,255,255,0.65)', marginTop: 2 }}>
+            Active until {expiryFormatted}
+          </div>
+        </div>
+      </div>
+      {showRenewPrompt && (
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#7A5C1E' }}>
+          Submit a new PalmPay reference below to renew
+        </span>
+      )}
+    </div>
+  )
+}
+
+function PendingPaymentCard({
+  plan,
+  reference,
+  submittedAt,
+}: {
+  plan: string
+  reference?: string | null
+  submittedAt?: string | null
+}) {
+  const submittedFormatted = submittedAt
+    ? new Date(submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null
+
+  return (
+    <div style={{
+      background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 14,
+      padding: '20px 22px', marginBottom: 20,
+      display: 'flex', alignItems: 'flex-start', gap: 14,
+    }}>
+      <i className="ti ti-clock-hour-4" style={{ fontSize: 22, color: '#C9A84C', flexShrink: 0, marginTop: 2 }} />
+      <div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#7A5C1E', marginBottom: 4 }}>
+          Payment submitted, awaiting confirmation
+        </div>
+        <p style={{ fontSize: 13, color: '#92681A', lineHeight: 1.7 }}>
+          Your {plan === 'YEARLY' ? 'Yearly' : 'Monthly'} plan claim (ref: <span style={{ fontFamily: 'monospace' }}>{reference}</span>)
+          {submittedFormatted ? ` submitted on ${submittedFormatted}` : ''} is waiting for your mentor or liaison officer to confirm.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+const PREMIUM_PERKS = [
+  '1-on-1 mentor calls',
+  'Priority 24-hour feedback on submissions',
+  'CV and LinkedIn profile review',
+  'Mock interview practice',
+  'Job placement support',
+  'A personal recommendation letter on completion',
+]
+
+const FREE_PERKS = [
+  'Full 48-week curriculum',
+  'Certificate of completion',
+  'Liaison officer support',
+  'Standard feedback timing',
+]
+
+function UpgradeToPremiumSection({
+  showForm,
+  onToggleForm,
+  plan,
+  onPlanChange,
+  reference,
+  onReferenceChange,
+  onSubmit,
+  submitting,
+}: {
+  showForm: boolean
+  onToggleForm: () => void
+  plan: 'MONTHLY' | 'YEARLY'
+  onPlanChange: (plan: 'MONTHLY' | 'YEARLY') => void
+  reference: string
+  onReferenceChange: (value: string) => void
+  onSubmit: () => void
+  submitting: boolean
+}) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 14, padding: '22px 24px', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: showForm ? 18 : 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <i className="ti ti-crown" style={{ fontSize: 20, color: '#C9A84C' }} />
+          <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 900, color: '#0F1F3D' }}>
+            Upgrade to Premium
+          </span>
+        </div>
+        <button onClick={onToggleForm} className="bit-btn-gold" style={{ fontSize: 12 }}>
+          {showForm ? 'Hide' : 'See plans'}
+          <i className={`ti ti-chevron-down bit-chevron${showForm ? ' open' : ''}`} style={{ fontSize: 13 }} />
+        </button>
+      </div>
+
+      {showForm && (
+        <>
+          <div className="bit-upgrade-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+            <div style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 10, padding: '16px 18px' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#8A8070', marginBottom: 10 }}>
+                Free
+              </div>
+              {FREE_PERKS.map(perk => (
+                <div key={perk} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 12.5, color: '#3A3A3A', marginBottom: 7 }}>
+                  <i className="ti ti-check" style={{ fontSize: 12, color: '#8A8070', marginTop: 2, flexShrink: 0 }} />
+                  {perk}
+                </div>
+              ))}
+            </div>
+            <div style={{ background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 10, padding: '16px 18px' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#7A5C1E', marginBottom: 10 }}>
+                Premium
+              </div>
+              {PREMIUM_PERKS.map(perk => (
+                <div key={perk} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 12.5, color: '#0F1F3D', fontWeight: 500, marginBottom: 7 }}>
+                  <i className="ti ti-check" style={{ fontSize: 12, color: '#C9A84C', marginTop: 2, flexShrink: 0 }} />
+                  {perk}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: '#0F1F3D', borderRadius: 10, padding: '16px 18px', marginBottom: 18 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#F5D87A', marginBottom: 10 }}>
+              Pay via PalmPay
+            </div>
+            <table width="100%" cellPadding={0} cellSpacing={0}>
+              <tbody>
+                <tr>
+                  <td style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', paddingBottom: 6, width: 120 }}>Account Number</td>
+                  <td style={{ fontSize: 14, color: '#fff', fontWeight: 700, fontFamily: 'monospace', paddingBottom: 6 }}>8146424841</td>
+                </tr>
+                <tr>
+                  <td style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Account Name</td>
+                  <td style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>Ajao Temitope E.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+            <button
+              onClick={() => onPlanChange('MONTHLY')}
+              className={`bit-plan-btn${plan === 'MONTHLY' ? ' active' : ''}`}
+            >
+              Monthly<br /><span style={{ fontSize: 11, fontWeight: 400 }}>₦20,000</span>
+            </button>
+            <button
+              onClick={() => onPlanChange('YEARLY')}
+              className={`bit-plan-btn${plan === 'YEARLY' ? ' active' : ''}`}
+            >
+              Yearly<br /><span style={{ fontSize: 11, fontWeight: 400 }}>₦200,000</span>
+            </button>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 7 }}>
+              PalmPay Transaction Reference
+            </label>
+            <input
+              type="text"
+              value={reference}
+              onChange={e => onReferenceChange(e.target.value)}
+              placeholder="e.g. PP240625XXXXXX"
+              className="bit-input"
+            />
+          </div>
+
+          <button onClick={onSubmit} disabled={submitting} className="bit-btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
+            {submitting ? (
+              <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} /> Submitting...</>
+            ) : (
+              <><i className="ti ti-send" style={{ fontSize: 14 }} /> Submit Payment</>
+            )}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function CertificateSection({
+  isPremium,
+  hasReceivedCertificate,
+  onRequestCertificate,
+  requestingCert,
+  onDownloadCertificate,
+  downloadingCert,
+  onRequestLetter,
+  requestingLetter,
+  letterRequested,
+}: {
+  isPremium: boolean
+  hasReceivedCertificate: boolean
+  onRequestCertificate: () => void
+  requestingCert: boolean
+  onDownloadCertificate: () => void
+  downloadingCert: boolean
+  onRequestLetter: () => void
+  requestingLetter: boolean
+  letterRequested: boolean
+}) {
+  return (
+    <div style={{
+      background: '#0F1F3D', borderRadius: 14, padding: '24px 26px', marginBottom: 20,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <i className="ti ti-certificate" style={{ fontSize: 28, color: '#F5D87A' }} />
+        <div>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 900, color: '#fff', marginBottom: 3 }}>
+            You've completed the program!
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+            All 48 weeks submitted. {hasReceivedCertificate ? 'Your certificate is ready.' : 'Request your certificate of completion.'}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {!hasReceivedCertificate ? (
+          <button onClick={onRequestCertificate} disabled={requestingCert} className="bit-btn-gold">
+            {requestingCert ? (
+              <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} /> Requesting...</>
+            ) : (
+              <><i className="ti ti-certificate" style={{ fontSize: 14 }} /> Request My Certificate</>
+            )}
+          </button>
+        ) : (
+          <button onClick={onDownloadCertificate} disabled={downloadingCert} className="bit-btn-gold">
+            {downloadingCert ? (
+              <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} /> Downloading...</>
+            ) : (
+              <><i className="ti ti-download" style={{ fontSize: 14 }} /> Download Certificate</>
+            )}
+          </button>
+        )}
+
+        {isPremium && hasReceivedCertificate && (
+          <button
+            onClick={onRequestLetter}
+            disabled={requestingLetter || letterRequested}
+            className="bit-btn-navy"
+            style={{ background: 'rgba(255,255,255,0.1)', color: '#F5D87A' }}
+          >
+            {requestingLetter ? (
+              <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} /> Requesting...</>
+            ) : letterRequested ? (
+              <><i className="ti ti-circle-check" style={{ fontSize: 14 }} /> Letter requested</>
+            ) : (
+              <><i className="ti ti-mail" style={{ fontSize: 14 }} /> Request Recommendation Letter</>
+            )}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
