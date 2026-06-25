@@ -7,6 +7,9 @@ import {
   createSubmission,
   getStats,
   updateTrack,
+  startJourney,
+  pauseJourney,
+  resumeJourney,
 } from '../controllers/menteeController'
 
 
@@ -25,3 +28,6 @@ menteeRouter.get('/me/submissions', getSubmissions)
 menteeRouter.post('/me/submissions', createSubmission)
 menteeRouter.get('/me/stats', getStats)
 menteeRouter.patch('/me/track', updateTrack)
+menteeRouter.post('/me/start', startJourney)
+menteeRouter.post('/me/pause', pauseJourney)
+menteeRouter.post('/me/resume', resumeJourney)

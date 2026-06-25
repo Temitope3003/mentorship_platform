@@ -13,10 +13,15 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Endpoints where a 401 means "your input was wrong" rather than "your session is invalid"
+const SKIP_AUTO_LOGOUT_ON_401 = ['/mentor/me/password']
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    const url = err.config?.url || ''
+    const skipLogout = SKIP_AUTO_LOGOUT_ON_401.some((path) => url.includes(path))
+    if (err.response?.status === 401 && !skipLogout) {
       useAuthStore.getState().logout()
     }
     return Promise.reject(err)

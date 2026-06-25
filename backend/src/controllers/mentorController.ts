@@ -7,16 +7,12 @@ import { sendWelcomeEmail } from '../emails/welcomeEmail'
 import { sendMentorApplicationAlertEmail } from '../emails/mentorApplicationAlertEmail'
 import { sendMentorApprovalEmail } from '../emails/mentorApprovalEmail'
 import { sendMentorRejectionEmail } from '../emails/mentorRejectionEmail'
+import { getCurrentWeek, getMenteeStatusLabel, getWeeksBehind } from '../utils/menteeStatus'
+import { DOMAINS } from '../utils/questionData'
 import bcrypt from 'bcryptjs'
 
 interface AuthRequest extends Request {
   mentorId?: string
-}
-
-function getCurrentWeek(startDate: Date): number {
-  const diffMs = Date.now() - new Date(startDate).getTime()
-  const diffWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1
-  return Math.max(1, Math.min(48, diffWeeks))
 }
 
 export async function getAllMentees(req: AuthRequest, res: Response) {
@@ -27,19 +23,30 @@ export async function getAllMentees(req: AuthRequest, res: Response) {
       orderBy: { createdAt: 'desc' },
     })
 
-    const result = mentees.map(m => ({
-      id: m.id,
-      name: m.name,
-      email: m.email,
-      accessCode: m.accessCode,
-      domainTrack: m.domainTrack,
-      currentWeek: getCurrentWeek(m.startDate),
-      submissionsCount: m.submissions.length,
-      isActive: m.isActive,
-      startDate: m.startDate,
-      topMatch: m.topMatch,
-      alignmentStatus: m.alignmentStatus,
-    }))
+    const result = mentees.map(m => {
+      const lastSubmittedWeek = m.submissions.length > 0
+        ? Math.max(...m.submissions.map(s => s.weekNumber))
+        : 0
+      return {
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        accessCode: m.accessCode,
+        domainTrack: m.domainTrack,
+        currentWeek: getCurrentWeek(m),
+        submissionsCount: m.submissions.length,
+        isActive: m.isActive,
+        startDate: m.startDate,
+        topMatch: m.topMatch,
+        alignmentStatus: m.alignmentStatus,
+        hasStarted: m.hasStarted,
+        isPaused: m.isPaused,
+        pausedAt: m.pausedAt,
+        pauseReason: m.pauseReason,
+        status: getMenteeStatusLabel(m, lastSubmittedWeek),
+        weeksBehind: getWeeksBehind(m, lastSubmittedWeek),
+      }
+    })
 
     return res.json(result)
   } catch (error) {
@@ -153,11 +160,10 @@ export async function getCohortStats(req: AuthRequest, res: Response) {
     }, 0)
 
     const atRisk = mentees.filter(m => {
-      const currentWeek = getCurrentWeek(m.startDate)
       const lastSubmitted = m.submissions.length > 0
         ? Math.max(...m.submissions.map(s => s.weekNumber))
         : 0
-      return currentWeek - lastSubmitted >= 2
+      return getMenteeStatusLabel(m, lastSubmitted) === 'AT_RISK'
     }).length
 
     const engagementRate = totalMentees > 0
@@ -401,6 +407,170 @@ export async function rejectApplication(req: AuthRequest, res: Response) {
     return res.json({ message: 'Application rejected', mentor: { id: mentor.id, name: mentor.name, email: mentor.email, status: mentor.status } })
   } catch (error) {
     console.error('Reject application error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function changePassword(req: AuthRequest, res: Response) {
+  try {
+    const { currentPassword, newPassword } = req.body
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' })
+    }
+
+    if (String(newPassword).length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters' })
+    }
+
+    const mentor = await prisma.mentor.findUnique({ where: { id: req.mentorId } })
+    if (!mentor) return res.status(404).json({ error: 'Mentor not found' })
+
+    const passwordValid = await bcrypt.compare(currentPassword, mentor.passwordHash)
+    if (!passwordValid) {
+      return res.status(401).json({ error: 'Current password is incorrect' })
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12)
+    await prisma.mentor.update({
+      where: { id: mentor.id },
+      data: { passwordHash },
+    })
+
+    return res.json({ message: 'Password updated successfully' })
+  } catch (error) {
+    console.error('Change password error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getAnalytics(req: AuthRequest, res: Response) {
+  try {
+    const mentees = await prisma.mentee.findMany({
+      where: { isActive: true },
+      include: { submissions: { select: { weekNumber: true, submittedAt: true } } },
+    })
+
+    // ── 1. SUBMISSION TRENDS: last 12 rolling weeks ──────────────────────────
+    const WEEKS_BACK = 12
+    const now = Date.now()
+    const submissionTrends: { weekLabel: string; count: number }[] = []
+    for (let i = WEEKS_BACK - 1; i >= 0; i--) {
+      const weekStart = new Date(now - i * 7 * 24 * 60 * 60 * 1000)
+      weekStart.setHours(0, 0, 0, 0)
+      const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)
+      const count = mentees.reduce((sum, m) => {
+        return sum + m.submissions.filter(s => {
+          const d = new Date(s.submittedAt)
+          return d >= weekStart && d < weekEnd
+        }).length
+      }, 0)
+      submissionTrends.push({
+        weekLabel: weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+        count,
+      })
+    }
+
+    // ── 2. TRACK DISTRIBUTION: all 15 tracks, zero-filled ────────────────────
+    const trackCounts: Record<string, number> = {}
+    DOMAINS.forEach(d => { trackCounts[d.name] = 0 })
+    mentees.forEach(m => {
+      trackCounts[m.domainTrack] = (trackCounts[m.domainTrack] || 0) + 1
+    })
+    const trackDistribution = Object.entries(trackCounts).map(([track, count]) => ({ track, count }))
+
+    // ── 3. STATUS BREAKDOWN + per-mentee status (reused below) ──────────────
+    const statusBreakdown = { NOT_STARTED: 0, ON_TRACK: 0, AT_RISK: 0, PAUSED: 0 }
+    const menteeStatuses = mentees.map(m => {
+      const lastSubmittedWeek = m.submissions.length > 0
+        ? Math.max(...m.submissions.map(s => s.weekNumber))
+        : 0
+      const status = getMenteeStatusLabel(m, lastSubmittedWeek)
+      statusBreakdown[status]++
+      return { mentee: m, status, lastSubmittedWeek }
+    })
+
+    // ── 4. AT-RISK LIST ───────────────────────────────────────────────────────
+    const atRiskList = menteeStatuses
+      .filter(x => x.status === 'AT_RISK')
+      .map(x => ({
+        id: x.mentee.id,
+        name: x.mentee.name,
+        track: x.mentee.domainTrack,
+        weeksBehind: getWeeksBehind(x.mentee, x.lastSubmittedWeek),
+      }))
+      .sort((a, b) => b.weeksBehind - a.weeksBehind)
+
+    // ── 5. COMPLETION RATE PROJECTION ────────────────────────────────────────
+    const eligible = menteeStatuses.filter(x => x.mentee.hasStarted && !x.mentee.isPaused)
+    let completionProjection: {
+      eligibleCount: number
+      averageCompletionPct: number
+      projectedCompletionDate: string | null
+      message: string | null
+    }
+
+    if (eligible.length === 0) {
+      completionProjection = {
+        eligibleCount: 0,
+        averageCompletionPct: 0,
+        projectedCompletionDate: null,
+        message: 'Not enough data yet',
+      }
+    } else {
+      const avgWeeksCompleted = eligible.reduce((sum, x) => sum + x.lastSubmittedWeek, 0) / eligible.length
+      const averageCompletionPct = Math.round((avgWeeksCompleted / 48) * 100)
+
+      const avgPace = eligible.reduce((sum, x) => {
+        const wk = getCurrentWeek(x.mentee) ?? 1
+        return sum + x.lastSubmittedWeek / wk
+      }, 0) / eligible.length
+
+      if (avgPace <= 0 || avgWeeksCompleted <= 0) {
+        completionProjection = {
+          eligibleCount: eligible.length,
+          averageCompletionPct,
+          projectedCompletionDate: null,
+          message: 'Not enough submission history yet to project a completion date',
+        }
+      } else {
+        const remainingWeeks = Math.ceil((48 - avgWeeksCompleted) / avgPace)
+        const projectedDate = new Date(now + Math.max(0, remainingWeeks) * 7 * 24 * 60 * 60 * 1000)
+        completionProjection = {
+          eligibleCount: eligible.length,
+          averageCompletionPct,
+          projectedCompletionDate: projectedDate.toISOString(),
+          message: null,
+        }
+      }
+    }
+
+    // ── 6. SUMMARY STATS ROW ──────────────────────────────────────────────────
+    const totalMentees = mentees.length
+    const startedMentees = mentees.filter(m => m.hasStarted).length
+    const totalSubmissions = mentees.reduce((sum, m) => sum + m.submissions.length, 0)
+    const avgWeeksCompleted = totalMentees > 0
+      ? Math.round((totalSubmissions / totalMentees) * 10) / 10
+      : 0
+    const overallCompletionRate = totalMentees > 0
+      ? Math.round((totalSubmissions / (totalMentees * 48)) * 100)
+      : 0
+
+    return res.json({
+      summary: {
+        totalMentees,
+        startedMentees,
+        avgWeeksCompleted,
+        overallCompletionRate,
+      },
+      submissionTrends,
+      trackDistribution,
+      statusBreakdown,
+      atRiskList,
+      completionProjection,
+    })
+  } catch (error) {
+    console.error('Get analytics error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

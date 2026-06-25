@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { ChangePasswordModal } from './ChangePasswordModal'
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
@@ -44,6 +45,27 @@ const CSS = `
   }
   .bit-mobile-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
 
+  .bit-settings-trigger {
+    display: flex; align-items: center; gap: 8px; background: none; border: none;
+    cursor: pointer; padding: 4px 6px 4px 4px; border-radius: 8px;
+    transition: background 0.15s;
+  }
+  .bit-settings-trigger:hover { background: rgba(255,255,255,0.06); }
+
+  .bit-settings-menu {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    background: #fff; border-radius: 10px; min-width: 190px;
+    box-shadow: 0 12px 32px rgba(15,31,61,0.22); border: 1px solid #E8E4D9;
+    overflow: hidden; z-index: 60;
+  }
+  .bit-settings-item {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 11px 16px; font-size: 13px; font-weight: 500; color: #0F1F3D;
+    background: none; border: none; cursor: pointer; text-align: left;
+    font-family: 'Inter', sans-serif; transition: background 0.15s;
+  }
+  .bit-settings-item:hover { background: #FBF7EC; }
+
   @media (min-width: 768px) {
     .bit-hamburger { display: none !important; }
   }
@@ -57,6 +79,8 @@ export function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false)
 
   // Pages with their own nav — don't render global navbar
   const hiddenRoutes = ['/', '/liaison/dashboard']
@@ -69,6 +93,7 @@ export function Navbar() {
   }
 
   const isLoggedIn = !!user
+  const isMentor = isLoggedIn && user.role === 'mentor'
 
   return (
     <>
@@ -129,17 +154,49 @@ export function Navbar() {
                 >
                   <i className="ti ti-layout-dashboard" style={{ fontSize: 13 }} /> Dashboard
                 </Link>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 6 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: 99, background: '#C9A84C',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 13, color: '#0F1F3D',
-                  }}>
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', fontFamily: "'Inter', sans-serif" }}>
-                    {user.name.split(' ')[0]}
-                  </span>
+                <div style={{ position: 'relative', marginLeft: 6 }}>
+                  {isMentor ? (
+                    <button
+                      className="bit-settings-trigger"
+                      onClick={() => setSettingsOpen(v => !v)}
+                    >
+                      <div style={{
+                        width: 32, height: 32, borderRadius: 99, background: '#C9A84C',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 13, color: '#0F1F3D',
+                      }}>
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', fontFamily: "'Inter', sans-serif" }}>
+                        {user.name.split(' ')[0]}
+                      </span>
+                      <i className="ti ti-chevron-down" style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }} />
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{
+                        width: 32, height: 32, borderRadius: 99, background: '#C9A84C',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 13, color: '#0F1F3D',
+                      }}>
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', fontFamily: "'Inter', sans-serif" }}>
+                        {user.name.split(' ')[0]}
+                      </span>
+                    </div>
+                  )}
+
+                  {settingsOpen && isMentor && (
+                    <div className="bit-settings-menu">
+                      <button
+                        className="bit-settings-item"
+                        onClick={() => { setSettingsOpen(false); setPasswordModalOpen(true) }}
+                      >
+                        <i className="ti ti-key" style={{ fontSize: 14, color: '#8A8070' }} /> Change Password
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={handleLogout}
@@ -223,6 +280,15 @@ export function Navbar() {
                 >
                   <i className="ti ti-layout-dashboard" style={{ fontSize: 14, color: '#C9A84C' }} /> Dashboard
                 </Link>
+                {isMentor && (
+                  <button
+                    onClick={() => { setMenuOpen(false); setPasswordModalOpen(true) }}
+                    className="bit-mobile-link"
+                    style={{ width: '100%', border: 'none', background: 'none', cursor: 'pointer' }}
+                  >
+                    <i className="ti ti-key" style={{ fontSize: 14, color: '#C9A84C' }} /> Change Password
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   style={{
@@ -242,6 +308,10 @@ export function Navbar() {
           </div>
         )}
       </nav>
+
+      {passwordModalOpen && (
+        <ChangePasswordModal onClose={() => setPasswordModalOpen(false)} />
+      )}
     </>
   )
 }

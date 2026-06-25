@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Mentee" ADD COLUMN     "hasStarted" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "isPaused" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "pauseCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "pauseReason" TEXT,
+ADD COLUMN     "pausedAt" TIMESTAMP(3),
+ADD COLUMN     "totalPausedDays" INTEGER NOT NULL DEFAULT 0;

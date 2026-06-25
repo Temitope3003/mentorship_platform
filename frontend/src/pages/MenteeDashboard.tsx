@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { useMenteeStats, useMenteeRoadmap, useCreateSubmission } from '../hooks/useMentee'
+import {
+  useMenteeStats,
+  useMenteeRoadmap,
+  useCreateSubmission,
+  useStartJourney,
+  usePauseJourney,
+  useResumeJourney,
+} from '../hooks/useMentee'
 import toast from 'react-hot-toast'
 import { api } from '../utils/api'
 
@@ -79,6 +86,34 @@ const CSS = `
   .bit-track-select:focus { box-shadow: 0 0 0 2px rgba(201,168,76,0.2); }
   .bit-track-select:disabled { opacity: 0.5; }
 
+  .bit-btn-navy {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #0F1F3D; color: #F5D87A; border: none; border-radius: 10px;
+    padding: 14px 28px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .bit-btn-navy:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+  .bit-btn-navy:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .bit-btn-ghost-pause {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff; color: #8A8070; border: 1px solid #E8E4D9; border-radius: 9px;
+    padding: 9px 16px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .bit-btn-ghost-pause:hover { border-color: #C9A84C; color: #0F1F3D; }
+
+  .bit-textarea {
+    width: 100%; border: 1px solid #E8E4D9; border-radius: 9px;
+    padding: 11px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
+    color: #0F1F3D; background: #F9F7F1; outline: none; resize: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; box-sizing: border-box;
+  }
+  .bit-textarea:focus { border-color: #C9A84C; background: #fff; box-shadow: 0 0 0 3px rgba(201,168,76,0.14); }
+  .bit-textarea::placeholder { color: #B0A898; }
+
   @media (max-width: 640px) {
     .bit-stats-grid { grid-template-columns: 1fr 1fr !important; }
     .bit-week-btn { padding: 14px 14px !important; }
@@ -91,10 +126,18 @@ export function MenteeDashboard() {
   const { data: stats, isLoading: statsLoading } = useMenteeStats()
   const { data: roadmap, isLoading: roadmapLoading } = useMenteeRoadmap()
   const createSubmission = useCreateSubmission()
+  const startJourney = useStartJourney()
+  const pauseJourney = usePauseJourney()
+  const resumeJourney = useResumeJourney()
   const [openWeek, setOpenWeek] = useState<number | null>(null)
   const [forms, setForms] = useState<Record<number, SubmissionFormData>>({})
   const [submitting, setSubmitting] = useState<number | null>(null)
   const [trackChanging, setTrackChanging] = useState(false)
+  const [starting, setStarting] = useState(false)
+  const [pausing, setPausing] = useState(false)
+  const [resuming, setResuming] = useState(false)
+  const [pauseModalOpen, setPauseModalOpen] = useState(false)
+  const [pauseReason, setPauseReason] = useState('')
 
   const domainColor = DOMAIN_COLORS[user?.domain || ''] || '#C9A84C'
   const firstName = user?.name?.split(' ')[0] || 'there'
@@ -160,6 +203,44 @@ export function MenteeDashboard() {
     }
   }
 
+  async function handleStart() {
+    setStarting(true)
+    try {
+      await startJourney.mutateAsync()
+      toast.success('Your journey has started. Week 1 begins now.')
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to start your journey')
+    } finally {
+      setStarting(false)
+    }
+  }
+
+  async function handlePause() {
+    setPausing(true)
+    try {
+      await pauseJourney.mutateAsync(pauseReason.trim() || undefined)
+      toast.success('Your journey has been paused. Take the time you need.')
+      setPauseModalOpen(false)
+      setPauseReason('')
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to pause your journey')
+    } finally {
+      setPausing(false)
+    }
+  }
+
+  async function handleResume() {
+    setResuming(true)
+    try {
+      await resumeJourney.mutateAsync()
+      toast.success('Welcome back. Your journey has resumed.')
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to resume your journey')
+    } finally {
+      setResuming(false)
+    }
+  }
+
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (statsLoading || roadmapLoading) {
     return (
@@ -173,8 +254,39 @@ export function MenteeDashboard() {
     )
   }
 
+  // ── Not started — takes priority over any old submission history ────────────
+  if (stats?.hasStarted === false) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", padding: '40px 24px' }}>
+        <style>{CSS}</style>
+        <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 18, background: 'rgba(201,168,76,0.14)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px',
+          }}>
+            <i className="ti ti-rocket" style={{ fontSize: 28, color: '#C9A84C' }} />
+          </div>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 900, color: '#0F1F3D', marginBottom: 12, lineHeight: 1.2 }}>
+            Ready to begin, {firstName}?
+          </h1>
+          <p style={{ fontSize: 14, color: '#6B6B6B', lineHeight: 1.8, marginBottom: 28 }}>
+            Your <strong style={{ color: '#0F1F3D' }}>{user?.domain}</strong> roadmap is ready and waiting. Week 1 of your 48-week journey begins the moment you start.
+          </p>
+          <button onClick={handleStart} disabled={starting} className="bit-btn-gold" style={{ justifyContent: 'center', width: '100%', paddingTop: 14, paddingBottom: 14, fontSize: 14 }}>
+            {starting ? (
+              <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 15 }} /> Starting...</>
+            ) : (
+              <><i className="ti ti-player-play" style={{ fontSize: 15 }} /> Start My Journey</>
+            )}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const weeks = roadmap?.weeks || []
   const currentWeek = stats?.currentWeek || 1
+  const isPaused = stats?.isPaused === true
 
   // ── Main render ──────────────────────────────────────────────────────────────
   return (
@@ -246,6 +358,26 @@ export function MenteeDashboard() {
               Track locked after first submission
             </div>
           )}
+        </div>
+
+        {isPaused && (
+          <PausedBanner
+            pausedAt={stats?.pausedAt}
+            pauseReason={stats?.pauseReason}
+            onResume={handleResume}
+            resuming={resuming}
+          />
+        )}
+
+        {!isPaused && (
+        <>
+
+        {/* ── PAUSE MY JOURNEY ───────────────────────────────────────────── */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+          <button onClick={() => setPauseModalOpen(true)} className="bit-btn-ghost-pause">
+            <i className="ti ti-player-pause" style={{ fontSize: 13 }} />
+            Pause my journey
+          </button>
         </div>
 
         {/* ── STATS ROW ──────────────────────────────────────────────────── */}
@@ -527,7 +659,124 @@ export function MenteeDashboard() {
           })}
         </div>
 
+        </>
+        )}
+
       </div>
+
+      {/* ── PAUSE MODAL ─────────────────────────────────────────────────── */}
+      {pauseModalOpen && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(15,31,61,0.55)', backdropFilter: 'blur(4px)', padding: 24,
+          }}
+          onClick={e => { if (e.target === e.currentTarget) { setPauseModalOpen(false); setPauseReason('') } }}
+        >
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '28px 28px',
+            width: '100%', maxWidth: 460, boxShadow: '0 20px 60px rgba(15,31,61,0.18)',
+            fontFamily: "'Inter', sans-serif",
+          }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900, color: '#0F1F3D', marginBottom: 4 }}>
+              Pause your journey
+            </h2>
+            <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 18, lineHeight: 1.7 }}>
+              You can pause up to <strong style={{ color: '#0F1F3D' }}>2 times</strong> during the program, each for up to about
+              <strong style={{ color: '#0F1F3D' }}> 2 weeks</strong> as a soft guideline. Your week tracker freezes until you resume.
+              {typeof stats?.pauseCount === 'number' && (
+                <> You have used <strong style={{ color: '#0F1F3D' }}>{stats.pauseCount}</strong> of 2 pauses so far.</>
+              )}
+            </p>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 7 }}>
+                Reason <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+              </label>
+              <textarea
+                value={pauseReason}
+                onChange={e => setPauseReason(e.target.value)}
+                placeholder="Let your mentor know why you are pausing, if you would like to."
+                rows={3}
+                className="bit-textarea"
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={handlePause}
+                disabled={pausing}
+                className="bit-btn-navy"
+                style={{ flex: 1, justifyContent: 'center', fontSize: 14 }}
+              >
+                {pausing ? (
+                  <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} /> Pausing...</>
+                ) : (
+                  <><i className="ti ti-player-pause" style={{ fontSize: 14 }} /> Pause My Journey</>
+                )}
+              </button>
+              <button
+                onClick={() => { setPauseModalOpen(false); setPauseReason('') }}
+                className="bit-btn-ghost-pause"
+                style={{ padding: '14px 22px' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PausedBanner({
+  pausedAt,
+  pauseReason,
+  onResume,
+  resuming,
+}: {
+  pausedAt?: string | null
+  pauseReason?: string | null
+  onResume: () => void
+  resuming: boolean
+}) {
+  const pausedDate = pausedAt
+    ? new Date(pausedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null
+
+  return (
+    <div style={{
+      background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 14,
+      padding: '28px 26px', marginBottom: 28, textAlign: 'center',
+    }}>
+      <div style={{
+        width: 52, height: 52, borderRadius: 14, background: 'rgba(201,168,76,0.18)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+      }}>
+        <i className="ti ti-player-pause" style={{ fontSize: 22, color: '#7A5C1E' }} />
+      </div>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900, color: '#0F1F3D', marginBottom: 8 }}>
+        Your journey is paused
+      </h2>
+      {pausedDate && (
+        <p style={{ fontSize: 13, color: '#7A5C1E', marginBottom: pauseReason ? 12 : 20 }}>
+          Paused since {pausedDate}
+        </p>
+      )}
+      {pauseReason && (
+        <p style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.7, marginBottom: 20, fontStyle: 'italic' }}>
+          "{pauseReason}"
+        </p>
+      )}
+      <button onClick={onResume} disabled={resuming} className="bit-btn-gold" style={{ justifyContent: 'center' }}>
+        {resuming ? (
+          <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} /> Resuming...</>
+        ) : (
+          <><i className="ti ti-player-play" style={{ fontSize: 14 }} /> Resume My Journey</>
+        )}
+      </button>
     </div>
   )
 }

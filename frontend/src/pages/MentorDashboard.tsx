@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -11,30 +12,19 @@ import {
 } from '../hooks/useMentor'
 import toast from 'react-hot-toast'
 import { api } from '../utils/api'
+import { DOMAINS as DOMAIN_LIST } from '../utils/questionData'
 
-const DOMAINS = [
-  'AI & Machine Learning', 'Data Analysis', 'Data Science & Engineering',
-  'Full Stack Engineering', 'Frontend Development', 'Backend Development',
-  'Cloud & Infrastructure', 'Cybersecurity', 'Product, Design & UX',
-  'Emerging Tech', 'Virtual Assistant', 'AI Automation & No-Code',
-  'DevRel & Technical Writing', 'Mobile Development',
-]
+const DOMAINS = DOMAIN_LIST.map(d => d.name)
 
-const DOMAIN_COLORS: Record<string, string> = {
-  'AI & Machine Learning': '#ff6b2b',
-  'Data Analysis': '#2563eb',
-  'Data Science & Engineering': '#7c3aed',
-  'Full Stack Engineering': '#0891b2',
-  'Frontend Development': '#f59e0b',
-  'Backend Development': '#059669',
-  'Cloud & Infrastructure': '#6366f1',
-  'Cybersecurity': '#ef4444',
-  'Product, Design & UX': '#ec4899',
-  'Emerging Tech': '#14b8a6',
-  'Virtual Assistant': '#84cc16',
-  'AI Automation & No-Code': '#f97316',
-  'DevRel & Technical Writing': '#8b5cf6',
-  'Mobile Development': '#06b6d4',
+const DOMAIN_COLORS: Record<string, string> = Object.fromEntries(
+  DOMAIN_LIST.map(d => [d.name, d.color])
+)
+
+const STATUS_BADGES: Record<string, { bg: string; border: string; color: string; icon: string; label: string }> = {
+  NOT_STARTED: { bg: '#F9F7F1', border: '#E8E4D9', color: '#8A8070', icon: 'ti ti-hourglass-empty', label: 'Not Started' },
+  PAUSED:      { bg: '#FBF7EC', border: '#DFC97A', color: '#7A5C1E', icon: 'ti ti-player-pause',    label: 'Paused' },
+  AT_RISK:     { bg: '#fff5f5', border: '#fecaca', color: '#b91c1c', icon: 'ti ti-alert-triangle',  label: 'At Risk' },
+  ON_TRACK:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: 'ti ti-circle-check',    label: 'On Track' },
 }
 
 type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications'
@@ -218,10 +208,16 @@ export function MentorDashboard() {
             <p style={{ fontSize: 14, color: '#6B6B6B' }}>Welcome back, {user?.name}</p>
           </div>
 
-          <button onClick={() => setTab('add')} className="bit-btn-gold">
-            <i className="ti ti-user-plus" style={{ fontSize: 14 }} />
-            Add Mentee
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Link to="/mentor/analytics" className="bit-btn-ghost">
+              <i className="ti ti-chart-dots-3" style={{ fontSize: 14 }} />
+              Analytics
+            </Link>
+            <button onClick={() => setTab('add')} className="bit-btn-gold">
+              <i className="ti ti-user-plus" style={{ fontSize: 14 }} />
+              Add Mentee
+            </button>
+          </div>
         </div>
 
         {/* ── STATS ──────────────────────────────────────────────────────── */}
@@ -324,7 +320,7 @@ export function MentorDashboard() {
                     {filteredMentees.map((m: any) => {
                       const color = DOMAIN_COLORS[m.domainTrack] || '#C9A84C'
                       const pct = Math.round((m.submissionsCount / 48) * 100)
-                      const isAtRisk = m.currentWeek - m.submissionsCount >= 2
+                      const sc = STATUS_BADGES[m.status] || STATUS_BADGES.ON_TRACK
                       return (
                         <tr key={m.id}>
                           <td>
@@ -350,7 +346,7 @@ export function MentorDashboard() {
                             </select>
                           </td>
                           <td style={{ color: '#6B6B6B', fontFamily: 'monospace', fontSize: 12 }}>
-                            W{m.currentWeek}/48
+                            {m.hasStarted ? `W${m.currentWeek}/48` : '—'}
                           </td>
                           <td style={{ color: '#6B6B6B', fontFamily: 'monospace', fontSize: 12 }}>
                             {m.submissionsCount}
@@ -364,15 +360,9 @@ export function MentorDashboard() {
                             </div>
                           </td>
                           <td>
-                            {isAtRisk ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#fff5f5', border: '1px solid #fecaca', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#b91c1c' }}>
-                                <i className="ti ti-alert-triangle" style={{ fontSize: 10 }} /> At Risk
-                              </span>
-                            ) : (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#15803d' }}>
-                                <i className="ti ti-circle-check" style={{ fontSize: 10 }} /> Active
-                              </span>
-                            )}
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: sc.color }}>
+                              <i className={sc.icon} style={{ fontSize: 10 }} /> {sc.label}
+                            </span>
                           </td>
                           <td>
                             <select

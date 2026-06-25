@@ -2,15 +2,47 @@ import { Request, Response } from 'express'
 import { prisma } from '../models/prisma'
 import { getCurriculumForDomain, getWeekForDomain } from '../utils/curriculum'
 import { sendConfirmationEmail } from '../emails/confirmationEmail'
+import { sendMenteePauseResumeAlertEmail } from '../emails/menteePauseResumeAlertEmail'
+import { getCurrentWeek } from '../utils/menteeStatus'
 
 interface AuthRequest extends Request {
   menteeId?: string
 }
 
-function getCurrentWeek(startDate: Date): number {
-  const diffMs = Date.now() - new Date(startDate).getTime()
-  const diffWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1
-  return Math.max(1, Math.min(48, diffWeeks))
+async function notifyAboutPauseResume(
+  mentee: { name: string; domainTrack: string; liaisonOfficerId: string | null },
+  action: 'paused' | 'resumed',
+  reason: string | null
+) {
+  try {
+    const recipients: { name: string; email: string }[] = []
+
+    if (mentee.liaisonOfficerId) {
+      const officer = await prisma.liaisonOfficer.findUnique({ where: { id: mentee.liaisonOfficerId } })
+      if (officer) recipients.push({ name: officer.name, email: officer.email })
+    }
+
+    const mentors = await prisma.mentor.findMany({
+      where: { status: 'APPROVED' },
+      select: { name: true, email: true },
+    })
+    recipients.push(...mentors)
+
+    await Promise.all(
+      recipients.map((r) =>
+        sendMenteePauseResumeAlertEmail({
+          recipientName: r.name,
+          recipientEmail: r.email,
+          menteeName: mentee.name,
+          menteeTrack: mentee.domainTrack,
+          action,
+          reason,
+        }).catch((err) => console.error('Pause/resume notification email error:', err.message))
+      )
+    )
+  } catch (err: any) {
+    console.error('Pause/resume notification error:', err.message)
+  }
 }
 
 export async function getProfile(req: AuthRequest, res: Response) {
@@ -33,7 +65,18 @@ export async function getRoadmap(req: AuthRequest, res: Response) {
     })
     if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
 
-    const currentWeek = getCurrentWeek(mentee.startDate)
+    if (!mentee.hasStarted) {
+      return res.json({
+        hasStarted: false,
+        isPaused: false,
+        domain: mentee.domainTrack,
+        currentWeek: null,
+        totalWeeks: 48,
+        weeks: [],
+      })
+    }
+
+    const currentWeek = getCurrentWeek(mentee)!
     const curriculum = getCurriculumForDomain(mentee.domainTrack)
 
     const submissions = await prisma.weeklySubmission.findMany({
@@ -50,6 +93,8 @@ export async function getRoadmap(req: AuthRequest, res: Response) {
     }))
 
     return res.json({
+      hasStarted: true,
+      isPaused: mentee.isPaused,
       domain: mentee.domainTrack,
       currentWeek,
       totalWeeks: 48,
@@ -93,7 +138,14 @@ export async function createSubmission(req: AuthRequest, res: Response) {
     })
     if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
 
-    const currentWeek = getCurrentWeek(mentee.startDate)
+    if (!mentee.hasStarted) {
+      return res.status(400).json({ error: 'You need to start your journey before submitting work' })
+    }
+    if (mentee.isPaused) {
+      return res.status(400).json({ error: 'Your journey is paused. Resume to continue submitting work.' })
+    }
+
+    const currentWeek = getCurrentWeek(mentee)!
     if (weekNumber > currentWeek) {
       return res.status(400).json({ error: 'You cannot submit a future week' })
     }
@@ -132,12 +184,27 @@ export async function getStats(req: AuthRequest, res: Response) {
     })
     if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
 
+    if (!mentee.hasStarted) {
+      return res.json({
+        hasStarted: false,
+        isPaused: false,
+        currentWeek: null,
+        weeksSubmitted: 0,
+        weeksRemaining: 48,
+        completionPct: 0,
+        streakCount: 0,
+        currentPhase: null,
+        phaseProgress: 0,
+        domain: mentee.domainTrack,
+      })
+    }
+
     const submissions = await prisma.weeklySubmission.findMany({
       where: { menteeId: req.menteeId },
       orderBy: { weekNumber: 'asc' },
     })
 
-    const currentWeek = getCurrentWeek(mentee.startDate)
+    const currentWeek = getCurrentWeek(mentee)!
     const submittedWeeks = submissions.map(s => s.weekNumber)
     const completionPct = Math.round((submissions.length / 48) * 100)
 
@@ -153,6 +220,11 @@ export async function getStats(req: AuthRequest, res: Response) {
     const phaseProgress = Math.round(((currentWeek - phaseStart) / 12) * 100)
 
     return res.json({
+      hasStarted: true,
+      isPaused: mentee.isPaused,
+      pausedAt: mentee.pausedAt,
+      pauseReason: mentee.pauseReason,
+      pauseCount: mentee.pauseCount,
       currentWeek,
       weeksSubmitted: submissions.length,
       weeksRemaining: 48 - submissions.length,
@@ -194,6 +266,93 @@ export async function updateTrack(req: Request, res: Response) {
     return res.json({ message: 'Track updated successfully', mentee: updated })
   } catch (error) {
     console.error('Update track error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function startJourney(req: AuthRequest, res: Response) {
+  try {
+    const mentee = await prisma.mentee.findUnique({ where: { id: req.menteeId } })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    if (mentee.hasStarted) {
+      return res.status(400).json({ error: 'You have already started your journey' })
+    }
+
+    const updated = await prisma.mentee.update({
+      where: { id: req.menteeId },
+      data: { hasStarted: true, startDate: new Date() },
+    })
+
+    return res.json({ message: 'Your journey has started. Week 1 begins now.', mentee: updated })
+  } catch (error) {
+    console.error('Start journey error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function pauseJourney(req: AuthRequest, res: Response) {
+  try {
+    const { reason } = req.body
+    const mentee = await prisma.mentee.findUnique({ where: { id: req.menteeId } })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    if (!mentee.hasStarted) {
+      return res.status(400).json({ error: 'You need to start your journey before you can pause it' })
+    }
+    if (mentee.isPaused) {
+      return res.status(400).json({ error: 'Your journey is already paused' })
+    }
+    if (mentee.pauseCount >= 2) {
+      return res.status(400).json({ error: 'You have used both of your available pauses' })
+    }
+
+    const updated = await prisma.mentee.update({
+      where: { id: req.menteeId },
+      data: {
+        isPaused: true,
+        pausedAt: new Date(),
+        pauseCount: { increment: 1 },
+        pauseReason: reason?.trim() || null,
+      },
+    })
+
+    notifyAboutPauseResume(updated, 'paused', updated.pauseReason)
+
+    return res.json({ message: 'Your journey has been paused. Take the time you need.', mentee: updated })
+  } catch (error) {
+    console.error('Pause journey error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function resumeJourney(req: AuthRequest, res: Response) {
+  try {
+    const mentee = await prisma.mentee.findUnique({ where: { id: req.menteeId } })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    if (!mentee.isPaused) {
+      return res.status(400).json({ error: 'Your journey is not currently paused' })
+    }
+
+    const pausedDays = mentee.pausedAt
+      ? Math.ceil((Date.now() - new Date(mentee.pausedAt).getTime()) / (24 * 60 * 60 * 1000))
+      : 0
+
+    const updated = await prisma.mentee.update({
+      where: { id: req.menteeId },
+      data: {
+        isPaused: false,
+        pausedAt: null,
+        totalPausedDays: { increment: pausedDays },
+      },
+    })
+
+    notifyAboutPauseResume(updated, 'resumed', null)
+
+    return res.json({ message: 'Welcome back. Your journey has resumed.', mentee: updated })
+  } catch (error) {
+    console.error('Resume journey error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

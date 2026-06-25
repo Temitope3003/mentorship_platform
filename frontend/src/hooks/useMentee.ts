@@ -37,3 +37,33 @@ export function useCreateSubmission() {
     },
   })
 }
+
+export function useStartJourney() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.post('/mentee/me/start').then(r => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentee'] })
+    },
+  })
+}
+
+export function usePauseJourney() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (reason?: string) => api.post('/mentee/me/pause', { reason }).then(r => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentee'] })
+    },
+  })
+}
+
+export function useResumeJourney() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.post('/mentee/me/resume').then(r => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentee'] })
+    },
+  })
+}

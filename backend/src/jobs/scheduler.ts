@@ -3,12 +3,7 @@ import { prisma } from '../models/prisma'
 import { sendReminderEmail } from '../emails/reminderEmail'
 import { sendWelcomeEmail } from '../emails/welcomeEmail'
 import { getCurriculumForDomain } from '../utils/curriculum'
-
-function getCurrentWeek(startDate: Date): number {
-  const diffMs = Date.now() - new Date(startDate).getTime()
-  const diffWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1
-  return Math.max(1, Math.min(48, diffWeeks))
-}
+import { getCurrentWeek, getMenteeStatusLabel } from '../utils/menteeStatus'
 
 function getDayInCurrentWeek(startDate: Date): number {
   const diffMs = Date.now() - new Date(startDate).getTime()
@@ -29,7 +24,9 @@ cron.schedule('0 9 * * *', async () => {
     })
 
     for (const mentee of mentees) {
-      const currentWeek = getCurrentWeek(mentee.startDate)
+      if (!mentee.hasStarted || mentee.isPaused) continue
+
+      const currentWeek = getCurrentWeek(mentee)!
       const dayInWeek = getDayInCurrentWeek(mentee.startDate)
 
       if (dayInWeek !== 3) continue
@@ -82,7 +79,9 @@ cron.schedule('0 18 * * *', async () => {
     })
 
     for (const mentee of mentees) {
-      const currentWeek = getCurrentWeek(mentee.startDate)
+      if (!mentee.hasStarted || mentee.isPaused) continue
+
+      const currentWeek = getCurrentWeek(mentee)!
       const dayInWeek = getDayInCurrentWeek(mentee.startDate)
 
       if (dayInWeek !== 6) continue
@@ -141,7 +140,9 @@ cron.schedule('0 8 * * 1', async () => {
     })
 
     for (const mentee of mentees) {
-      const currentWeek = getCurrentWeek(mentee.startDate)
+      if (!mentee.hasStarted || mentee.isPaused) continue
+
+      const currentWeek = getCurrentWeek(mentee)!
       const lastSubmitted = mentee.submissions[0]?.weekNumber || 0
       const weeksBehind = currentWeek - lastSubmitted
 
@@ -203,6 +204,8 @@ cron.schedule('0 0 * * *', async () => {
     })
 
     for (const mentee of mentees) {
+      if (!mentee.hasStarted) continue
+
       for (const milestone of milestones) {
         const hasJustCompleted = mentee.submissions.some(
           s => s.weekNumber === milestone.week
@@ -383,22 +386,23 @@ cron.schedule('0 7 * * 1', async () => {
 
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
-      const submitted = officer.mentees.filter(m =>
+      const notStarted = officer.mentees.filter(m => !m.hasStarted)
+      const paused = officer.mentees.filter(m => m.hasStarted && m.isPaused)
+      const activeMentees = officer.mentees.filter(m => m.hasStarted && !m.isPaused)
+
+      const submitted = activeMentees.filter(m =>
         m.submissions.some(s => new Date(s.submittedAt) > oneWeekAgo)
       )
 
-      const notSubmitted = officer.mentees.filter(m =>
+      const notSubmitted = activeMentees.filter(m =>
         !m.submissions.some(s => new Date(s.submittedAt) > oneWeekAgo)
       )
 
-      const atRisk = officer.mentees.filter(m => {
-        const currentWeek = Math.max(1, Math.min(48,
-          Math.floor((Date.now() - new Date(m.startDate).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1
-        ))
+      const atRisk = activeMentees.filter(m => {
         const lastSubmitted = m.submissions.length > 0
           ? Math.max(...m.submissions.map(s => s.weekNumber))
           : 0
-        return currentWeek - lastSubmitted >= 2
+        return getMenteeStatusLabel(m, lastSubmitted) === 'AT_RISK'
       })
 
       const { sendEmail } = await import('../emails/sender')
@@ -428,16 +432,21 @@ cron.schedule('0 7 * * 1', async () => {
               <h3 style="margin: 0 0 8px; color: #991b1b;">🚨 Needs Urgent Help (${atRisk.length})</h3>
               ${atRisk.length === 0 ? '<p style="color: #666;">No one is at risk this week.</p>' :
                 atRisk.map(m => {
-                  const currentWeek = Math.max(1, Math.min(48,
-                    Math.floor((Date.now() - new Date(m.startDate).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1
-                  ))
                   const lastSubmitted = m.submissions.length > 0
                     ? Math.max(...m.submissions.map(s => s.weekNumber))
                     : 0
+                  const currentWeek = getCurrentWeek(m) ?? 0
                   return `<p style="margin: 4px 0;"><strong>${m.name}</strong> — ${m.domainTrack} — ${currentWeek - lastSubmitted} weeks behind</p>`
                 }).join('')
               }
             </div>
+
+            ${notStarted.length > 0 || paused.length > 0 ? `
+            <div style="background: #f1f5f9; border-left: 4px solid #64748b; padding: 16px; margin: 16px 0; border-radius: 4px;">
+              <h3 style="margin: 0 0 8px; color: #334155;">⏸️ Not Started or Paused (${notStarted.length + paused.length})</h3>
+              ${[...notStarted.map(m => `<p style="margin: 4px 0;"><strong>${m.name}</strong> — ${m.domainTrack} — Not started</p>`),
+                 ...paused.map(m => `<p style="margin: 4px 0;"><strong>${m.name}</strong> — ${m.domainTrack} — Paused</p>`)].join('')}
+            </div>` : ''}
 
             <div style="background: #f1f5f9; padding: 16px; border-radius: 4px; margin-top: 16px;">
               <h3 style="margin: 0 0 8px;">📊 Summary</h3>
@@ -445,7 +454,8 @@ cron.schedule('0 7 * * 1', async () => {
               <p style="margin: 4px 0;">Submitted: <strong>${submitted.length}</strong></p>
               <p style="margin: 4px 0;">Not submitted: <strong>${notSubmitted.length}</strong></p>
               <p style="margin: 4px 0;">At risk: <strong>${atRisk.length}</strong></p>
-              <p style="margin: 4px 0;">Engagement rate: <strong>${officer.mentees.length > 0 ? Math.round((submitted.length / officer.mentees.length) * 100) : 0}%</strong></p>
+              <p style="margin: 4px 0;">Not started or paused: <strong>${notStarted.length + paused.length}</strong></p>
+              <p style="margin: 4px 0;">Engagement rate: <strong>${activeMentees.length > 0 ? Math.round((submitted.length / activeMentees.length) * 100) : 0}%</strong></p>
             </div>
 
             <p style="margin-top: 24px;">Log in to your dashboard at <a href="https://buildintech.xyz/liaison/login">buildintech.xyz/liaison/login</a> to send check-in messages.</p>

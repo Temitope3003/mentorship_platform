@@ -2,15 +2,10 @@ import { Request, Response } from 'express'
 import { prisma } from '../models/prisma'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { getCurrentWeek, getMenteeStatusLabel, getWeeksBehind } from '../utils/menteeStatus'
 
 interface AuthRequest extends Request {
   liaisonId?: string
-}
-
-function getCurrentWeek(startDate: Date): number {
-  const diffMs = Date.now() - new Date(startDate).getTime()
-  const diffWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1
-  return Math.max(1, Math.min(48, diffWeeks))
 }
 
 export async function loginLiaison(req: Request, res: Response) {
@@ -62,40 +57,52 @@ export async function getLiaisonDashboard(req: AuthRequest, res: Response) {
 
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
-    const submitted = officer.mentees.filter(m =>
+    const notStarted = officer.mentees.filter(m => !m.hasStarted)
+    const paused = officer.mentees.filter(m => m.hasStarted && m.isPaused)
+    const activeMentees = officer.mentees.filter(m => m.hasStarted && !m.isPaused)
+
+    const submitted = activeMentees.filter(m =>
       m.submissions.some(s => new Date(s.submittedAt) > oneWeekAgo)
     )
 
-    const notSubmitted = officer.mentees.filter(m =>
+    const notSubmitted = activeMentees.filter(m =>
       !m.submissions.some(s => new Date(s.submittedAt) > oneWeekAgo)
     )
 
-    const atRisk = officer.mentees.filter(m => {
-      const currentWeek = getCurrentWeek(m.startDate)
+    const atRisk = activeMentees.filter(m => {
       const lastSubmitted = m.submissions.length > 0
         ? Math.max(...m.submissions.map(s => s.weekNumber))
         : 0
-      return currentWeek - lastSubmitted >= 2
+      return getMenteeStatusLabel(m, lastSubmitted) === 'AT_RISK'
     })
 
     return res.json({
       officer: { id: officer.id, name: officer.name, email: officer.email },
       summary: {
         total: officer.mentees.length,
+        notStartedCount: notStarted.length,
+        pausedCount: paused.length,
         submittedCount: submitted.length,
         notSubmittedCount: notSubmitted.length,
         atRiskCount: atRisk.length,
-        engagementRate: officer.mentees.length > 0
-          ? Math.round((submitted.length / officer.mentees.length) * 100)
+        engagementRate: activeMentees.length > 0
+          ? Math.round((submitted.length / activeMentees.length) * 100)
           : 0,
       },
+      notStarted: notStarted.map(m => ({
+        id: m.id, name: m.name, email: m.email, accessCode: m.accessCode, domainTrack: m.domainTrack,
+      })),
+      paused: paused.map(m => ({
+        id: m.id, name: m.name, email: m.email, accessCode: m.accessCode, domainTrack: m.domainTrack,
+        pausedAt: m.pausedAt, pauseReason: m.pauseReason,
+      })),
       submitted: submitted.map(m => ({
         id: m.id,
         name: m.name,
         email: m.email,
         accessCode: m.accessCode,
         domainTrack: m.domainTrack,
-        currentWeek: getCurrentWeek(m.startDate),
+        currentWeek: getCurrentWeek(m),
         lastSubmission: m.submissions
           .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())[0],
       })),
@@ -105,25 +112,26 @@ export async function getLiaisonDashboard(req: AuthRequest, res: Response) {
         email: m.email,
         accessCode: m.accessCode,
         domainTrack: m.domainTrack,
-        currentWeek: getCurrentWeek(m.startDate),
+        currentWeek: getCurrentWeek(m),
         lastSubmittedWeek: m.submissions.length > 0
           ? Math.max(...m.submissions.map(s => s.weekNumber))
           : 0,
       })),
-      atRisk: atRisk.map(m => ({
-        id: m.id,
-        name: m.name,
-        email: m.email,
-        accessCode: m.accessCode,
-        domainTrack: m.domainTrack,
-        currentWeek: getCurrentWeek(m.startDate),
-        lastSubmittedWeek: m.submissions.length > 0
+      atRisk: atRisk.map(m => {
+        const lastSubmittedWeek = m.submissions.length > 0
           ? Math.max(...m.submissions.map(s => s.weekNumber))
-          : 0,
-        weeksBehind: getCurrentWeek(m.startDate) - (m.submissions.length > 0
-          ? Math.max(...m.submissions.map(s => s.weekNumber))
-          : 0),
-      })),
+          : 0
+        return {
+          id: m.id,
+          name: m.name,
+          email: m.email,
+          accessCode: m.accessCode,
+          domainTrack: m.domainTrack,
+          currentWeek: getCurrentWeek(m),
+          lastSubmittedWeek,
+          weeksBehind: getWeeksBehind(m, lastSubmittedWeek),
+        }
+      }),
     })
   } catch (error) {
     console.error('Liaison dashboard error:', error)
@@ -141,20 +149,28 @@ export async function getLiaisonMentees(req: AuthRequest, res: Response) {
       orderBy: { createdAt: 'desc' },
     })
 
-    const result = mentees.map(m => ({
-      id: m.id,
-      name: m.name,
-      email: m.email,
-      accessCode: m.accessCode,
-      domainTrack: m.domainTrack,
-      currentWeek: getCurrentWeek(m.startDate),
-      submissionsCount: m.submissions.length,
-      lastSubmittedWeek: m.submissions.length > 0
+    const result = mentees.map(m => {
+      const lastSubmittedWeek = m.submissions.length > 0
         ? Math.max(...m.submissions.map(s => s.weekNumber))
-        : 0,
-      startDate: m.startDate,
-      notes: m.liaisonNotes,
-    }))
+        : 0
+      return {
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        accessCode: m.accessCode,
+        domainTrack: m.domainTrack,
+        currentWeek: getCurrentWeek(m),
+        submissionsCount: m.submissions.length,
+        lastSubmittedWeek,
+        startDate: m.startDate,
+        notes: m.liaisonNotes,
+        hasStarted: m.hasStarted,
+        isPaused: m.isPaused,
+        pausedAt: m.pausedAt,
+        pauseReason: m.pauseReason,
+        status: getMenteeStatusLabel(m, lastSubmittedWeek),
+      }
+    })
 
     return res.json(result)
   } catch (error) {

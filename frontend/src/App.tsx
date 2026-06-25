@@ -9,6 +9,7 @@ import { MentorLoginPage } from './pages/MentorLoginPage'
 import { MentorRegisterPage } from './pages/MentorRegisterPage'
 import { MenteeDashboard } from './pages/MenteeDashboard'
 import { MentorDashboard } from './pages/MentorDashboard'
+import { MentorAnalyticsPage } from './pages/MentorAnalyticsPage'
 import { DomainPage } from './pages/DomainPage'
 import { CareerDomainsPage } from './pages/CareerDomainsPage'
 import { LiaisonLoginPage } from './pages/LiaisonLoginPage'
@@ -48,6 +49,14 @@ export default function App() {
           element={
             <ProtectedRoute role="mentor">
               <MentorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mentor/analytics"
+          element={
+            <ProtectedRoute role="mentor">
+              <MentorAnalyticsPage />
             </ProtectedRoute>
           }
         />

@@ -4,6 +4,13 @@ import axios from 'axios'
 
 const API = import.meta.env.VITE_API_URL
 
+const STATUS_BADGES: Record<string, { bg: string; border: string; color: string; icon: string; label: string }> = {
+  NOT_STARTED: { bg: '#F9F7F1', border: '#E8E4D9', color: '#8A8070', icon: 'ti ti-hourglass-empty', label: 'Not Started' },
+  PAUSED:      { bg: '#FBF7EC', border: '#DFC97A', color: '#7A5C1E', icon: 'ti ti-player-pause',    label: 'Paused' },
+  AT_RISK:     { bg: '#fff5f5', border: '#fecaca', color: '#b91c1c', icon: 'ti ti-alert-triangle',  label: 'At Risk' },
+  ON_TRACK:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: 'ti ti-circle-check',    label: 'On Track' },
+}
+
 function useLocalStorage<T>(key: string, initial: T) {
   const [value, setValue] = useState<T>(() => {
     try { return JSON.parse(localStorage.getItem(key) || '') } catch { return initial }
@@ -281,7 +288,8 @@ export function LiaisonDashboard() {
         {tab === 'mentees' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {mentees.map((m: any) => {
-              const pct = Math.round((m.currentWeek / 48) * 100)
+              const pct = m.hasStarted ? Math.round((m.currentWeek / 48) * 100) : 0
+              const sc = STATUS_BADGES[m.status] || STATUS_BADGES.ON_TRACK
               return (
                 <div key={m.id} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '18px 20px' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
@@ -291,10 +299,13 @@ export function LiaisonDashboard() {
                         <span style={{ fontSize: 10, background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 999, padding: '2px 8px', color: '#8A8070', fontFamily: 'monospace' }}>
                           {m.accessCode}
                         </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 999, padding: '2px 9px', fontSize: 10, fontWeight: 600, color: sc.color }}>
+                          <i className={sc.icon} style={{ fontSize: 9 }} /> {sc.label}
+                        </span>
                       </div>
                       <div style={{ fontSize: 12, color: '#6B6B6B', marginBottom: 4 }}>{m.domainTrack}</div>
                       <div style={{ fontSize: 11, color: '#8A8070', marginBottom: 10 }}>
-                        Week {m.currentWeek} of 48 &middot; {m.submissionsCount} submissions
+                        {m.hasStarted ? `Week ${m.currentWeek} of 48` : 'Not started yet'} &middot; {m.submissionsCount} submissions
                       </div>
                       <div style={{ height: 5, borderRadius: 99, background: '#F0EBD8', overflow: 'hidden', maxWidth: 240 }}>
                         <div style={{ height: '100%', borderRadius: 99, background: '#C9A84C', width: `${pct}%` }} />

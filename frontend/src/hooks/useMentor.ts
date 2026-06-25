@@ -8,6 +8,13 @@ export function useMentorStats() {
   })
 }
 
+export function useMentorAnalytics() {
+  return useQuery({
+    queryKey: ['mentor', 'analytics'],
+    queryFn: () => api.get('/mentor/analytics').then(r => r.data),
+  })
+}
+
 export function useMentees() {
   return useQuery({
     queryKey: ['mentor', 'mentees'],

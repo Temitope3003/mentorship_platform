@@ -42,6 +42,12 @@ model Mentee {
   mentorId         String?
   liaisonOfficerId String?
   liaisonNotes     String?
+  hasStarted       Boolean            @default(false)
+  isPaused         Boolean            @default(false)
+  pausedAt         DateTime?
+  pauseReason      String?
+  totalPausedDays  Int                @default(0)
+  pauseCount       Int                @default(0)
   emailLogs        EmailLog[]
   liaisonOfficer   LiaisonOfficer?    @relation(fields: [liaisonOfficerId], references: [id])
   mentor           Mentor?            @relation(fields: [mentorId], references: [id])
