@@ -216,7 +216,7 @@ export async function sendCheckin(req: AuthRequest, res: Response) {
       where: { id: req.liaisonId },
     })
 
-    const { sendEmail } = await import('../emails/sender')
+    const { sendEmail } = await import('../emails/sender.js')
     await sendEmail({
       to: mentee.email,
       subject: `Checking in on your progress — ${mentee.name}`,

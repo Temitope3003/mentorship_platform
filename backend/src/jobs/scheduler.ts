@@ -259,7 +259,7 @@ async function sendCheckinEmail(data: {
   weeksBehind: number
   currentWeek: number
 }) {
-  const { sendEmail } = await import('../emails/sender')
+  const { sendEmail } = await import('../emails/sender.js')
   const firstName = data.name.split(' ')[0]
   const dashboardUrl = `${process.env.FRONTEND_URL}/dashboard`
 
@@ -305,7 +305,7 @@ async function sendPhaseCompleteEmail(data: {
   domain: string
   weeksCompleted: number
 }) {
-  const { sendEmail } = await import('../emails/sender')
+  const { sendEmail } = await import('../emails/sender.js')
   const firstName = data.name.split(' ')[0]
   const dashboardUrl = `${process.env.FRONTEND_URL}/dashboard`
   const nextPhase = data.phase + 1
@@ -406,7 +406,7 @@ cron.schedule('0 7 * * 1', async () => {
         return getMenteeStatusLabel(m, lastSubmitted) === 'AT_RISK'
       })
 
-      const { sendEmail } = await import('../emails/sender')
+      const { sendEmail } = await import('../emails/sender.js')
       await sendEmail({
         to: officer.email,
         subject: `Weekly Mentee Report — ${new Date().toDateString()}`,

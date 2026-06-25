@@ -1,6 +1,4 @@
-import React from 'react'
-import { renderToBuffer } from '@react-pdf/renderer'
-import { RecommendationLetterDocument } from '../pdf/recommendationLetterTemplate'
+import { buildRecommendationLetterDocument } from '../pdf/recommendationLetterTemplate'
 
 interface RecommendationLetterPdfData {
   menteeName: string
@@ -10,6 +8,11 @@ interface RecommendationLetterPdfData {
 }
 
 export async function generateRecommendationLetterPdf(data: RecommendationLetterPdfData): Promise<Buffer> {
+  // @react-pdf/renderer is ESM-only; the backend compiles to CommonJS, so it must be
+  // loaded via dynamic import() rather than a static import, or `require()` crashes in production.
+  const reactPdf = await import('@react-pdf/renderer')
+  const { renderToBuffer } = reactPdf
+
   const completionDateFormatted = data.completionDate.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
@@ -21,7 +24,7 @@ export async function generateRecommendationLetterPdf(data: RecommendationLetter
     year: 'numeric',
   })
 
-  const element = React.createElement(RecommendationLetterDocument, {
+  const element = buildRecommendationLetterDocument(reactPdf, {
     menteeName: data.menteeName,
     domainTrack: data.domainTrack,
     completionDateFormatted,
