@@ -14,6 +14,9 @@ import {
   getCertificate,
   requestCertificate,
   requestRecommendationLetter,
+  chatWithBot,
+  getChatHistory,
+  clearChatHistory,
 } from '../controllers/menteeController'
 
 
@@ -39,3 +42,6 @@ menteeRouter.post('/me/submit-payment', submitPayment)
 menteeRouter.get('/me/certificate', getCertificate)
 menteeRouter.post('/me/request-certificate', requestCertificate)
 menteeRouter.post('/me/request-recommendation-letter', requestRecommendationLetter)
+menteeRouter.post('/me/chat', chatWithBot)
+menteeRouter.get('/me/chat/history', getChatHistory)
+menteeRouter.delete('/me/chat/history', clearChatHistory)

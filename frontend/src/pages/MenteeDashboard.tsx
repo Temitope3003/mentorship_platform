@@ -14,6 +14,7 @@ import {
 } from '../hooks/useMentee'
 import toast from 'react-hot-toast'
 import { api } from '../utils/api'
+import { MenteeChatWidget } from '../components/MenteeChatWidget'
 
 const DOMAIN_COLORS: Record<string, string> = {
   'AI & Machine Learning': '#ff6b2b',
@@ -358,6 +359,7 @@ export function MenteeDashboard() {
             )}
           </button>
         </div>
+        <MenteeChatWidget />
       </div>
     )
   }
@@ -853,6 +855,8 @@ export function MenteeDashboard() {
           </div>
         </div>
       )}
+
+      <MenteeChatWidget />
     </div>
   )
 }

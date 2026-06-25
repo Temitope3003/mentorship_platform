@@ -1,6 +1,7 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, matchPath } from 'react-router-dom'
 import { Navbar } from './components/ui/Navbar'
 import { ProtectedRoute } from './components/ui/ProtectedRoute'
+import { PublicChatWidget } from './components/PublicChatWidget'
 import { LandingPage } from './pages/LandingPage'
 import { AssessmentPage } from './pages/AssessmentPage'
 import { ResultsPage } from './pages/ResultsPage'
@@ -19,13 +20,18 @@ import { LiaisonDashboard } from './pages/LiaisonDashboard'
 // Pages that have their own built-in navigation
 const NO_NAVBAR_ROUTES = ['/', '/liaison/dashboard']
 
+// Public, pre-login pages where the visitor chatbot is offered
+const PUBLIC_CHATBOT_PATTERNS = ['/', '/domains', '/domain/:domainId', '/roadmap-preview/:domain']
+
 export default function App() {
   const location = useLocation()
   const showNavbar = !NO_NAVBAR_ROUTES.includes(location.pathname)
+  const showPublicChat = PUBLIC_CHATBOT_PATTERNS.some((pattern) => matchPath(pattern, location.pathname))
 
   return (
     <div style={{ minHeight: '100vh' }}>
       {showNavbar && <Navbar />}
+      {showPublicChat && <PublicChatWidget />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/assess" element={<AssessmentPage />} />

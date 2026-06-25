@@ -8,6 +8,9 @@ import { changeMenteeTrack, TrackChangeError } from '../services/menteeTrackServ
 import { sendPaymentClaimAlertEmail } from '../emails/paymentClaimAlertEmail'
 import { sendMenteeRequestAlertEmail } from '../emails/menteeRequestAlertEmail'
 import { generateCertificatePdf } from '../services/certificateService'
+import { getMenteeChatReply } from '../services/chatbotService'
+
+const CHAT_DAILY_LIMIT = 20
 
 interface AuthRequest extends Request {
   menteeId?: string
@@ -554,6 +557,99 @@ export async function requestRecommendationLetter(req: AuthRequest, res: Respons
     return res.json({ message: 'Your mentor has been notified and will write your recommendation letter soon.' })
   } catch (error) {
     console.error('Request recommendation letter error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function chatWithBot(req: AuthRequest, res: Response) {
+  try {
+    const { message } = req.body
+
+    if (!message || !String(message).trim()) {
+      return res.status(400).json({ error: 'Message is required' })
+    }
+    if (String(message).trim().length > 2000) {
+      return res.status(400).json({ error: 'Message is too long' })
+    }
+
+    const mentee = await prisma.mentee.findUnique({ where: { id: req.menteeId } })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const todayCount = await prisma.chatMessage.count({
+      where: { menteeId: req.menteeId, role: 'user', createdAt: { gte: todayStart } },
+    })
+
+    if (todayCount >= CHAT_DAILY_LIMIT) {
+      return res.status(429).json({ error: "You've reached today's chat limit. It resets at midnight." })
+    }
+
+    await prisma.chatMessage.create({
+      data: { menteeId: req.menteeId!, role: 'user', content: String(message).trim() },
+    })
+
+    const recentMessages = await prisma.chatMessage.findMany({
+      where: { menteeId: req.menteeId },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    })
+    const historyChronological = recentMessages.reverse()
+
+    const currentWeek = mentee.hasStarted ? getCurrentWeek(mentee) : null
+
+    const reply = await getMenteeChatReply({
+      domainTrack: mentee.domainTrack,
+      currentWeek,
+      history: historyChronological.map((m) => ({ role: m.role, content: m.content })),
+    })
+
+    await prisma.chatMessage.create({
+      data: { menteeId: req.menteeId!, role: 'assistant', content: reply },
+    })
+
+    return res.json({
+      reply,
+      messagesRemainingToday: Math.max(0, CHAT_DAILY_LIMIT - 1 - todayCount),
+    })
+  } catch (error) {
+    console.error('Mentee chat error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getChatHistory(req: AuthRequest, res: Response) {
+  try {
+    const messages = await prisma.chatMessage.findMany({
+      where: { menteeId: req.menteeId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
+
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const todayCount = await prisma.chatMessage.count({
+      where: { menteeId: req.menteeId, role: 'user', createdAt: { gte: todayStart } },
+    })
+
+    return res.json({
+      messages: messages.reverse(),
+      messagesRemainingToday: Math.max(0, CHAT_DAILY_LIMIT - todayCount),
+    })
+  } catch (error) {
+    console.error('Get chat history error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function clearChatHistory(req: AuthRequest, res: Response) {
+  try {
+    await prisma.chatMessage.deleteMany({ where: { menteeId: req.menteeId } })
+    return res.json({ message: 'Chat history cleared' })
+  } catch (error) {
+    console.error('Clear chat history error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

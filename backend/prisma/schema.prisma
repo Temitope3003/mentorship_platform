@@ -62,6 +62,29 @@ model Mentee {
   liaisonOfficer   LiaisonOfficer?    @relation(fields: [liaisonOfficerId], references: [id])
   mentor           Mentor?            @relation(fields: [mentorId], references: [id])
   submissions      WeeklySubmission[]
+  chatMessages     ChatMessage[]
+}
+
+model ChatMessage {
+  id         String   @id @default(uuid())
+  menteeId   String
+  mentee     Mentee   @relation(fields: [menteeId], references: [id])
+  role       String   // "user" or "assistant"
+  content    String
+  createdAt  DateTime @default(now())
+
+  @@index([menteeId, createdAt])
+}
+
+model PublicChatMessage {
+  id          String   @id @default(uuid())
+  sessionId   String   // random ID generated client-side, stored in localStorage
+  context     String   @default("visitor")  // reserved for future use (e.g. "mentor_applicant" later)
+  role        String   // "user" or "assistant"
+  content     String
+  createdAt   DateTime @default(now())
+
+  @@index([sessionId, createdAt])
 }
 
 model WeeklySubmission {
