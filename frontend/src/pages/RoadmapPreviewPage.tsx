@@ -62,6 +62,7 @@ export function RoadmapPreviewPage() {
         const res = await api.get(`/assessment/roadmap-preview/${encodeURIComponent(domain || '')}`)
         setData(res.data)
         setError('')
+        try { window.plausible?.('Roadmap Preview Viewed', { props: { track: res.data.domain } }) } catch {}
       } catch {
         setError('We could not find that career track.')
       } finally {
@@ -79,6 +80,7 @@ export function RoadmapPreviewPage() {
     setChoosing(true)
     try {
       await api.patch(`/assessment/${token}/track`, { domain: data.domain })
+      try { window.plausible?.('Track Selected', { props: { track: data.domain } }) } catch {}
       toast.success(`Track set to ${data.domain}. Log in with your access code to begin.`)
       navigate('/login')
     } catch (err: any) {

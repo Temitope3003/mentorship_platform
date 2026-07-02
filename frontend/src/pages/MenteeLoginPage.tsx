@@ -43,6 +43,7 @@ export function MenteeLoginPage() {
     try {
       const res = await api.post('/auth/mentee/login', { code })
       setAuth(res.data.token, { ...res.data.mentee, role: 'mentee' })
+      try { window.plausible?.('Mentee Logged In') } catch {}
       navigate('/dashboard')
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Access code not found')

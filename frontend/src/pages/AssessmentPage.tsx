@@ -106,6 +106,7 @@ export function AssessmentPage() {
     try {
       await api.put(`/assessment/${sessionToken}/answers`, { statedGoal: goal })
       setStage('quiz')
+      try { window.plausible?.('Assessment Started') } catch {}
     } catch { toast.error('Something went wrong saving your goal') }
     finally { setLoading(false) }
   }
@@ -144,6 +145,7 @@ export function AssessmentPage() {
     setLoading(true)
     try {
       await api.post(`/assessment/${sessionToken}/complete`, { answers })
+      try { window.plausible?.('Assessment Completed') } catch {}
       navigate(`/results/${sessionToken}`)
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Something went wrong submitting your assessment')

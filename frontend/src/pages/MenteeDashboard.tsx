@@ -223,6 +223,7 @@ export function MenteeDashboard() {
         link: form.link?.trim() || undefined,
       })
       toast.success(`Week ${weekNumber} submitted successfully`)
+      try { window.plausible?.('Week Submitted', { props: { week: weekNumber } }) } catch {}
       setForms(prev => { const n = { ...prev }; delete n[weekNumber]; return n })
       setOpenWeek(null)
     } catch (err: any) {
@@ -236,6 +237,7 @@ export function MenteeDashboard() {
     setStarting(true)
     try {
       await startJourney.mutateAsync()
+      try { window.plausible?.('Journey Started') } catch {}
       toast.success('Your journey has started. Week 1 begins now.')
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to start your journey')
@@ -278,6 +280,7 @@ export function MenteeDashboard() {
     setSubmittingPayment(true)
     try {
       await submitPayment.mutateAsync({ paymentReference: paymentReference.trim(), pendingPaymentPlan: paymentPlan })
+      try { window.plausible?.('Premium Upgrade Submitted') } catch {}
       toast.success('Payment submitted. Awaiting confirmation from your mentor or liaison officer.')
       setShowPaymentForm(false)
       setPaymentReference('')
