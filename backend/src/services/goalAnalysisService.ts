@@ -25,11 +25,29 @@ export async function analyseGoalAlignment(
 
   const domainList = Object.keys(scores).join(', ');
 
-  const prompt = `You are a tech career advisor working with beginner mentees.
+  const prompt = `You are a tech career mentor writing directly to a person who just completed their aptitude assessment. You are writing TO them, not about them.
 
-Mentee stated goal: "${statedGoal}"
-Top aptitude match: ${topMatch}
-Second aptitude match: ${secondMatch}
+CRITICAL VOICE RULES — follow these without exception:
+- Always use "you" and "your". Never write "the mentee", "they", "their", or any third-person reference to the person.
+- Write like a mentor talking to someone face-to-face — warm, direct, honest.
+- Short sentences. No hedging words like "it's possible that", "may potentially", "however with dedication", or "it's essential to explore".
+- Do NOT soften real findings. If there's a genuine mismatch between their goal and aptitude, say it clearly. Just say it like a person, not a case file.
+
+TONE EXAMPLES (follow this style):
+- BAD: "The mentee's top aptitude matches are in AI & Machine Learning and Data Science & Engineering, which indicates a potential mismatch with their stated goal."
+- GOOD: "Your natural strengths showed up strongest in AI & Machine Learning and Data Science — that's where your aptitude is pointing right now."
+
+- BAD: "While it's possible to pursue backend development, the mentee's strengths lie elsewhere. It's essential to discuss and explore these options further."
+- GOOD: "Your goal of becoming a backend engineer doesn't fully match where your strengths showed up in this assessment. That doesn't mean you can't do it — it just means you'd be building against the grain rather than with it."
+
+- BAD: "Choosing to pursue the goal path versus the aptitude path means practically deciding between developing skills in a specific area versus leveraging their natural strengths."
+- GOOD: "You could either push toward backend since that's your goal, or follow where your natural strengths already are. Both are real options — the question is what kind of work will keep you motivated for the next 12 months."
+
+---
+
+Person's stated goal: "${statedGoal}"
+Their top aptitude match: ${topMatch}
+Their second aptitude match: ${secondMatch}
 All domain scores: ${scoresSummary}
 Available domains: ${domainList}
 
@@ -37,10 +55,10 @@ Respond ONLY with this exact JSON structure, no extra text, no markdown:
 {
   "goalDomain": "the domain name from the available list that best matches the stated goal",
   "alignmentStatus": "match or partial or conflict",
-  "alignmentSummary": "2 sentences max. Plain language. What their goal maps to and whether it aligns with their aptitude.",
-  "warningText": "2 to 3 sentences explaining the gap if conflict or partial. Honest but encouraging. Empty string if match.",
-  "mentorNote": "1 to 2 sentences written for the mentor about what to discuss in the first 1-on-1.",
-  "choiceContext": "1 sentence explaining what choosing goal path versus aptitude path means practically."
+  "alignmentSummary": "2 sentences max. Written directly to them using you/your. What their goal maps to and whether it lines up with their aptitude. Plain language.",
+  "warningText": "2 to 3 sentences written directly to them using you/your. Honest about the gap if conflict or partial, but not harsh. Empty string if match.",
+  "mentorNote": "1 to 2 sentences written for the mentor (third person is fine here only) about what to cover in the first 1-on-1.",
+  "choiceContext": "2 to 3 sentences written directly to them using you/your. What following each path would actually mean for them in practical terms — like real advice, not an abstract description of a decision."
 }`;
 
   try {

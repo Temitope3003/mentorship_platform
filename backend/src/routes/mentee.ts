@@ -17,6 +17,8 @@ import {
   chatWithBot,
   getChatHistory,
   clearChatHistory,
+  getJobListings,
+  getIncomeOpportunities,
 } from '../controllers/menteeController'
 
 
@@ -45,3 +47,5 @@ menteeRouter.post('/me/request-recommendation-letter', requestRecommendationLett
 menteeRouter.post('/me/chat', chatWithBot)
 menteeRouter.get('/me/chat/history', getChatHistory)
 menteeRouter.delete('/me/chat/history', clearChatHistory)
+menteeRouter.get('/me/jobs', getJobListings)
+menteeRouter.get('/me/income-opportunities', getIncomeOpportunities)

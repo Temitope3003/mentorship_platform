@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
 import { QUESTIONS } from '../utils/questionData'
 import toast from 'react-hot-toast'
+import { PageMeta } from '../components/PageMeta'
 
 type Answer = number | number[] | null
 
@@ -154,6 +155,11 @@ export function AssessmentPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", color: '#0F1F3D', padding: '48px 20px 72px' }}>
+      <PageMeta
+        title="Take the Free Tech Career Aptitude Assessment"
+        description="Find your ideal tech career track in 10 minutes. Our AI-powered assessment matches your natural strengths to the right domain and gives you a personalised roadmap."
+        path="/assess"
+      />
       <style>{CSS}</style>
 
       {/* ── PROGRESS BAR ─────────────────────────────────────────────── */}

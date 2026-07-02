@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
 import toast from 'react-hot-toast'
 import { MentorApplicantChatWidget } from '../components/MentorApplicantChatWidget'
+import { PageMeta } from '../components/PageMeta'
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
@@ -113,6 +114,11 @@ export function MentorRegisterPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', fontFamily: "'Inter', sans-serif", color: '#0F1F3D' }}>
+      <PageMeta
+        title="Become a Mentor"
+        description="Apply to mentor aspiring tech professionals on their 48-week journey. Give back, build your leadership record, and earn a certificate of mentorship."
+        path="/mentor/register"
+      />
       <style>{CSS}</style>
       <MentorApplicantChatWidget />
 

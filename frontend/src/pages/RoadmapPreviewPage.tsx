@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { api } from '../utils/api'
+import { PageMeta } from '../components/PageMeta'
 
 interface VisibleWeek {
   week: number
@@ -129,6 +130,11 @@ export function RoadmapPreviewPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", color: '#0F1F3D' }}>
+      <PageMeta
+        title={`${domainName} 48-Week Roadmap`}
+        description={`${tagline}. Free structured 48-week ${domainName} learning path with expert mentors, weekly check-ins, and a certificate of completion.`}
+        path={`/roadmap-preview/${encodeURIComponent(domainName)}`}
+      />
       <style>{CSS}</style>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DOMAINS } from '../utils/questionData'
 import { DOMAIN_DETAILS } from './DomainPage'
+import { PageMeta } from '../components/PageMeta'
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
@@ -60,6 +61,11 @@ export function CareerDomainsPage() {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: '#F9F7F1', color: '#0F1F3D', minHeight: '100vh' }}>
+      <PageMeta
+        title="Explore 15 Tech Career Domains"
+        description="Browse AI & Machine Learning, Backend Development, Cybersecurity, and 12 more tech career paths. See salaries, top roles, and get your free 48-week roadmap."
+        path="/domains"
+      />
       <style>{CSS}</style>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}

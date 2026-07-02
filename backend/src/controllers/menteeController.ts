@@ -653,3 +653,44 @@ export async function clearChatHistory(req: AuthRequest, res: Response) {
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export async function getJobListings(req: AuthRequest, res: Response) {
+  try {
+    const mentee = await prisma.mentee.findUnique({ where: { id: req.menteeId } })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    const domainTrack = mentee.domainTrack
+    const isPremium = mentee.plan === 'PREMIUM'
+
+    const totalAvailable = await prisma.jobListing.count({ where: { domainTrack } })
+
+    const listings = await prisma.jobListing.findMany({
+      where: { domainTrack },
+      orderBy: [{ postedAt: 'desc' }, { fetchedAt: 'desc' }],
+      take: isPremium ? 50 : 5,
+    })
+
+    return res.json({
+      listings,
+      totalAvailable,
+      isPremium,
+      domainTrack,
+    })
+  } catch (error) {
+    console.error('Get job listings error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getIncomeOpportunities(_req: AuthRequest, res: Response) {
+  try {
+    const opportunities = await prisma.incomeOpportunity.findMany({
+      where: { status: 'APPROVED' },
+      orderBy: { proposedAt: 'asc' },
+    })
+    return res.json({ opportunities })
+  } catch (error) {
+    console.error('Get income opportunities error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}

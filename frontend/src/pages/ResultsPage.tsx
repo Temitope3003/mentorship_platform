@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { api } from '../utils/api'
 import { DOMAINS } from '../utils/questionData'
+import { PageMeta } from '../components/PageMeta'
 
 interface MenteeResult {
   id: string
@@ -94,6 +95,10 @@ export function ResultsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", color: '#0F1F3D', padding: '56px 20px 72px' }}>
+      <PageMeta
+        title={`Your ${mentee.topMatch} Career Assessment Results`}
+        description={`Your aptitude assessment matched you to ${mentee.topMatch}. See your full score breakdown, goal alignment, and get your free personalised roadmap.`}
+      />
       <style>{CSS}</style>
 
       <div style={{ maxWidth: 580, margin: '0 auto' }}>

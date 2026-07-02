@@ -1030,3 +1030,79 @@ export async function getMentorChatHistory(req: AuthRequest, res: Response) {
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+export async function refreshJobs(_req: AuthRequest, res: Response) {
+  try {
+    const { fetchAndStoreJobs } = await import('../services/jobFetchService.js')
+    const result = await fetchAndStoreJobs()
+    return res.json({
+      message: `Job refresh complete. ${result.added} new listings added.`,
+      added: result.added,
+      errors: result.errors,
+    })
+  } catch (error) {
+    console.error('Refresh jobs error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getPendingIncomeOpportunities(_req: AuthRequest, res: Response) {
+  try {
+    const opportunities = await prisma.incomeOpportunity.findMany({
+      where: { status: 'PENDING' },
+      orderBy: { proposedAt: 'desc' },
+    })
+    return res.json({ opportunities })
+  } catch (error) {
+    console.error('Get pending income opportunities error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function approveIncomeOpportunity(req: AuthRequest, res: Response) {
+  try {
+    const mentor = await prisma.mentor.findUnique({ where: { id: req.mentorId } })
+    if (!mentor) return res.status(404).json({ error: 'Mentor not found' })
+
+    const updated = await prisma.incomeOpportunity.update({
+      where: { id: String(req.params.id) },
+      data: { status: 'APPROVED', reviewedAt: new Date(), reviewedBy: mentor.name },
+    })
+    return res.json({ opportunity: updated })
+  } catch (error) {
+    console.error('Approve income opportunity error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function rejectIncomeOpportunity(req: AuthRequest, res: Response) {
+  try {
+    const updated = await prisma.incomeOpportunity.update({
+      where: { id: String(req.params.id) },
+      data: { status: 'REJECTED', reviewedAt: new Date() },
+    })
+    return res.json({ opportunity: updated })
+  } catch (error) {
+    console.error('Reject income opportunity error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function updateIncomeOpportunity(req: AuthRequest, res: Response) {
+  try {
+    const { name, description, url, category } = req.body
+    const updated = await prisma.incomeOpportunity.update({
+      where: { id: String(req.params.id) },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(url !== undefined && { url }),
+        ...(category !== undefined && { category }),
+      },
+    })
+    return res.json({ opportunity: updated })
+  } catch (error) {
+    console.error('Update income opportunity error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}

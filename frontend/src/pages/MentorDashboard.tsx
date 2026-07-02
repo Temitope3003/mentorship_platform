@@ -28,7 +28,7 @@ const STATUS_BADGES: Record<string, { bg: string; border: string; color: string;
   ON_TRACK:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: 'ti ti-circle-check',    label: 'On Track' },
 }
 
-type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications' | 'payments' | 'mentors'
+type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications' | 'payments' | 'mentors' | 'income'
 
 async function extractBlobError(err: any, fallback: string): Promise<string> {
   try {
@@ -256,6 +256,7 @@ export function MentorDashboard() {
     { id: 'liaison',     label: 'Liaison Officers',  icon: 'ti ti-shield' },
     ...(user?.isSuperAdmin ? [{ id: 'applications' as Tab, label: 'Applications', icon: 'ti ti-user-check' }] : []),
     ...(user?.isSuperAdmin ? [{ id: 'mentors' as Tab, label: 'Mentors', icon: 'ti ti-award' }] : []),
+    ...(user?.isSuperAdmin ? [{ id: 'income' as Tab, label: 'Income Suggestions', icon: 'ti ti-coin' }] : []),
   ]
 
   return (
@@ -771,6 +772,9 @@ export function MentorDashboard() {
         {/* ── TAB: MENTORS (super-admin only) ─────────────────────────────── */}
         {tab === 'mentors' && user?.isSuperAdmin && <ApprovedMentorsTab />}
 
+        {/* ── TAB: INCOME SUGGESTIONS (super-admin only) ─────────────────── */}
+        {tab === 'income' && user?.isSuperAdmin && <IncomeOpportunitiesTab />}
+
       </div>
 
       <MentorChatWidget />
@@ -1266,6 +1270,160 @@ function ApplicationsTab() {
           <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
             <i className="ti ti-user-check" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
             No pending applications.
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function IncomeOpportunitiesTab() {
+  const [opportunities, setOpportunities] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<{ name: string; description: string; url: string; category: string }>({ name: '', description: '', url: '', category: '' })
+  const [actingId, setActingId] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const load = async () => {
+    try {
+      const res = await api.get('/mentor/income-opportunities/pending')
+      setOpportunities(res.data.opportunities || [])
+    } catch {
+      toast.error('Failed to load income suggestions')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function handleApprove(id: string, name: string) {
+    setActingId(id)
+    try {
+      await api.patch(`/mentor/income-opportunities/${id}/approve`)
+      toast.success(`${name} approved and visible to all mentees`)
+      setOpportunities(prev => prev.filter(o => o.id !== id))
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to approve')
+    } finally {
+      setActingId(null)
+    }
+  }
+
+  async function handleReject(id: string, name: string) {
+    if (!confirm(`Reject "${name}"?`)) return
+    setActingId(id)
+    try {
+      await api.patch(`/mentor/income-opportunities/${id}/reject`)
+      toast.success(`${name} rejected`)
+      setOpportunities(prev => prev.filter(o => o.id !== id))
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to reject')
+    } finally {
+      setActingId(null)
+    }
+  }
+
+  function startEdit(opp: any) {
+    setEditingId(opp.id)
+    setEditForm({ name: opp.name, description: opp.description, url: opp.url, category: opp.category })
+  }
+
+  async function saveEdit(id: string) {
+    try {
+      const res = await api.patch(`/mentor/income-opportunities/${id}`, editForm)
+      setOpportunities(prev => prev.map(o => o.id === id ? res.data.opportunity : o))
+      setEditingId(null)
+      toast.success('Saved')
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to save')
+    }
+  }
+
+  async function handleRefreshJobs() {
+    setRefreshing(true)
+    try {
+      const res = await api.post('/mentor/jobs/refresh')
+      toast.success(res.data.message)
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to refresh jobs')
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070' }}>
+        <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 24, color: '#C9A84C', display: 'block', margin: '0 auto 10px' }} />
+        Loading suggestions...
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: '#6B6B6B', margin: 0 }}>
+          AI-researched income platforms pending your review. Approved entries appear on all mentee dashboards.
+        </p>
+        <button onClick={handleRefreshJobs} disabled={refreshing} className="bit-btn-ghost" style={{ fontSize: 12 }}>
+          {refreshing ? (
+            <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 13 }} /> Refreshing...</>
+          ) : (
+            <><i className="ti ti-refresh" style={{ fontSize: 13 }} /> Refresh Job Listings Now</>
+          )}
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {opportunities.map(opp => (
+          <div key={opp.id} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '20px 22px' }}>
+            {editingId === opp.id ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <input value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} placeholder="Name" className="bit-input" />
+                <textarea value={editForm.description} onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" rows={3} className="bit-input" style={{ resize: 'none' }} />
+                <input value={editForm.url} onChange={e => setEditForm(p => ({ ...p, url: e.target.value }))} placeholder="URL" className="bit-input" />
+                <input value={editForm.category} onChange={e => setEditForm(p => ({ ...p, category: e.target.value }))} placeholder="Category" className="bit-input" />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => saveEdit(opp.id)} className="bit-btn-gold" style={{ fontSize: 12 }}>
+                    <i className="ti ti-check" style={{ fontSize: 13 }} /> Save
+                  </button>
+                  <button onClick={() => setEditingId(null)} className="bit-btn-ghost" style={{ fontSize: 12 }}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0F1F3D', marginBottom: 3 }}>{opp.name}</div>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: 999, padding: '2px 9px', fontSize: 10, fontWeight: 700, color: '#7A5C1E', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
+                      {opp.category}
+                    </span>
+                  </div>
+                  <a href={opp.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#C9A84C', textDecoration: 'underline' }}>{opp.url}</a>
+                </div>
+                <p style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.7, marginBottom: 14 }}>{opp.description}</p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button onClick={() => handleApprove(opp.id, opp.name)} disabled={actingId === opp.id} className="bit-btn-gold" style={{ fontSize: 12 }}>
+                    <i className="ti ti-check" style={{ fontSize: 13 }} /> Approve
+                  </button>
+                  <button onClick={() => startEdit(opp)} className="bit-btn-ghost" style={{ fontSize: 12 }}>
+                    <i className="ti ti-edit" style={{ fontSize: 13 }} /> Edit
+                  </button>
+                  <button onClick={() => handleReject(opp.id, opp.name)} disabled={actingId === opp.id} className="bit-btn-ghost" style={{ fontSize: 12, color: '#ef4444', borderColor: '#fecaca' }}>
+                    <i className="ti ti-x" style={{ fontSize: 13 }} /> Reject
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+        {opportunities.length === 0 && (
+          <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+            <i className="ti ti-coin" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
+            No pending suggestions. The AI researches new platforms every Sunday.
           </div>
         )}
       </div>

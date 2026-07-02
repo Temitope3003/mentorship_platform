@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&amp;family=Inter:wght@400;500&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0F1F3D"/>
+
+  <!-- Subtle grid pattern -->
+  <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+    <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(201,168,76,0.06)" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Gold accent bar top -->
+  <rect x="0" y="0" width="1200" height="5" fill="#C9A84C"/>
+
+  <!-- Gold "B" mark circle -->
+  <circle cx="140" cy="290" r="88" fill="rgba(201,168,76,0.12)" stroke="#C9A84C" stroke-width="1.5"/>
+  <text x="140" y="337" font-family="Georgia, serif" font-size="100" font-weight="bold" font-style="italic" fill="#C9A84C" text-anchor="middle">B</text>
+
+  <!-- Wordmark -->
+  <text x="265" y="270" font-family="Georgia, 'Playfair Display', serif" font-size="68" font-weight="900" fill="#FFFFFF" letter-spacing="-1">Build In Tech</text>
+
+  <!-- Tagline -->
+  <text x="265" y="322" font-family="Arial, Inter, sans-serif" font-size="28" font-weight="400" fill="rgba(255,255,255,0.65)" letter-spacing="0.5">Free AI-powered tech career mentorship</text>
+
+  <!-- Divider line -->
+  <line x1="265" y1="350" x2="900" y2="350" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+
+  <!-- Stats row -->
+  <text x="265" y="404" font-family="Arial, Inter, sans-serif" font-size="22" fill="#C9A84C" font-weight="600">15 Career Tracks</text>
+  <circle cx="450" cy="396" r="3" fill="rgba(255,255,255,0.3)"/>
+  <text x="465" y="404" font-family="Arial, Inter, sans-serif" font-size="22" fill="#C9A84C" font-weight="600">48-Week Roadmap</text>
+  <circle cx="680" cy="396" r="3" fill="rgba(255,255,255,0.3)"/>
+  <text x="695" y="404" font-family="Arial, Inter, sans-serif" font-size="22" fill="#C9A84C" font-weight="600">Expert Mentors</text>
+
+  <!-- URL -->
+  <text x="265" y="454" font-family="Arial, Inter, sans-serif" font-size="20" fill="rgba(255,255,255,0.35)" letter-spacing="1">buildintech.xyz</text>
+
+  <!-- Decorative gold dots bottom right -->
+  <circle cx="1100" cy="550" r="6" fill="#C9A84C" opacity="0.5"/>
+  <circle cx="1130" cy="540" r="4" fill="#C9A84C" opacity="0.3"/>
+  <circle cx="1115" cy="570" r="3" fill="#C9A84C" opacity="0.2"/>
+
+  <!-- Gold accent bar bottom -->
+  <rect x="0" y="625" width="1200" height="5" fill="rgba(201,168,76,0.4)"/>
+</svg>

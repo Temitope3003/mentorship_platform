@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { DOMAINS } from '../utils/questionData'
+import { PageMeta } from '../components/PageMeta'
 
 export interface DomainDetail {
   tagline: string
@@ -545,6 +546,11 @@ export function DomainPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", color: '#0F1F3D' }}>
+      <PageMeta
+        title={`${decodedDomain} Career Track`}
+        description={`${details.tagline}. See salary ranges, top roles, required tools, and get your free personalised 48-week roadmap.`}
+        path={`/domain/${encodeURIComponent(decodedDomain)}`}
+      />
       <style>{CSS}</style>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}

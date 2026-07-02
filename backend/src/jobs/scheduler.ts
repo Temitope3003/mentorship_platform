@@ -510,4 +510,47 @@ cron.schedule('0 6 * * *', async () => {
   }
 })
 
+// ─────────────────────────────────────────────
+// JOB: Daily job fetch
+// Runs every day at 2am server time
+// Fetches new listings from RemoteOK and Arbeitnow, upserts by externalId
+// ─────────────────────────────────────────────
+cron.schedule('0 2 * * *', async () => {
+  console.log('[Scheduler] Running daily job fetch...')
+  try {
+    const { fetchAndStoreJobs } = await import('../services/jobFetchService.js')
+    const result = await fetchAndStoreJobs()
+    console.log(`[Scheduler] Job fetch complete — ${result.added} new listings added`)
+    if (result.errors.length) console.warn('[Scheduler] Job fetch errors:', result.errors)
+  } catch (error) {
+    console.error('[Scheduler] Job fetch error:', error)
+  }
+})
+
+// ─────────────────────────────────────────────
+// JOB: Weekly income opportunity research
+// Runs every Sunday at 3am — Groq researches new platforms, inserts as PENDING
+// ─────────────────────────────────────────────
+cron.schedule('0 3 * * 0', async () => {
+  console.log('[Scheduler] Running weekly income opportunity research...')
+  try {
+    const { researchAndProposeOpportunities } = await import('../services/incomeResearchService.js')
+    const added = await researchAndProposeOpportunities()
+    console.log(`[Scheduler] Income research complete — ${added} new proposals added`)
+  } catch (error) {
+    console.error('[Scheduler] Income research error:', error)
+  }
+})
+
+// Seed default income opportunities on startup (idempotent — skips if already present)
+;(async () => {
+  try {
+    const { seedDefaultOpportunities } = await import('../services/incomeResearchService.js')
+    await seedDefaultOpportunities()
+    console.log('[Scheduler] Default income opportunities seeded')
+  } catch (error) {
+    console.error('[Scheduler] Seed error:', error)
+  }
+})()
+
 console.log('[Scheduler] All cron jobs registered')

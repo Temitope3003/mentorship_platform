@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
 import {
   useMenteeStats,
@@ -16,6 +16,8 @@ import toast from 'react-hot-toast'
 import { api } from '../utils/api'
 import { MenteeChatWidget } from '../components/MenteeChatWidget'
 import { DOMAINS as DOMAIN_LIST } from '../utils/questionData'
+
+type DashTab = 'journey' | 'jobs'
 
 const DOMAIN_COLORS: Record<string, string> = Object.fromEntries(
   DOMAIN_LIST.map((d) => [d.name, d.color])
@@ -145,6 +147,26 @@ export function MenteeDashboard() {
   const [requestingLetter, setRequestingLetter] = useState(false)
   const [downloadingCert, setDownloadingCert] = useState(false)
   const [letterRequested, setLetterRequested] = useState(false)
+
+  const [dashTab, setDashTab] = useState<DashTab>('journey')
+  const [jobsData, setJobsData] = useState<{ listings: any[]; totalAvailable: number; isPremium: boolean } | null>(null)
+  const [jobsLoading, setJobsLoading] = useState(false)
+  const [incomeOpps, setIncomeOpps] = useState<any[]>([])
+
+  useEffect(() => {
+    api.get('/mentee/me/income-opportunities')
+      .then(r => setIncomeOpps(r.data.opportunities || []))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (dashTab !== 'jobs' || jobsData) return
+    setJobsLoading(true)
+    api.get('/mentee/me/jobs')
+      .then(r => setJobsData(r.data))
+      .catch(() => toast.error('Failed to load job listings'))
+      .finally(() => setJobsLoading(false))
+  }, [dashTab])
 
   const domainColor = DOMAIN_COLORS[user?.domain || ''] || '#C9A84C'
   const firstName = user?.name?.split(' ')[0] || 'there'
@@ -432,6 +454,41 @@ export function MenteeDashboard() {
             </div>
           )}
         </div>
+
+        {/* ── DASH TABS ──────────────────────────────────────────────────── */}
+        <div style={{ display: 'flex', borderBottom: '1px solid #E8E4D9', marginBottom: 28, gap: 2 }}>
+          {([
+            { id: 'journey', label: 'My Journey',        icon: 'ti ti-map' },
+            { id: 'jobs',    label: 'Job Opportunities',  icon: 'ti ti-briefcase' },
+          ] as { id: DashTab; label: string; icon: string }[]).map(t => (
+            <button
+              key={t.id}
+              onClick={() => setDashTab(t.id)}
+              style={{
+                padding: '11px 18px', fontSize: 13, fontWeight: 600,
+                fontFamily: "'Inter', sans-serif", border: 'none', background: 'none',
+                cursor: 'pointer',
+                borderBottom: dashTab === t.id ? '2px solid #C9A84C' : '2px solid transparent',
+                color: dashTab === t.id ? '#C9A84C' : '#8A8070',
+                transition: 'color 0.15s, border-color 0.15s',
+              }}
+            >
+              <i className={t.icon} style={{ fontSize: 13, marginRight: 6 }} />
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── TAB: JOB OPPORTUNITIES ─────────────────────────────────────── */}
+        {dashTab === 'jobs' && (
+          <JobOpportunitiesTab
+            loading={jobsLoading}
+            data={jobsData}
+            domainTrack={user?.domain || ''}
+          />
+        )}
+
+        {dashTab === 'journey' && <>
 
         {/* ── PREMIUM / PAYMENT ───────────────────────────────────────────── */}
         {stats?.plan === 'PREMIUM' ? (
@@ -772,6 +829,11 @@ export function MenteeDashboard() {
         </>
         )}
 
+        {/* ── EARN WHILE YOU LEARN ────────────────────────────────────────── */}
+        <EarnWhileYouLearn opportunities={incomeOpps} />
+
+        </>}
+
       </div>
 
       {/* ── PAUSE MODAL ─────────────────────────────────────────────────── */}
@@ -839,6 +901,176 @@ export function MenteeDashboard() {
       )}
 
       <MenteeChatWidget />
+    </div>
+  )
+}
+
+function JobOpportunitiesTab({
+  loading,
+  data,
+  domainTrack,
+}: {
+  loading: boolean
+  data: { listings: any[]; totalAvailable: number; isPremium: boolean } | null
+  domainTrack: string
+}) {
+  if (loading) {
+    return (
+      <div style={{ padding: '64px 0', textAlign: 'center' }}>
+        <div className="bit-spin" style={{ width: 32, height: 32, border: '3px solid #E8E4D9', borderTopColor: '#C9A84C', borderRadius: '50%', margin: '0 auto 14px' }} />
+        <p style={{ color: '#8A8070', fontSize: 14 }}>Finding jobs in {domainTrack}...</p>
+      </div>
+    )
+  }
+
+  if (!data) return null
+
+  const { listings, totalAvailable, isPremium } = data
+  const hiddenCount = totalAvailable - listings.length
+
+  if (totalAvailable === 0) {
+    return (
+      <div style={{ padding: '64px 24px', textAlign: 'center' }}>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(201,168,76,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+          <i className="ti ti-briefcase" style={{ fontSize: 24, color: '#C9A84C' }} />
+        </div>
+        <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 900, color: '#0F1F3D', marginBottom: 8 }}>
+          No listings yet for {domainTrack}
+        </h3>
+        <p style={{ fontSize: 13, color: '#8A8070', lineHeight: 1.7, maxWidth: 360, margin: '0 auto' }}>
+          Job listings are refreshed daily. Check back tomorrow — new roles get added every night.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+        <span style={{ fontSize: 13, color: '#6B6B6B' }}>
+          Showing <strong style={{ color: '#0F1F3D' }}>{listings.length}</strong> of{' '}
+          <strong style={{ color: '#0F1F3D' }}>{totalAvailable}</strong> {domainTrack} roles
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+        {listings.map((job: any) => (
+          <div key={job.id} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '18px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#0F1F3D', marginBottom: 4 }}>{job.title}</div>
+                <div style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 8 }}>{job.company}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {job.isRemote && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(29,74,110,0.07)', border: '1px solid rgba(29,74,110,0.18)', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#1D4A6E' }}>
+                      <i className="ti ti-world" style={{ fontSize: 10 }} /> Remote
+                    </span>
+                  )}
+                  {job.location && !job.isRemote && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 999, padding: '3px 10px', fontSize: 11, color: '#8A8070' }}>
+                      <i className="ti ti-map-pin" style={{ fontSize: 10 }} /> {job.location}
+                    </span>
+                  )}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 999, padding: '3px 10px', fontSize: 11, color: '#8A8070' }}>
+                    <i className="ti ti-antenna" style={{ fontSize: 10 }} /> {job.source}
+                  </span>
+                </div>
+              </div>
+              <a
+                href={job.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#C9A84C', color: '#0F1F3D', border: 'none', borderRadius: 9, padding: '9px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', flexShrink: 0 }}
+              >
+                <i className="ti ti-external-link" style={{ fontSize: 13 }} />
+                Apply
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {!isPremium && hiddenCount > 0 && (
+        <div style={{ background: '#0F1F3D', borderRadius: 14, padding: '24px 26px', textAlign: 'center' }}>
+          <i className="ti ti-lock" style={{ fontSize: 24, color: '#F5D87A', display: 'block', marginBottom: 12 }} />
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 6 }}>
+            {hiddenCount} more {domainTrack} role{hiddenCount !== 1 ? 's' : ''} available on Premium
+          </div>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, marginBottom: 18 }}>
+            Upgrade to Premium to see all matched listings — refreshed daily.
+          </p>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#C9A84C', color: '#0F1F3D', border: 'none', borderRadius: 9, padding: '11px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          >
+            <i className="ti ti-crown" style={{ fontSize: 14 }} />
+            Upgrade to Premium
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function EarnWhileYouLearn({ opportunities }: { opportunities: any[] }) {
+  if (opportunities.length === 0) return null
+
+  const CATEGORY_COLORS: Record<string, string> = {
+    'Research Studies': '#1D4A6E',
+    'Freelance Work': '#7A5C1E',
+    'Usability Testing': '#15803d',
+    'Data Labeling': '#7c3aed',
+    'Remote Work': '#0891b2',
+    'Micro-tasks': '#ef4444',
+    'Other': '#8A8070',
+  }
+
+  return (
+    <div style={{ marginTop: 40, paddingTop: 32, borderTop: '1px solid #E8E4D9' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <i className="ti ti-coin" style={{ fontSize: 18, color: '#C9A84C' }} />
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900, color: '#0F1F3D', margin: 0 }}>
+          Earn While You Learn
+        </h2>
+      </div>
+      <p style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.7, marginBottom: 20 }}>
+        Vetted platforms where you can earn real income as a beginner while building your skills.
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+        {opportunities.map((opp: any) => {
+          const catColor = CATEGORY_COLORS[opp.category] || '#8A8070'
+          return (
+            <div key={opp.id} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#0F1F3D' }}>{opp.name}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', background: `${catColor}14`, border: `1px solid ${catColor}30`, borderRadius: 999, padding: '2px 9px', fontSize: 10, fontWeight: 700, color: catColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    {opp.category}
+                  </span>
+                </div>
+                <p style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.65, margin: 0 }}>{opp.description}</p>
+              </div>
+              <a
+                href={opp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#F9F7F1', border: '1px solid #E8E4D9', color: '#0F1F3D', borderRadius: 9, padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', flexShrink: 0, transition: 'border-color 0.15s' }}
+              >
+                <i className="ti ti-external-link" style={{ fontSize: 12 }} />
+                Learn More
+              </a>
+            </div>
+          )
+        })}
+      </div>
+
+      <div style={{ background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <i className="ti ti-alert-triangle" style={{ fontSize: 15, color: '#7A5C1E', flexShrink: 0, marginTop: 1 }} />
+        <p style={{ fontSize: 12, color: '#7A5C1E', lineHeight: 1.65, margin: 0 }}>
+          Build In Tech does not guarantee income from these platforms. Be cautious of any opportunity that asks you to pay money upfront — that is a common scam pattern.
+        </p>
+      </div>
     </div>
   )
 }

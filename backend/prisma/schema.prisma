@@ -72,7 +72,7 @@ model Mentee {
 model ChatMessage {
   id         String   @id @default(uuid())
   menteeId   String
-  mentee     Mentee   @relation(fields: [menteeId], references: [id])
+  mentee     Mentee   @relation(fields: [menteeId], references: [id], onDelete: Cascade)
   role       String   // "user" or "assistant"
   content    String
   createdAt  DateTime @default(now())
@@ -83,7 +83,7 @@ model ChatMessage {
 model MentorChatMessage {
   id         String   @id @default(uuid())
   mentorId   String
-  mentor     Mentor   @relation(fields: [mentorId], references: [id])
+  mentor     Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
   role       String   // "user" or "assistant"
   content    String
   createdAt  DateTime @default(now())
@@ -142,7 +142,7 @@ model EmailLog {
   errorMsg   String?
   sentAt     DateTime?
   createdAt  DateTime  @default(now())
-  mentee     Mentee?   @relation(fields: [menteeId], references: [id])
+  mentee     Mentee?   @relation(fields: [menteeId], references: [id], onDelete: Cascade)
 }
 
 model LiaisonOfficer {
@@ -153,4 +153,30 @@ model LiaisonOfficer {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   mentees      Mentee[]
+}
+
+model JobListing {
+  id          String    @id @default(uuid())
+  title       String
+  company     String
+  location    String?
+  isRemote    Boolean   @default(true)
+  url         String
+  source      String
+  domainTrack String
+  postedAt    DateTime?
+  fetchedAt   DateTime  @default(now())
+  externalId  String    @unique
+}
+
+model IncomeOpportunity {
+  id          String    @id @default(uuid())
+  name        String
+  description String
+  url         String
+  category    String
+  status      String    @default("PENDING")
+  proposedAt  DateTime  @default(now())
+  reviewedAt  DateTime?
+  reviewedBy  String?
 }

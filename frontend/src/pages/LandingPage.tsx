@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { DOMAINS } from '../utils/questionData'
+import { PageMeta } from '../components/PageMeta'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -165,6 +166,11 @@ function StarRow() {
 export function LandingPage() {
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: '#ffffff', color: '#0F1F3D', overflowX: 'hidden' }}>
+      <PageMeta
+        title="Build In Tech — Free AI-Powered Tech Career Mentorship"
+        description="Discover your ideal tech career path, get a personalised 48-week roadmap, and connect with expert mentors — completely free."
+        path="/"
+      />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
