@@ -15,31 +15,13 @@ import {
 import toast from 'react-hot-toast'
 import { api } from '../utils/api'
 import { MenteeChatWidget } from '../components/MenteeChatWidget'
+import { DOMAINS as DOMAIN_LIST } from '../utils/questionData'
 
-const DOMAIN_COLORS: Record<string, string> = {
-  'AI & Machine Learning': '#ff6b2b',
-  'Data Analysis': '#2563eb',
-  'Data Science & Engineering': '#7c3aed',
-  'Full Stack Engineering': '#0891b2',
-  'Frontend Development': '#f59e0b',
-  'Backend Development': '#059669',
-  'Cloud & Infrastructure': '#6366f1',
-  'Cybersecurity': '#ef4444',
-  'Product, Design & UX': '#ec4899',
-  'Emerging Tech': '#14b8a6',
-  'Virtual Assistant': '#84cc16',
-  'AI Automation & No-Code': '#f97316',
-  'DevRel & Technical Writing': '#8b5cf6',
-  'Mobile Development': '#06b6d4',
-}
+const DOMAIN_COLORS: Record<string, string> = Object.fromEntries(
+  DOMAIN_LIST.map((d) => [d.name, d.color])
+)
 
-const DOMAINS = [
-  'AI & Machine Learning', 'Data Analysis', 'Data Science & Engineering',
-  'Full Stack Engineering', 'Frontend Development', 'Backend Development',
-  'Cloud & Infrastructure', 'Cybersecurity', 'Product, Design & UX',
-  'Emerging Tech', 'Virtual Assistant', 'AI Automation & No-Code',
-  'DevRel & Technical Writing', 'Mobile Development',
-]
+const DOMAINS = DOMAIN_LIST.map((d) => d.name)
 
 interface SubmissionFormData {
   summary: string

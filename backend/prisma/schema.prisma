@@ -18,7 +18,11 @@ model Mentor {
   applicationNote  String?
   appliedAt        DateTime  @default(now())
   reviewedAt       DateTime?
+  hasReceivedCertificate Boolean @default(false)
+  certificateIssuedAt    DateTime?
+  certificateCode        String?
   mentees          Mentee[]
+  chatMessages     MentorChatMessage[]
 }
 
 model Mentee {
@@ -74,6 +78,17 @@ model ChatMessage {
   createdAt  DateTime @default(now())
 
   @@index([menteeId, createdAt])
+}
+
+model MentorChatMessage {
+  id         String   @id @default(uuid())
+  mentorId   String
+  mentor     Mentor   @relation(fields: [mentorId], references: [id])
+  role       String   // "user" or "assistant"
+  content    String
+  createdAt  DateTime @default(now())
+
+  @@index([mentorId, createdAt])
 }
 
 model PublicChatMessage {

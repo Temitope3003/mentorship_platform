@@ -13,6 +13,7 @@ import {
 import toast from 'react-hot-toast'
 import { api } from '../utils/api'
 import { DOMAINS as DOMAIN_LIST } from '../utils/questionData'
+import { MentorChatWidget } from '../components/MentorChatWidget'
 
 const DOMAINS = DOMAIN_LIST.map(d => d.name)
 
@@ -27,7 +28,7 @@ const STATUS_BADGES: Record<string, { bg: string; border: string; color: string;
   ON_TRACK:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: 'ti ti-circle-check',    label: 'On Track' },
 }
 
-type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications' | 'payments'
+type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications' | 'payments' | 'mentors'
 
 async function extractBlobError(err: any, fallback: string): Promise<string> {
   try {
@@ -146,6 +147,7 @@ export function MentorDashboard() {
   const [letterModal, setLetterModal] = useState<{ id: string; name: string } | null>(null)
   const [letterContent, setLetterContent] = useState('')
   const [issuingLetter, setIssuingLetter] = useState(false)
+  const [myProfile, setMyProfile] = useState<{ hasReceivedCertificate: boolean; certificateCode: string | null } | null>(null)
 
   const { data: stats } = useMentorStats()
   const { data: mentees, isLoading: menteesLoading } = useMentees()
@@ -158,6 +160,19 @@ export function MentorDashboard() {
   useEffect(() => {
     api.get('/mentor/liaison-officers').then(res => setOfficers(res.data)).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    api.get('/mentor/me').then(res => setMyProfile(res.data)).catch(() => {})
+  }, [])
+
+  async function handleDownloadMyCertificate() {
+    try {
+      const res = await api.get('/mentor/me/certificate', { responseType: 'blob' })
+      downloadBlob(res.data, `BuildInTech-Certificate-of-Mentorship.pdf`)
+    } catch (err: any) {
+      toast.error(await extractBlobError(err, 'Failed to download certificate'))
+    }
+  }
 
   const filteredMentees = (mentees || []).filter((m: any) => {
     const matchSearch = !search || m.name.toLowerCase().includes(search.toLowerCase()) || m.email.toLowerCase().includes(search.toLowerCase())
@@ -240,6 +255,7 @@ export function MentorDashboard() {
     { id: 'add',         label: 'Add Mentee',        icon: 'ti ti-user-plus' },
     { id: 'liaison',     label: 'Liaison Officers',  icon: 'ti ti-shield' },
     ...(user?.isSuperAdmin ? [{ id: 'applications' as Tab, label: 'Applications', icon: 'ti ti-user-check' }] : []),
+    ...(user?.isSuperAdmin ? [{ id: 'mentors' as Tab, label: 'Mentors', icon: 'ti ti-award' }] : []),
   ]
 
   return (
@@ -270,7 +286,17 @@ export function MentorDashboard() {
             }}>
               Program Overview
             </h1>
-            <p style={{ fontSize: 14, color: '#6B6B6B' }}>Welcome back, {user?.name}</p>
+            <p style={{ fontSize: 14, color: '#6B6B6B', marginBottom: myProfile?.hasReceivedCertificate ? 10 : 0 }}>Welcome back, {user?.name}</p>
+            {myProfile?.hasReceivedCertificate && (
+              <button
+                onClick={handleDownloadMyCertificate}
+                className="bit-btn-ghost"
+                style={{ fontSize: 12, padding: '7px 14px' }}
+              >
+                <i className="ti ti-certificate" style={{ fontSize: 13 }} />
+                Download My Certificate of Mentorship
+              </button>
+            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -742,7 +768,12 @@ export function MentorDashboard() {
         {/* ── TAB: APPLICATIONS (super-admin only) ───────────────────────── */}
         {tab === 'applications' && user?.isSuperAdmin && <ApplicationsTab />}
 
+        {/* ── TAB: MENTORS (super-admin only) ─────────────────────────────── */}
+        {tab === 'mentors' && user?.isSuperAdmin && <ApprovedMentorsTab />}
+
       </div>
+
+      <MentorChatWidget />
 
       {/* ── RECOMMENDATION LETTER MODAL ─────────────────────────────────── */}
       {letterModal && (
@@ -1238,6 +1269,205 @@ function ApplicationsTab() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function ApprovedMentorsTab() {
+  const [mentors, setMentors] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [issuingCertId, setIssuingCertId] = useState<string | null>(null)
+  const [letterModal, setLetterModal] = useState<{ id: string; name: string } | null>(null)
+  const [letterContent, setLetterContent] = useState('')
+  const [issuingLetter, setIssuingLetter] = useState(false)
+
+  const load = async () => {
+    try {
+      const res = await api.get('/mentor/approved')
+      setMentors(res.data)
+    } catch {
+      toast.error('Failed to load mentors')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function handleIssueCertificate(id: string, name: string) {
+    setIssuingCertId(id)
+    try {
+      const res = await api.post(`/mentor/applications/${id}/issue-certificate`, {}, { responseType: 'blob' })
+      downloadBlob(res.data, `BuildInTech-Certificate-of-Mentorship-${name.replace(/\s+/g, '-')}.pdf`)
+      toast.success(`Certificate issued for ${name}`)
+      setMentors(prev => prev.map(m => (m.id === id ? { ...m, hasReceivedCertificate: true } : m)))
+    } catch (err: any) {
+      toast.error(await extractBlobError(err, 'Failed to issue certificate'))
+    } finally {
+      setIssuingCertId(null)
+    }
+  }
+
+  async function handleIssueLetter() {
+    if (!letterModal) return
+    if (!letterContent.trim() || letterContent.trim().length < 50) {
+      toast.error('Letter content must be at least 50 characters')
+      return
+    }
+    setIssuingLetter(true)
+    try {
+      const res = await api.post(
+        `/mentor/applications/${letterModal.id}/issue-recommendation-letter`,
+        { letterContent: letterContent.trim() },
+        { responseType: 'blob' }
+      )
+      downloadBlob(res.data, `BuildInTech-Recommendation-${letterModal.name.replace(/\s+/g, '-')}.pdf`)
+      toast.success(`Recommendation letter issued for ${letterModal.name}`)
+      setLetterModal(null)
+      setLetterContent('')
+    } catch (err: any) {
+      toast.error(await extractBlobError(err, 'Failed to issue recommendation letter'))
+    } finally {
+      setIssuingLetter(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070' }}>
+        <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 24, color: '#C9A84C', display: 'block', margin: '0 auto 10px' }} />
+        Loading mentors...
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 16 }}>
+        Approved mentors. Issue a Certificate of Mentorship or write a personal recommendation letter for their contribution — both are generated as a PDF, emailed, and downloaded here.
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {mentors.map(m => (
+          <div key={m.id} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '20px 22px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#0F1F3D', marginBottom: 3 }}>
+                  {m.name}
+                  {m.isSuperAdmin && (
+                    <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: '#C9A84C', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Super Admin
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 13, color: '#6B6B6B' }}>{m.email}</div>
+              </div>
+              {m.hasReceivedCertificate && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  background: '#f0fdf4', border: '1px solid #bbf7d0',
+                  borderRadius: 999, padding: '4px 11px', fontSize: 11, fontWeight: 700, color: '#15803d', flexShrink: 0,
+                }}>
+                  <i className="ti ti-certificate" style={{ fontSize: 11 }} />
+                  Certificate Issued
+                </span>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => handleIssueCertificate(m.id, m.name)}
+                disabled={issuingCertId === m.id}
+                className="bit-btn-gold"
+                style={{ fontSize: 12 }}
+              >
+                {issuingCertId === m.id ? (
+                  <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 13 }} /> Generating...</>
+                ) : (
+                  <><i className="ti ti-certificate" style={{ fontSize: 13 }} /> {m.hasReceivedCertificate ? 'Re-issue Certificate' : 'Issue Certificate'}</>
+                )}
+              </button>
+              <button
+                onClick={() => setLetterModal({ id: m.id, name: m.name })}
+                className="bit-btn-ghost"
+                style={{ fontSize: 12 }}
+              >
+                <i className="ti ti-file-text" style={{ fontSize: 13 }} /> Write Recommendation Letter
+              </button>
+            </div>
+          </div>
+        ))}
+        {mentors.length === 0 && (
+          <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+            <i className="ti ti-award" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
+            No approved mentors yet.
+          </div>
+        )}
+      </div>
+
+      {/* ── RECOMMENDATION LETTER MODAL ─────────────────────────────────── */}
+      {letterModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(15,31,61,0.55)', backdropFilter: 'blur(4px)', padding: 24,
+          }}
+          onClick={e => { if (e.target === e.currentTarget) { setLetterModal(null); setLetterContent('') } }}
+        >
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '28px 28px',
+            width: '100%', maxWidth: 560, boxShadow: '0 20px 60px rgba(15,31,61,0.18)',
+            fontFamily: "'Inter', sans-serif",
+          }}>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 900, color: '#0F1F3D', marginBottom: 4 }}>
+              Write Recommendation Letter
+            </h2>
+            <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 18 }}>
+              For {letterModal.name} — this will be generated as a PDF, emailed to them, and downloaded here.
+            </p>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 7 }}>
+                Letter Content
+              </label>
+              <textarea
+                value={letterContent}
+                onChange={e => setLetterContent(e.target.value)}
+                placeholder="It is my pleasure to recommend... Speak to their contribution, reliability, and the impact they had on mentees."
+                rows={8}
+                className="bit-input"
+                style={{ resize: 'none' }}
+              />
+              <div style={{ textAlign: 'right', marginTop: 4 }}>
+                <span style={{ fontSize: 11, color: letterContent.trim().length >= 50 ? '#1D4A6E' : '#8A8070' }}>
+                  {letterContent.trim().length} chars {letterContent.trim().length < 50 ? `(need ${50 - letterContent.trim().length} more)` : '✓'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={handleIssueLetter}
+                disabled={issuingLetter}
+                className="bit-btn-gold"
+                style={{ flex: 1, justifyContent: 'center', fontSize: 14 }}
+              >
+                {issuingLetter ? (
+                  <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 14 }} /> Generating...</>
+                ) : (
+                  <><i className="ti ti-send" style={{ fontSize: 14 }} /> Issue Letter</>
+                )}
+              </button>
+              <button
+                onClick={() => { setLetterModal(null); setLetterContent('') }}
+                className="bit-btn-ghost"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -17,6 +17,12 @@ import { sendPremiumWelcomeEmail } from '../emails/premiumWelcomeEmail'
 import { sendPaymentRejectedEmail } from '../emails/paymentRejectedEmail'
 import { sendCertificateIssuedEmail } from '../emails/certificateIssuedEmail'
 import { sendRecommendationLetterEmail } from '../emails/recommendationLetterEmail'
+import { generateMentorCertificateCode } from '../utils/certificateCode'
+import { generateMentorCertificatePdf } from '../services/mentorCertificateService'
+import { generateMentorRecommendationLetterPdf } from '../services/mentorRecommendationLetterService'
+import { sendMentorCertificateIssuedEmail } from '../emails/mentorCertificateIssuedEmail'
+import { sendMentorRecommendationLetterEmail } from '../emails/mentorRecommendationLetterEmail'
+import { getMentorChatReply } from '../services/mentorChatbotService'
 
 interface AuthRequest extends Request {
   mentorId?: string
@@ -795,6 +801,232 @@ export async function issueRecommendationLetter(req: AuthRequest, res: Response)
     return res.send(pdfBuffer)
   } catch (error) {
     console.error('Issue recommendation letter error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+const MENTOR_CHAT_DAILY_LIMIT = 20
+
+export async function getMyMentorProfile(req: AuthRequest, res: Response) {
+  try {
+    const mentor = await prisma.mentor.findUnique({
+      where: { id: req.mentorId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isSuperAdmin: true,
+        hasReceivedCertificate: true,
+        certificateIssuedAt: true,
+        certificateCode: true,
+      },
+    })
+    if (!mentor) return res.status(404).json({ error: 'Mentor not found' })
+    return res.json(mentor)
+  } catch (error) {
+    console.error('Get mentor profile error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getApprovedMentors(req: AuthRequest, res: Response) {
+  try {
+    const mentors = await prisma.mentor.findMany({
+      where: { status: 'APPROVED' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isSuperAdmin: true,
+        appliedAt: true,
+        hasReceivedCertificate: true,
+        certificateIssuedAt: true,
+      },
+      orderBy: { name: 'asc' },
+    })
+    return res.json(mentors)
+  } catch (error) {
+    console.error('Get approved mentors error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function issueMentorCertificate(req: AuthRequest, res: Response) {
+  try {
+    const mentorId = String(req.params.id)
+    const mentor = await prisma.mentor.findUnique({ where: { id: mentorId } })
+    if (!mentor) return res.status(404).json({ error: 'Mentor not found' })
+    if (mentor.status !== 'APPROVED') {
+      return res.status(400).json({ error: 'Only approved mentors can receive a certificate' })
+    }
+
+    const certificateCode = mentor.certificateCode || generateMentorCertificateCode()
+    const certificateIssuedAt = mentor.certificateIssuedAt || new Date()
+
+    const pdfBuffer = await generateMentorCertificatePdf({
+      mentorName: mentor.name,
+      issuedDate: certificateIssuedAt,
+      certificateCode,
+    })
+
+    if (!mentor.hasReceivedCertificate) {
+      await prisma.mentor.update({
+        where: { id: mentorId },
+        data: { hasReceivedCertificate: true, certificateIssuedAt, certificateCode },
+      })
+
+      sendMentorCertificateIssuedEmail({
+        name: mentor.name,
+        email: mentor.email,
+        pdfBuffer,
+      }).catch(err => console.error('Mentor certificate issued email error:', err.message))
+    }
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="BuildInTech-Certificate-of-Mentorship-${certificateCode}.pdf"`)
+    return res.send(pdfBuffer)
+  } catch (error) {
+    console.error('Issue mentor certificate error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getMyMentorCertificate(req: AuthRequest, res: Response) {
+  try {
+    const mentor = await prisma.mentor.findUnique({ where: { id: req.mentorId } })
+    if (!mentor) return res.status(404).json({ error: 'Mentor not found' })
+
+    if (!mentor.hasReceivedCertificate || !mentor.certificateCode) {
+      return res.status(404).json({ error: 'No certificate has been issued yet' })
+    }
+
+    const pdfBuffer = await generateMentorCertificatePdf({
+      mentorName: mentor.name,
+      issuedDate: mentor.certificateIssuedAt || new Date(),
+      certificateCode: mentor.certificateCode,
+    })
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="BuildInTech-Certificate-of-Mentorship-${mentor.certificateCode}.pdf"`)
+    return res.send(pdfBuffer)
+  } catch (error) {
+    console.error('Get my mentor certificate error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function issueMentorRecommendationLetter(req: AuthRequest, res: Response) {
+  try {
+    const mentorId = String(req.params.id)
+    const { letterContent } = req.body
+
+    if (!letterContent || letterContent.trim().length < 50) {
+      return res.status(400).json({ error: 'Letter content must be at least 50 characters' })
+    }
+
+    const mentor = await prisma.mentor.findUnique({ where: { id: mentorId } })
+    if (!mentor) return res.status(404).json({ error: 'Mentor not found' })
+    if (mentor.status !== 'APPROVED') {
+      return res.status(400).json({ error: 'Only approved mentors can receive a recommendation letter' })
+    }
+
+    const pdfBuffer = await generateMentorRecommendationLetterPdf({
+      mentorName: mentor.name,
+      letterContent: letterContent.trim(),
+    })
+
+    sendMentorRecommendationLetterEmail({
+      name: mentor.name,
+      email: mentor.email,
+      pdfBuffer,
+    }).catch(err => console.error('Mentor recommendation letter email error:', err.message))
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="BuildInTech-Recommendation-${mentor.name.replace(/\s+/g, '-')}.pdf"`)
+    return res.send(pdfBuffer)
+  } catch (error) {
+    console.error('Issue mentor recommendation letter error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function chatWithMentorBot(req: AuthRequest, res: Response) {
+  try {
+    const { message } = req.body
+
+    if (!message || !String(message).trim()) {
+      return res.status(400).json({ error: 'Message is required' })
+    }
+    if (String(message).trim().length > 2000) {
+      return res.status(400).json({ error: 'Message is too long' })
+    }
+
+    const mentor = await prisma.mentor.findUnique({ where: { id: req.mentorId } })
+    if (!mentor) return res.status(404).json({ error: 'Mentor not found' })
+
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const todayCount = await prisma.mentorChatMessage.count({
+      where: { mentorId: req.mentorId, role: 'user', createdAt: { gte: todayStart } },
+    })
+
+    if (todayCount >= MENTOR_CHAT_DAILY_LIMIT) {
+      return res.status(429).json({ error: "You've reached today's chat limit. It resets at midnight." })
+    }
+
+    await prisma.mentorChatMessage.create({
+      data: { mentorId: req.mentorId!, role: 'user', content: String(message).trim() },
+    })
+
+    const recentMessages = await prisma.mentorChatMessage.findMany({
+      where: { mentorId: req.mentorId },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    })
+    const historyChronological = recentMessages.reverse()
+
+    const reply = await getMentorChatReply({
+      mentorName: mentor.name,
+      isSuperAdmin: mentor.isSuperAdmin,
+      history: historyChronological.map((m) => ({ role: m.role, content: m.content })),
+    })
+
+    await prisma.mentorChatMessage.create({
+      data: { mentorId: req.mentorId!, role: 'assistant', content: reply },
+    })
+
+    return res.json({
+      reply,
+      messagesRemainingToday: Math.max(0, MENTOR_CHAT_DAILY_LIMIT - 1 - todayCount),
+    })
+  } catch (error) {
+    console.error('Mentor chat error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getMentorChatHistory(req: AuthRequest, res: Response) {
+  try {
+    const messages = await prisma.mentorChatMessage.findMany({
+      where: { mentorId: req.mentorId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
+
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const todayCount = await prisma.mentorChatMessage.count({
+      where: { mentorId: req.mentorId, role: 'user', createdAt: { gte: todayStart } },
+    })
+
+    return res.json({
+      messages: messages.reverse(),
+      messagesRemainingToday: Math.max(0, MENTOR_CHAT_DAILY_LIMIT - todayCount),
+    })
+  } catch (error) {
+    console.error('Get mentor chat history error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

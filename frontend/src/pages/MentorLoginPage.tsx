@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../utils/api'
 import { useAuthStore } from '../store/authStore'
 import toast from 'react-hot-toast'
+import { MentorApplicantChatWidget } from '../components/MentorApplicantChatWidget'
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
@@ -53,6 +54,7 @@ export function MentorLoginPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', fontFamily: "'Inter', sans-serif", color: '#0F1F3D' }}>
       <style>{CSS}</style>
+      <MentorApplicantChatWidget />
 
       {/* Left navy panel */}
       <div style={{

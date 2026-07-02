@@ -25,6 +25,13 @@ import {
   rejectPayment,
   issueCertificate,
   issueRecommendationLetter,
+  getMyMentorProfile,
+  getApprovedMentors,
+  issueMentorCertificate,
+  getMyMentorCertificate,
+  issueMentorRecommendationLetter,
+  chatWithMentorBot,
+  getMentorChatHistory,
 } from '../controllers/mentorController'
 
 export const mentorRouter = Router()
@@ -42,6 +49,14 @@ mentorRouter.get('/applications', requireSuperAdmin, getApplications)
 mentorRouter.patch('/applications/:id/approve', requireSuperAdmin, approveApplication)
 mentorRouter.patch('/applications/:id/reject', requireSuperAdmin, rejectApplication)
 mentorRouter.post('/me/password', changePassword)
+mentorRouter.get('/me', getMyMentorProfile)
+mentorRouter.get('/me/certificate', getMyMentorCertificate)
+mentorRouter.post('/me/chat', chatWithMentorBot)
+mentorRouter.get('/me/chat/history', getMentorChatHistory)
+
+mentorRouter.get('/approved', requireSuperAdmin, getApprovedMentors)
+mentorRouter.post('/applications/:id/issue-certificate', requireSuperAdmin, issueMentorCertificate)
+mentorRouter.post('/applications/:id/issue-recommendation-letter', requireSuperAdmin, issueMentorRecommendationLetter)
 
 mentorRouter.get('/mentees', getAllMentees)
 mentorRouter.post('/mentees', createMentee)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
 import toast from 'react-hot-toast'
+import { MentorApplicantChatWidget } from '../components/MentorApplicantChatWidget'
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
@@ -81,6 +82,7 @@ export function MentorRegisterPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9F7F1', fontFamily: "'Inter', sans-serif", padding: '40px 24px' }}>
         <style>{CSS}</style>
+        <MentorApplicantChatWidget />
         <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
           <div style={{
             width: 64, height: 64, borderRadius: 18, background: 'rgba(201,168,76,0.14)',
@@ -112,6 +114,7 @@ export function MentorRegisterPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', fontFamily: "'Inter', sans-serif", color: '#0F1F3D' }}>
       <style>{CSS}</style>
+      <MentorApplicantChatWidget />
 
       {/* Left navy panel */}
       <div style={{

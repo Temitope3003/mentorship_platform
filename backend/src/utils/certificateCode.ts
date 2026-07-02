@@ -9,3 +9,12 @@ export function generateCertificateCode(): string {
   }
   return `BIT-${year}-${suffix}`
 }
+
+export function generateMentorCertificateCode(): string {
+  const year = new Date().getFullYear()
+  let suffix = ''
+  for (let i = 0; i < 6; i++) {
+    suffix += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]
+  }
+  return `BIT-MENTOR-${year}-${suffix}`
+}

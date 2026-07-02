@@ -23,5 +23,12 @@ export async function sendEmail({ to, subject, html, from, attachments }: SendEm
     html,
     ...(attachments ? { attachments } : {}),
   })
+
+  // Resend's SDK resolves with { data, error } even on failure — it never rejects.
+  // Without this throw, callers' .catch() handlers never fire and failures go silent.
+  if (result.error) {
+    throw new Error(`Resend error sending "${subject}" to ${to}: ${result.error.message}`)
+  }
+
   return result
 }

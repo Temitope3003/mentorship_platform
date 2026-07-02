@@ -1,11 +1,18 @@
 import { sendEmail } from './sender'
 
+interface TopDomainBreakdown {
+  domain: string
+  score: number
+  tagline: string
+}
+
 interface WelcomeEmailData {
   name: string
   email: string
   accessCode: string
   topMatch: string
   secondMatch: string
+  topDomains?: TopDomainBreakdown[]
   alignmentStatus?: string | null
   mentorNote?: string | null
   alignmentSummary?: string | null
@@ -42,7 +49,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData) {
     <div style="background:white;border-radius:0 0 16px 16px;padding:40px;border:1px solid #e2d9cc;border-top:none;">
 
       <p style="margin:0 0 28px;color:#4a3f2f;font-size:15px;line-height:1.7;">
-        You have completed your career assessment. Here is a full breakdown of your results, your AI-powered goal analysis, and your access code.
+        You have completed your career assessment. Here is a full breakdown of your results${data.alignmentStatus ? ', your AI-powered goal analysis,' : ''} and your access code.
       </p>
 
       <!-- career match -->
@@ -50,13 +57,46 @@ export async function sendWelcomeEmail(data: WelcomeEmailData) {
         <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#9a8e7e;">
           Your Top Career Match
         </p>
-        <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#d4622a;">
+        <p style="margin:0;font-size:22px;font-weight:700;color:#d4622a;">
           ${data.topMatch}
         </p>
-        <p style="margin:0;font-size:13px;color:#9a8e7e;">
-          Second match: ${data.secondMatch}
-        </p>
       </div>
+
+      <!-- full results breakdown -->
+      ${data.topDomains && data.topDomains.length > 0 ? `
+      <div style="margin-bottom:24px;">
+        <p style="margin:0 0 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9a8e7e;">
+          Your Full Results Breakdown
+        </p>
+        <div style="background:#faf7f2;border-radius:12px;padding:8px 20px;border:1px solid #e2d9cc;">
+          ${data.topDomains.map((d, i) => {
+            const topScore = data.topDomains![0].score || 1
+            const pct = Math.max(6, Math.round((d.score / topScore) * 100))
+            return `
+          <div style="padding:16px 0;${i < data.topDomains!.length - 1 ? 'border-bottom:1px solid #e2d9cc;' : ''}">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:4px;">
+              <tr>
+                <td align="left">
+                  <p style="margin:0;font-size:14px;font-weight:700;color:#1a1208;">
+                    ${i + 1}. ${d.domain}
+                  </p>
+                </td>
+                <td align="right">
+                  <p style="margin:0;font-size:11px;color:#9a8e7e;font-family:monospace;white-space:nowrap;">
+                    ${d.score} pts
+                  </p>
+                </td>
+              </tr>
+            </table>
+            <div style="height:6px;border-radius:99px;background:#e2d9cc;overflow:hidden;margin-bottom:6px;">
+              <div style="height:100%;border-radius:99px;background:${i === 0 ? '#d4622a' : '#c9bba3'};width:${pct}%;"></div>
+            </div>
+            ${d.tagline ? `<p style="margin:0;font-size:12.5px;color:#6b5d4a;line-height:1.5;">${d.tagline}</p>` : ''}
+          </div>`
+          }).join('')}
+        </div>
+      </div>
+      ` : ''}
 
       <!-- AI ANALYSIS SECTION -->
       ${data.alignmentStatus ? `

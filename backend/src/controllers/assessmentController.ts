@@ -174,16 +174,20 @@ export async function completeAssessment(req: Request, res: Response) {
       });
     }
 
-    // Send welcome email directly (non-blocking)
-
-    // Send welcome email directly (non-blocking)
     // Send welcome email to mentee (non-blocking)
+    const topDomains = ranked.slice(0, 4).map((r) => ({
+      domain: r.domain,
+      score: r.score,
+      tagline: DOMAIN_PREVIEW_DETAILS[r.domain]?.tagline || '',
+    }));
+
     sendWelcomeEmail({
       name: mentee.name,
       email: mentee.email,
       accessCode: mentee.accessCode,
       topMatch: mentee.topMatch!,
       secondMatch: mentee.secondMatch!,
+      topDomains,
       alignmentStatus: mentee.alignmentStatus || undefined,
       alignmentSummary: analysis?.alignmentSummary || undefined,
       warningText: analysis?.warningText || undefined,
