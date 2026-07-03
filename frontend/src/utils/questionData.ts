@@ -18,6 +18,19 @@ export const DOMAINS = [
 
 export const QUESTIONS = [
   {
+    text: 'If you had to pick a tech career path today, which one feels closest to what you want?',
+    options: [
+      { text: 'Building AI or machine learning systems' },
+      { text: 'Analysing data and turning it into insights' },
+      { text: 'Building websites or web applications' },
+      { text: 'Building mobile apps' },
+      { text: 'Cybersecurity or protecting systems' },
+      { text: 'Cloud infrastructure and DevOps' },
+      { text: 'Product design and user experience' },
+      { text: 'I genuinely have no idea yet' },
+    ],
+  },
+  {
     text: 'What best describes your background right now?',
     options: [
       { text: 'No tech background at all' },

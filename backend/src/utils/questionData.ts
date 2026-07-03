@@ -37,6 +37,20 @@ export const DOMAINS: Domain[] = [
 export const QUESTIONS: Question[] = [
   {
     id: 1,
+    text: 'If you had to pick a tech career path today, which one feels closest to what you want?',
+    options: [
+      { text: 'Building AI or machine learning systems', scores: { 'AI & Machine Learning': 15 } },
+      { text: 'Analysing data and turning it into insights', scores: { 'Data Analysis': 15 } },
+      { text: 'Building websites or web applications', scores: { 'Full Stack Engineering': 15 } },
+      { text: 'Building mobile apps', scores: { 'Mobile Development': 15 } },
+      { text: 'Cybersecurity or protecting systems', scores: { 'Cybersecurity': 15 } },
+      { text: 'Cloud infrastructure and DevOps', scores: { 'Cloud & Infrastructure': 15 } },
+      { text: 'Product design and user experience', scores: { 'Product, Design & UX': 15 } },
+      { text: 'I genuinely have no idea yet', scores: {} },
+    ],
+  },
+  {
+    id: 2,
     text: 'When you solve a problem, which approach do you naturally take?',
     options: [
       { text: 'Break it into data and look for patterns', scores: { 'AI & Machine Learning': 3, 'Data Analysis': 3, 'Data Science & Engineering': 4 } },
@@ -46,7 +60,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 2,
+    id: 3,
     text: 'What kind of work excites you most on a typical day?',
     options: [
       { text: 'Writing code and building features', scores: { 'Full Stack Engineering': 3, 'Frontend Development': 3, 'Backend Development': 3, 'Mobile Development': 3 } },
@@ -56,7 +70,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 3,
+    id: 4,
     text: 'Which of these describes your learning style best?',
     multi: true,
     options: [
@@ -69,7 +83,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 4,
+    id: 5,
     text: 'How do you feel about mathematics and statistics?',
     options: [
       { text: 'I enjoy it and find it natural', scores: { 'AI & Machine Learning': 5, 'Data Science & Engineering': 5, 'Data Analysis': 3 } },
@@ -79,7 +93,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 5,
+    id: 6,
     text: 'What type of project would you be most proud to show someone?',
     multi: true,
     options: [
@@ -91,7 +105,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 6,
+    id: 7,
     text: 'Which of these tools or concepts are you most drawn to?',
     multi: true,
     options: [
@@ -103,7 +117,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 7,
+    id: 8,
     text: 'How do you feel about writing and explaining technical concepts?',
     options: [
       { text: 'I love writing and explaining things clearly', scores: { 'DevRel & Technical Writing': 5, 'Product, Design & UX': 2 } },
@@ -113,7 +127,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 8,
+    id: 9,
     text: 'When you think about your ideal work environment, which fits best?',
     options: [
       { text: 'Deep focus work alone on complex technical problems', scores: { 'AI & Machine Learning': 4, 'Backend Development': 4, 'Data Science & Engineering': 4, 'Cybersecurity': 3, 'DevSecOps': 3 } },
@@ -123,7 +137,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 9,
+    id: 10,
     text: 'Which career outcome excites you most?',
     options: [
       { text: 'Building AI products that solve real world problems', scores: { 'AI & Machine Learning': 5, 'AI Automation & No-Code': 4, 'Data Science & Engineering': 3 } },
@@ -133,7 +147,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 10,
+    id: 11,
     text: 'How comfortable are you with ambiguity and undefined problems?',
     options: [
       { text: 'I thrive in ambiguity and enjoy defining problems', scores: { 'Product, Design & UX': 4, 'Emerging Tech': 4, 'AI Automation & No-Code': 3 } },
@@ -143,7 +157,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 11,
+    id: 12,
     text: 'Which of these activities would you do for fun on a weekend?',
     multi: true,
     options: [
@@ -156,7 +170,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 12,
+    id: 13,
     text: 'When you look at a mobile app, what do you notice first?',
     options: [
       { text: 'How fast it loads and how smooth the animations are', scores: { 'Mobile Development': 5, 'Frontend Development': 4 } },
@@ -166,7 +180,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 13,
+    id: 14,
     text: 'How do you feel about working with large amounts of data?',
     options: [
       { text: 'I love it and want to build pipelines and models with it', scores: { 'Data Science & Engineering': 5, 'AI & Machine Learning': 4 } },
@@ -176,7 +190,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 14,
+    id: 15,
     text: 'Which programming concept interests you most?',
     options: [
       { text: 'Machine learning algorithms and neural networks', scores: { 'AI & Machine Learning': 5, 'Data Science & Engineering': 4 } },
@@ -186,7 +200,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 15,
+    id: 16,
     text: 'What motivates you most about working in tech?',
     options: [
       { text: 'Building products that directly improve people\'s lives', scores: { 'Mobile Development': 3, 'Full Stack Engineering': 3, 'Product, Design & UX': 4 } },
@@ -196,7 +210,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 16,
+    id: 17,
     text: 'How do you prefer to work with other people?',
     options: [
       { text: 'I lead and facilitate, keeping teams organised and moving', scores: { 'Product, Design & UX': 4, 'Virtual Assistant': 4, 'DevRel & Technical Writing': 3 } },
@@ -206,7 +220,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 17,
+    id: 18,
     text: 'Which of these challenges would you most enjoy solving?',
     options: [
       { text: 'Why is this ML model performing poorly on new data', scores: { 'AI & Machine Learning': 5, 'Data Science & Engineering': 4 } },
@@ -216,7 +230,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 18,
+    id: 19,
     text: 'What is your relationship with creativity and visual thinking?',
     options: [
       { text: 'I am highly visual and love creating beautiful things', scores: { 'Frontend Development': 5, 'Product, Design & UX': 5 } },
@@ -226,7 +240,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 19,
+    id: 20,
     text: 'When you think about React Native or Flutter, what comes to mind?',
     options: [
       { text: 'I want to build cross-platform mobile apps', scores: { 'Mobile Development': 5 } },
@@ -236,7 +250,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 20,
+    id: 21,
     text: 'How do you feel about writing articles, tutorials, or documentation?',
     options: [
       { text: 'I genuinely enjoy it and do it already', scores: { 'DevRel & Technical Writing': 5 } },
@@ -246,7 +260,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 21,
+    id: 22,
     text: 'Which of these tools would you most like to master?',
     multi: true,
     options: [
@@ -259,7 +273,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 22,
+    id: 23,
     text: 'How important is it to you to see your work used by real people quickly?',
     options: [
       { text: 'Very important, I want fast visible results', scores: { 'Frontend Development': 4, 'Mobile Development': 4, 'AI Automation & No-Code': 4, 'Virtual Assistant': 3 } },
@@ -269,7 +283,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 23,
+    id: 24,
     text: 'What is your honest relationship with the command line and servers?',
     options: [
       { text: 'I love it and want to live in the terminal', scores: { 'Cloud & Infrastructure': 5, 'Backend Development': 4, 'Cybersecurity': 4, 'DevSecOps': 5 } },
@@ -279,7 +293,7 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 24,
+    id: 25,
     text: 'In five years, which role fits your vision best?',
     options: [
       { text: 'Senior ML Engineer or AI Researcher', scores: { 'AI & Machine Learning': 5, 'Data Science & Engineering': 3 } },

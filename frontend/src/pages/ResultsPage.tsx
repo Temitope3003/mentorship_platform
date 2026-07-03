@@ -17,6 +17,12 @@ interface MenteeResult {
   mentorNote: string | null
 }
 
+interface TopContribution {
+  questionText: string
+  selectedAnswer: string
+  pointsAdded: number
+}
+
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -41,6 +47,7 @@ export function ResultsPage() {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
   const [mentee, setMentee] = useState<MenteeResult | null>(null)
+  const [contributions, setContributions] = useState<TopContribution[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showBars, setShowBars] = useState(false)
@@ -50,6 +57,7 @@ export function ResultsPage() {
       try {
         const res = await api.get(`/assessment/${token}/results`)
         setMentee(res.data.mentee)
+        setContributions(res.data.topContributions || [])
         setTimeout(() => setShowBars(true), 400)
       } catch {
         setError('Results not found. Please complete the assessment first.')
@@ -119,7 +127,7 @@ export function ResultsPage() {
             Your Career Match
           </h1>
           <p style={{ fontSize: 14, color: '#6B6B6B' }}>
-            Based on your {DOMAINS.length + 4} answers, here is where you naturally fit.
+            Based on your 25 answers, here is where you naturally fit.
           </p>
         </div>
 
@@ -247,6 +255,34 @@ export function ResultsPage() {
             See My Roadmap
           </Link>
         </div>
+
+        {/* ── WHY YOU MATCHED ────────────────────────────────────────────── */}
+        {contributions.length > 0 && (
+          <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 14, padding: '22px 24px', marginBottom: 14 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 16 }}>
+              <i className="ti ti-sparkles" style={{ fontSize: 11, marginRight: 5 }} />
+              Why You Matched {mentee.topMatch}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {contributions.map((c, i) => (
+                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 22, height: 22, borderRadius: 6,
+                    background: topDomain.color + '18', color: topDomain.color,
+                    fontSize: 11, fontWeight: 700, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {i + 1}
+                  </span>
+                  <div>
+                    <div style={{ fontSize: 11, color: '#8A8070', marginBottom: 3, lineHeight: 1.5 }}>{c.questionText}</div>
+                    <div style={{ fontSize: 13, color: '#0F1F3D', fontWeight: 500, lineHeight: 1.5 }}>{c.selectedAnswer}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── SECONDARY MATCHES ──────────────────────────────────────────── */}
         {rankedScores.length > 1 && (

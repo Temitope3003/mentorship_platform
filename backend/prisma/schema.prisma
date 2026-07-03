@@ -119,16 +119,17 @@ model WeeklySubmission {
 }
 
 model AssessmentSession {
-  id           String   @id @default(uuid())
-  sessionToken String   @unique @default(uuid())
-  name         String?
-  email        String?
-  statedGoal   String?
-  answers      Json?
-  completed    Boolean  @default(false)
-  menteeId     String?
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  id               String   @id @default(uuid())
+  sessionToken     String   @unique @default(uuid())
+  name             String?
+  email            String?
+  statedGoal       String?
+  answers          Json?
+  completed        Boolean  @default(false)
+  menteeId         String?
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  topContributions Json?
 }
 
 model EmailLog {

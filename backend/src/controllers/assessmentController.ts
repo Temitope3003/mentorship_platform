@@ -9,7 +9,7 @@ import {
 import { analyseGoalAlignment } from '../services/goalAnalysisService';
 import { sendWelcomeEmail } from '../emails/welcomeEmail';
 import { sendMentorAlertEmail } from '../emails/mentorAlertEmail';
-import { DOMAINS } from '../utils/questionData';
+import { DOMAINS, QUESTIONS } from '../utils/questionData';
 import { getCurriculumForDomain } from '../utils/curriculum';
 import { DOMAIN_PREVIEW_DETAILS } from '../utils/domainDetails';
 import { changeMenteeTrack, TrackChangeError } from '../services/menteeTrackService';
@@ -81,6 +81,30 @@ export async function saveAnswers(req: Request, res: Response) {
   }
 }
 
+type Contribution = { questionText: string; selectedAnswer: string; pointsAdded: number }
+
+function computeTopContributions(
+  answers: (number | number[])[],
+  topMatch: string,
+  count = 4
+): Contribution[] {
+  const contributions: Contribution[] = []
+  answers.forEach((answer, questionIndex) => {
+    const question = QUESTIONS[questionIndex]
+    if (!question) return
+    const selectedIndices = Array.isArray(answer) ? answer : [answer]
+    selectedIndices.forEach((optionIndex) => {
+      const option = question.options[optionIndex]
+      if (!option) return
+      const pts = option.scores[topMatch] || 0
+      if (pts > 0) {
+        contributions.push({ questionText: question.text, selectedAnswer: option.text, pointsAdded: pts })
+      }
+    })
+  })
+  return contributions.sort((a, b) => b.pointsAdded - a.pointsAdded).slice(0, count)
+}
+
 export async function completeAssessment(req: Request, res: Response) {
   try {
     const token = String(req.params.token);
@@ -113,6 +137,7 @@ export async function completeAssessment(req: Request, res: Response) {
     const ranked = rankDomains(scores);
     const topMatch = ranked[0].domain;
     const secondMatch = ranked[1].domain;
+    const topContributions = computeTopContributions(answers, topMatch);
 
     // Run AI goal analysis if a goal was provided
     let analysis = null;
@@ -216,6 +241,7 @@ export async function completeAssessment(req: Request, res: Response) {
         completed: true,
         menteeId: mentee.id,
         answers,
+        topContributions,
       },
     });
 
@@ -273,6 +299,7 @@ export async function getResults(req: Request, res: Response) {
         allScores: mentee.allScores,
         mentorNote: mentee.mentorNote,
       },
+      topContributions: session.topContributions ?? [],
     });
   } catch (error) {
     console.error('Get results error:', error);

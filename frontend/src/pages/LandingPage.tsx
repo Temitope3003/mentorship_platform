@@ -51,7 +51,7 @@ const STEPS: Step[] = [
     num: 'Step 02',
     iconClass: 'ti ti-brain',
     title: 'Complete the assessment',
-    desc: '24 questions about how you think and work. Takes about 8 minutes.',
+    desc: '25 questions about how you think and work. Takes about 8 minutes.',
   },
   {
     num: 'Step 03',
