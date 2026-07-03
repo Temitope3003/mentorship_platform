@@ -52,6 +52,7 @@ app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/assessment', assessmentRouter)
 app.use('/api/v1/mentee', menteeRouter)
 app.use('/api/v1/mentor', mentorRouter)
+app.use('/api/v1/liaison', liaisonRouter)
 app.use('/api/v1/public', publicRouter)
 
 app.use((req, res) => {
@@ -61,5 +62,3 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`)
 })
-
-app.use('/api/v1/liaison', liaisonRouter)
