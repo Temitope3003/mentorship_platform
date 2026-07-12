@@ -138,6 +138,9 @@ export function Navbar() {
                 <Link to="/assess" className="bit-nav-link">
                   <i className="ti ti-bolt" style={{ fontSize: 13 }} /> Take Assessment
                 </Link>
+                <Link to="/contact" className="bit-nav-link">
+                  <i className="ti ti-mail" style={{ fontSize: 13 }} /> Contact
+                </Link>
                 <Link to="/login" className="bit-nav-link">
                   <i className="ti ti-user" style={{ fontSize: 13 }} /> Mentee Login
                 </Link>
@@ -239,6 +242,9 @@ export function Navbar() {
                 </Link>
                 <Link to="/assess" className="bit-mobile-link" onClick={() => setMenuOpen(false)}>
                   <i className="ti ti-bolt" style={{ fontSize: 14, color: '#C9A84C' }} /> Take Assessment
+                </Link>
+                <Link to="/contact" className="bit-mobile-link" onClick={() => setMenuOpen(false)}>
+                  <i className="ti ti-mail" style={{ fontSize: 14, color: '#C9A84C' }} /> Contact
                 </Link>
                 <Link to="/login" className="bit-mobile-link" onClick={() => setMenuOpen(false)}>
                   <i className="ti ti-user" style={{ fontSize: 14, color: '#C9A84C' }} /> Mentee Login

@@ -16,12 +16,13 @@ import { DomainPage } from './pages/DomainPage'
 import { CareerDomainsPage } from './pages/CareerDomainsPage'
 import { LiaisonLoginPage } from './pages/LiaisonLoginPage'
 import { LiaisonDashboard } from './pages/LiaisonDashboard'
+import { ContactPage } from './pages/ContactPage'
 
 // Pages that have their own built-in navigation
 const NO_NAVBAR_ROUTES = ['/', '/liaison/dashboard']
 
 // Public, pre-login pages where the visitor chatbot is offered
-const PUBLIC_CHATBOT_PATTERNS = ['/', '/domains', '/domain/:domainId', '/roadmap-preview/:domain']
+const PUBLIC_CHATBOT_PATTERNS = ['/', '/domains', '/domain/:domainId', '/roadmap-preview/:domain', '/contact']
 
 export default function App() {
   const location = useLocation()
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/domain/:domainId" element={<DomainPage />} />
         <Route path="/liaison/login" element={<LiaisonLoginPage />} />
         <Route path="/liaison/dashboard" element={<LiaisonDashboard />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route
           path="/dashboard"
           element={

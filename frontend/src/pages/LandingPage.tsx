@@ -243,6 +243,7 @@ export function LandingPage() {
         .bit-testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: left; }
         .bit-features-split { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
         .bit-hero-stats-bento { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .bit-contact-grid     { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 
         /* ── Desktop typography ────────────────────────────────────── */
         .bit-hero-h1    { font-size: 68px; }
@@ -282,6 +283,7 @@ export function LandingPage() {
           .bit-hero-cta          { justify-content: center !important; }
           .bit-hero-trust        { justify-content: center !important; }
           .bit-stats-band        { display: block !important; }
+          .bit-contact-grid      { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -312,6 +314,7 @@ export function LandingPage() {
         <div className="bit-nav-links" style={{ display: 'flex', alignItems: 'center' }}>
           <Link to="/assess" className="bit-nav-link">Assessment</Link>
           <Link to="/domains" className="bit-nav-link">Domains</Link>
+          <Link to="/contact" className="bit-nav-link">Contact</Link>
           <Link to="/login" className="bit-nav-link">Login</Link>
           <Link
             to="/assess"
@@ -696,6 +699,63 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* ── CONTACT ──────────────────────────────────────────────────────── */}
+      <section style={{ padding: '72px 28px', background: '#ffffff', borderTop: '1px solid #E8E4D9' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ marginBottom: 14 }}><GoldPill>Get in Touch</GoldPill></div>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 900, color: '#0F1F3D', marginBottom: 12, lineHeight: 1.2 }}>
+              Have a question before you start?
+            </h2>
+            <p style={{ fontSize: 15, color: '#6B6B6B', lineHeight: 1.75 }}>We are happy to help.</p>
+          </div>
+          <div className="bit-contact-grid">
+            {[
+              { icon: 'ti ti-mail', label: 'General Enquiries', email: 'hello@buildintech.xyz', desc: 'Questions about the program, how it works, or anything else.' },
+              { icon: 'ti ti-user-check', label: 'Become a Mentor', email: 'mentors@buildintech.xyz', desc: 'Interested in mentoring? Reach out to join our mentor team.' },
+              { icon: 'ti ti-shield', label: 'Liaison Enquiries', email: 'liaisons@buildintech.xyz', desc: 'For liaison officer roles and partnership questions.' },
+            ].map(card => (
+              <div key={card.email} style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 14, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ width: 42, height: 42, background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className={card.icon} style={{ fontSize: 18, color: '#7A5C1E' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0F1F3D', marginBottom: 4 }}>{card.label}</div>
+                  <div style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.6, marginBottom: 10 }}>{card.desc}</div>
+                  <a href={`mailto:${card.email}`} style={{ fontSize: 13, fontWeight: 600, color: '#C9A84C', textDecoration: 'none' }}>
+                    {card.email}
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+          {import.meta.env.VITE_WHATSAPP_LINK && (
+            <div style={{ textAlign: 'center', marginTop: 28 }}>
+              <a
+                href={import.meta.env.VITE_WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: '#25D366', color: '#fff', borderRadius: 10,
+                  padding: '12px 24px', fontSize: 14, fontWeight: 700,
+                  textDecoration: 'none', fontFamily: "'Inter', sans-serif",
+                  transition: 'opacity 0.15s',
+                }}
+              >
+                <i className="ti ti-brand-whatsapp" style={{ fontSize: 18 }} />
+                Join our WhatsApp community
+              </a>
+            </div>
+          )}
+          <div style={{ textAlign: 'center', marginTop: 28 }}>
+            <Link to="/contact" style={{ fontSize: 14, color: '#C9A84C', fontWeight: 600, textDecoration: 'none' }}>
+              Visit the full contact page <i className="ti ti-arrow-right" style={{ fontSize: 13 }} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── FINAL CTA ────────────────────────────────────────────────────── */}
       <section style={{ background: '#0F1F3D', padding: '72px 28px', textAlign: 'center' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -742,10 +802,13 @@ export function LandingPage() {
           <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.28)' }}>
             © 2026 BuildInTech · Empowering the next generation of tech professionals.
           </p>
-          <div style={{ display: 'flex', gap: '18px' }}>
+          <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
             <Link to="/assess"       style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Assessment</Link>
+            <Link to="/domains"      style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Domains</Link>
+            <Link to="/contact"      style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Contact</Link>
             <Link to="/login"        style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Login</Link>
             <Link to="/mentor/login" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>Mentor</Link>
+            <a href="mailto:hello@buildintech.xyz" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.32)', textDecoration: 'none' }}>hello@buildintech.xyz</a>
           </div>
         </div>
       </footer>
