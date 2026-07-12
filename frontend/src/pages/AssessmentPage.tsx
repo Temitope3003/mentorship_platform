@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
 import { QUESTIONS } from '../utils/questionData'
@@ -6,6 +6,9 @@ import toast from 'react-hot-toast'
 import { PageMeta } from '../components/PageMeta'
 
 type Answer = number | number[] | null
+
+const STORAGE_LEAD_ID = 'assessment_lead_id'
+const STORAGE_LEAD_EMAIL = 'assessment_lead_email'
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
@@ -78,7 +81,7 @@ const CSS = `
 
 export function AssessmentPage() {
   const navigate = useNavigate()
-  const [stage, setStage] = useState<'intake' | 'goal' | 'quiz'>('intake')
+  const [stage, setStage] = useState<'lead' | 'intake' | 'goal' | 'quiz'>('lead')
   const [sessionToken, setSessionToken] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -86,6 +89,39 @@ export function AssessmentPage() {
   const [currentQ, setCurrentQ] = useState(0)
   const [answers, setAnswers] = useState<Answer[]>(new Array(QUESTIONS.length).fill(null))
   const [loading, setLoading] = useState(false)
+  // Lead capture state
+  const [leadEmail, setLeadEmail] = useState('')
+  const [leadFirstName, setLeadFirstName] = useState('')
+  const [leadPhone, setLeadPhone] = useState('')
+
+  useEffect(() => {
+    const storedId = sessionStorage.getItem(STORAGE_LEAD_ID)
+    const storedEmail = sessionStorage.getItem(STORAGE_LEAD_EMAIL)
+    if (storedId && storedEmail) {
+      setEmail(storedEmail)
+      setStage('intake')
+    }
+  }, [])
+
+  async function handleLead() {
+    if (!leadEmail.trim() || !leadEmail.includes('@')) { toast.error('Please enter a valid email address'); return }
+    setLoading(true)
+    try {
+      const res = await api.post('/public/assessment-lead', {
+        email: leadEmail.trim(),
+        firstName: leadFirstName.trim() || undefined,
+        phoneNumber: leadPhone.trim() || undefined,
+      })
+      sessionStorage.setItem(STORAGE_LEAD_ID, res.data.leadId)
+      sessionStorage.setItem(STORAGE_LEAD_EMAIL, leadEmail.trim().toLowerCase())
+      setEmail(leadEmail.trim().toLowerCase())
+      setStage('intake')
+    } catch {
+      // Non-fatal — still proceed even if lead capture fails
+      setEmail(leadEmail.trim().toLowerCase())
+      setStage('intake')
+    } finally { setLoading(false) }
+  }
 
   async function handleIntake() {
     if (!name.trim() || !email.trim()) { toast.error('Please enter your name and email'); return }
@@ -152,7 +188,7 @@ export function AssessmentPage() {
     } finally { setLoading(false) }
   }
 
-  const progress = stage === 'intake' ? 5 : stage === 'goal' ? 15 : 15 + ((currentQ / QUESTIONS.length) * 85)
+  const progress = stage === 'lead' ? 0 : stage === 'intake' ? 5 : stage === 'goal' ? 15 : 15 + ((currentQ / QUESTIONS.length) * 85)
   const isMultiQ = stage === 'quiz' && !!QUESTIONS[currentQ]?.multi
 
   return (
@@ -168,7 +204,7 @@ export function AssessmentPage() {
       <div style={{ maxWidth: 540, margin: '0 auto 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, fontSize: 12 }}>
           <span style={{ color: '#8A8070', fontWeight: 500 }}>
-            {stage === 'intake' ? 'Your details' : stage === 'goal' ? 'Your goal' : `Question ${currentQ + 1} of ${QUESTIONS.length}`}
+            {stage === 'lead' ? 'Before we start' : stage === 'intake' ? 'Your details' : stage === 'goal' ? 'Your goal' : `Question ${currentQ + 1} of ${QUESTIONS.length}`}
           </span>
           <span style={{ color: '#C9A84C', fontWeight: 700, fontFamily: 'monospace' }}>{Math.round(progress)}%</span>
         </div>
@@ -181,6 +217,84 @@ export function AssessmentPage() {
       </div>
 
       <div style={{ maxWidth: 540, margin: '0 auto' }}>
+
+        {/* ── LEAD CAPTURE ─────────────────────────────────────────────── */}
+        {stage === 'lead' && (
+          <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 16, padding: '36px 32px', boxShadow: '0 4px 24px rgba(15,31,61,0.06)' }}>
+            <div style={{ marginBottom: 10 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 999,
+                padding: '4px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.07em',
+                textTransform: 'uppercase', color: '#7A5C1E',
+              }}>
+                <i className="ti ti-mail" style={{ fontSize: 11 }} /> Free Assessment
+              </span>
+            </div>
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 900, color: '#0F1F3D', marginBottom: 10, lineHeight: 1.2 }}>
+              Where should we send your results?
+            </h1>
+            <p style={{ fontSize: 14, color: '#6B6B6B', lineHeight: 1.75, marginBottom: 28 }}>
+              Your personalised domain match and 48-week roadmap will be emailed to you. No account needed.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: '#8A8070', marginBottom: 8 }}>
+                  Email Address <span style={{ color: '#C9A84C' }}>*</span>
+                </label>
+                <input
+                  type="email"
+                  value={leadEmail}
+                  onChange={(e) => setLeadEmail(e.target.value)}
+                  placeholder="e.g. amara@email.com"
+                  className="bit-input"
+                  onKeyDown={(e) => e.key === 'Enter' && handleLead()}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: '#8A8070', marginBottom: 8 }}>
+                  First Name <span style={{ color: '#B0A898', fontWeight: 400, textTransform: 'none', fontSize: 10 }}>(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={leadFirstName}
+                  onChange={(e) => setLeadFirstName(e.target.value)}
+                  placeholder="e.g. Amara"
+                  className="bit-input"
+                  onKeyDown={(e) => e.key === 'Enter' && handleLead()}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: '#8A8070', marginBottom: 8 }}>
+                  Phone Number <span style={{ color: '#B0A898', fontWeight: 400, textTransform: 'none', fontSize: 10 }}>(optional)</span>
+                </label>
+                <input
+                  type="tel"
+                  value={leadPhone}
+                  onChange={(e) => setLeadPhone(e.target.value)}
+                  placeholder="e.g. +234 800 000 0000"
+                  className="bit-input"
+                  onKeyDown={(e) => e.key === 'Enter' && handleLead()}
+                />
+                <p style={{ margin: '6px 0 0', fontSize: 12, color: '#8A8070' }}>
+                  <i className="ti ti-brand-whatsapp" style={{ fontSize: 12, marginRight: 4, color: '#25D366' }} />
+                  For WhatsApp updates only
+                </p>
+              </div>
+              <button onClick={handleLead} disabled={loading} className="bit-btn-gold" style={{ width: '100%' }}>
+                {loading ? (
+                  <><i className="ti ti-loader-2 bit-spin" style={{ fontSize: 15 }} /> Please wait...</>
+                ) : (
+                  <><i className="ti ti-arrow-right" style={{ fontSize: 15 }} /> Start My Assessment</>
+                )}
+              </button>
+              <p style={{ textAlign: 'center', fontSize: 12, color: '#8A8070' }}>
+                Your details go directly to your mentor. Never sold or shared.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ── INTAKE ───────────────────────────────────────────────────── */}
         {stage === 'intake' && (
@@ -223,10 +337,12 @@ export function AssessmentPage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => !sessionStorage.getItem(STORAGE_LEAD_ID) && setEmail(e.target.value)}
                   placeholder="e.g. amara@email.com"
                   className="bit-input"
                   onKeyDown={(e) => e.key === 'Enter' && handleIntake()}
+                  readOnly={!!sessionStorage.getItem(STORAGE_LEAD_ID)}
+                  style={sessionStorage.getItem(STORAGE_LEAD_ID) ? { background: '#F0EDE6', color: '#6B6B6B', cursor: 'default' } : {}}
                 />
               </div>
               <button onClick={handleIntake} disabled={loading} className="bit-btn-gold" style={{ width: '100%' }}>

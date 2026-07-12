@@ -59,6 +59,7 @@ model Mentee {
   paymentReference String?
   pendingPaymentPlan String?
   pendingPaymentSubmittedAt DateTime?
+  phoneNumber      String?
   hasReceivedCertificate Boolean      @default(false)
   certificateIssuedAt DateTime?
   certificateCode  String?
@@ -180,4 +181,16 @@ model IncomeOpportunity {
   proposedAt  DateTime  @default(now())
   reviewedAt  DateTime?
   reviewedBy  String?
+}
+
+model LeadCapture {
+  id                  String    @id @default(uuid())
+  email               String
+  firstName           String?
+  phoneNumber         String?
+  startedAt           DateTime  @default(now())
+  completedAt         DateTime?
+  assessmentSessionId String?
+  followUpSent        Boolean   @default(false)
+  createdAt           DateTime  @default(now())
 }

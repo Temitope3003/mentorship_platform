@@ -7,6 +7,7 @@ import {
   mentorApplicantChat,
   getMentorApplicantChatHistory,
 } from '../controllers/publicChatController'
+import { captureAssessmentLead } from '../controllers/leadCaptureController'
 
 export const publicRouter = Router()
 
@@ -32,3 +33,5 @@ publicRouter.delete('/chat/history/:sessionId', clearPublicChatHistory)
 
 publicRouter.post('/mentor-chat', mentorChatRateLimiter, mentorApplicantChat)
 publicRouter.get('/mentor-chat/history/:sessionId', getMentorApplicantChatHistory)
+
+publicRouter.post('/assessment-lead', captureAssessmentLead)

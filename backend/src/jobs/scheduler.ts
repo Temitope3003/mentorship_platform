@@ -553,4 +553,143 @@ cron.schedule('0 3 * * 0', async () => {
   }
 })()
 
+// ─────────────────────────────────────────────
+// JOB: Abandoned lead follow-up
+// Runs daily at 10am — emails leads who started but never completed (>24h, not yet sent)
+// ─────────────────────────────────────────────
+cron.schedule('0 10 * * *', async () => {
+  console.log('[Scheduler] Running abandoned lead follow-up...')
+  try {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const leads = await prisma.leadCapture.findMany({
+      where: {
+        completedAt: null,
+        followUpSent: false,
+        startedAt: { lt: cutoff },
+      },
+    })
+
+    const { sendEmail } = await import('../emails/sender.js')
+
+    for (const lead of leads) {
+      const firstName = lead.firstName || 'there'
+      const assessmentUrl = `${process.env.FRONTEND_URL}/assessment`
+
+      await sendEmail({
+        to: lead.email,
+        subject: 'You left your results behind',
+        html: `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f9f7f1;font-family:Arial,sans-serif;color:#0F1F3D;">
+  <div style="max-width:560px;margin:0 auto;padding:40px 20px;">
+    <div style="background:white;border-radius:16px;padding:40px;border:1px solid #E8E4D9;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C9A84C;margin-bottom:16px;">Build In Tech</div>
+      <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#0F1F3D;font-family:Georgia,serif;">
+        Hi ${firstName}, your results are waiting
+      </h1>
+      <p style="margin:0 0 16px;color:#4A3F2F;font-size:15px;line-height:1.7;">
+        You started the Tech Career Assessment but didn't quite finish it. Your personalised domain match and 48-week roadmap are just a few questions away.
+      </p>
+      <p style="margin:0 0 24px;color:#4A3F2F;font-size:15px;line-height:1.7;">
+        It takes about 8 minutes. No account needed — just complete the quiz and see your match instantly.
+      </p>
+      <a href="${assessmentUrl}"
+         style="display:inline-block;background:#C9A84C;color:#0F1F3D;padding:14px 28px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700;">
+        Complete My Assessment →
+      </a>
+      <div style="border-top:1px solid #E8E4D9;padding-top:20px;margin-top:32px;">
+        <p style="margin:0;font-size:12px;color:#9A8E7E;">Build In Tech — Your tech career starts here.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`,
+      })
+
+      await prisma.leadCapture.update({
+        where: { id: lead.id },
+        data: { followUpSent: true },
+      })
+
+      console.log(`[Scheduler] Abandoned lead follow-up sent to ${lead.email}`)
+    }
+  } catch (error) {
+    console.error('[Scheduler] Abandoned lead follow-up error:', error)
+  }
+})
+
+// ─────────────────────────────────────────────
+// JOB: Completed-but-no-account follow-up
+// Runs daily at 10am — emails leads who completed assessment but never created a mentee account (>48h)
+// ─────────────────────────────────────────────
+cron.schedule('0 10 * * *', async () => {
+  console.log('[Scheduler] Running completed-no-account follow-up...')
+  try {
+    const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000)
+    const leads = await prisma.leadCapture.findMany({
+      where: {
+        completedAt: { not: null, lt: cutoff },
+        followUpSent: false,
+      },
+    })
+
+    const emails = leads.map(l => l.email)
+    const existingMentees = emails.length > 0
+      ? await prisma.mentee.findMany({ where: { email: { in: emails } }, select: { email: true } })
+      : []
+    const menteeEmailSet = new Set(existingMentees.map(m => m.email))
+
+    const leadsWithoutAccounts = leads.filter(l => !menteeEmailSet.has(l.email))
+
+    const { sendEmail } = await import('../emails/sender.js')
+
+    for (const lead of leadsWithoutAccounts) {
+      const firstName = lead.firstName || 'there'
+      const assessmentUrl = `${process.env.FRONTEND_URL}/assessment`
+
+      await sendEmail({
+        to: lead.email,
+        subject: 'Your tech career match is ready — next step inside',
+        html: `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f9f7f1;font-family:Arial,sans-serif;color:#0F1F3D;">
+  <div style="max-width:560px;margin:0 auto;padding:40px 20px;">
+    <div style="background:white;border-radius:16px;padding:40px;border:1px solid #E8E4D9;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C9A84C;margin-bottom:16px;">Build In Tech</div>
+      <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#0F1F3D;font-family:Georgia,serif;">
+        Hi ${firstName}, ready to start your roadmap?
+      </h1>
+      <p style="margin:0 0 16px;color:#4A3F2F;font-size:15px;line-height:1.7;">
+        You completed the assessment and got your domain match. The next step is to begin your 48-week personalised roadmap inside the platform.
+      </p>
+      <p style="margin:0 0 24px;color:#4A3F2F;font-size:15px;line-height:1.7;">
+        Your access code was sent to this email after you completed the quiz. Use it to log in and start Week 1 of your journey today.
+      </p>
+      <a href="${assessmentUrl}"
+         style="display:inline-block;background:#C9A84C;color:#0F1F3D;padding:14px 28px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700;">
+        Get Back to My Results →
+      </a>
+      <div style="border-top:1px solid #E8E4D9;padding-top:20px;margin-top:32px;">
+        <p style="margin:0;font-size:12px;color:#9A8E7E;">Build In Tech — Your tech career starts here.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`,
+      })
+
+      await prisma.leadCapture.update({
+        where: { id: lead.id },
+        data: { followUpSent: true },
+      })
+
+      console.log(`[Scheduler] Completed-no-account follow-up sent to ${lead.email}`)
+    }
+  } catch (error) {
+    console.error('[Scheduler] Completed-no-account follow-up error:', error)
+  }
+})
+
 console.log('[Scheduler] All cron jobs registered')

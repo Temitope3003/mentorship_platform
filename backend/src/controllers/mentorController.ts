@@ -68,6 +68,7 @@ export async function getAllMentees(req: AuthRequest, res: Response) {
         planExpiresAt: m.planExpiresAt,
         pendingPaymentPlan: m.pendingPaymentPlan,
         hasReceivedCertificate: m.hasReceivedCertificate,
+        phoneNumber: m.phoneNumber || null,
       }
     })
 
@@ -1103,6 +1104,43 @@ export async function updateIncomeOpportunity(req: AuthRequest, res: Response) {
     return res.json({ opportunity: updated })
   } catch (error) {
     console.error('Update income opportunity error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getLeads(_req: AuthRequest, res: Response) {
+  try {
+    const leads = await prisma.leadCapture.findMany({
+      orderBy: { startedAt: 'desc' },
+    })
+
+    const emails = leads
+      .filter(l => l.completedAt !== null)
+      .map(l => l.email)
+
+    const menteesByEmail = emails.length > 0
+      ? await prisma.mentee.findMany({
+          where: { email: { in: emails } },
+          select: { email: true },
+        })
+      : []
+
+    const menteeEmailSet = new Set(menteesByEmail.map(m => m.email))
+
+    const result = leads.map(l => ({
+      id: l.id,
+      email: l.email,
+      firstName: l.firstName,
+      phoneNumber: l.phoneNumber,
+      startedAt: l.startedAt,
+      completedAt: l.completedAt,
+      followUpSent: l.followUpSent,
+      hasMenteeAccount: menteeEmailSet.has(l.email),
+    }))
+
+    return res.json(result)
+  } catch (error) {
+    console.error('Get leads error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

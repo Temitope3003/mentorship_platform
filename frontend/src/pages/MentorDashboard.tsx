@@ -28,7 +28,7 @@ const STATUS_BADGES: Record<string, { bg: string; border: string; color: string;
   ON_TRACK:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: 'ti ti-circle-check',    label: 'On Track' },
 }
 
-type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications' | 'payments' | 'mentors' | 'income'
+type Tab = 'mentees' | 'submissions' | 'codes' | 'add' | 'liaison' | 'applications' | 'payments' | 'mentors' | 'income' | 'leads'
 
 async function extractBlobError(err: any, fallback: string): Promise<string> {
   try {
@@ -257,6 +257,7 @@ export function MentorDashboard() {
     ...(user?.isSuperAdmin ? [{ id: 'applications' as Tab, label: 'Applications', icon: 'ti ti-user-check' }] : []),
     ...(user?.isSuperAdmin ? [{ id: 'mentors' as Tab, label: 'Mentors', icon: 'ti ti-award' }] : []),
     ...(user?.isSuperAdmin ? [{ id: 'income' as Tab, label: 'Income Suggestions', icon: 'ti ti-coin' }] : []),
+    ...(user?.isSuperAdmin ? [{ id: 'leads' as Tab, label: 'Leads', icon: 'ti ti-mail-opened' }] : []),
   ]
 
   return (
@@ -418,6 +419,12 @@ export function MentorDashboard() {
                           <td>
                             <div style={{ fontWeight: 600, fontSize: 13, color: '#0F1F3D' }}>{m.name}</div>
                             <div style={{ fontSize: 11, color: '#8A8070', fontFamily: 'monospace', marginTop: 2 }}>{m.accessCode}</div>
+                            {m.phoneNumber && (
+                              <div style={{ fontSize: 11, color: '#8A8070', marginTop: 1 }}>
+                                <i className="ti ti-brand-whatsapp" style={{ fontSize: 10, marginRight: 3, color: '#25D366' }} />
+                                {m.phoneNumber}
+                              </div>
+                            )}
                           </td>
                           <td>
                             <select
@@ -774,6 +781,9 @@ export function MentorDashboard() {
 
         {/* ── TAB: INCOME SUGGESTIONS (super-admin only) ─────────────────── */}
         {tab === 'income' && user?.isSuperAdmin && <IncomeOpportunitiesTab />}
+
+        {/* ── TAB: LEADS (super-admin only) ──────────────────────────────── */}
+        {tab === 'leads' && user?.isSuperAdmin && <LeadsTab />}
 
       </div>
 
@@ -1424,6 +1434,112 @@ function IncomeOpportunitiesTab() {
           <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
             <i className="ti ti-coin" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
             No pending suggestions. The AI researches new platforms every Sunday.
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function LeadsTab() {
+  const [leads, setLeads] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.get('/mentor/leads')
+      .then(res => setLeads(res.data))
+      .catch(() => toast.error('Failed to load leads'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const total = leads.length
+  const completed = leads.filter(l => l.completedAt !== null).length
+  const converted = leads.filter(l => l.hasMenteeAccount).length
+
+  if (loading) {
+    return (
+      <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070' }}>
+        <i className="ti ti-loader-2 bit-spin" style={{ fontSize: 24, color: '#C9A84C', display: 'block', margin: '0 auto 10px' }} />
+        Loading leads...
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+        {[
+          { label: 'Total Leads', value: total, icon: 'ti ti-users', color: '#C9A84C' },
+          { label: 'Completed Assessment', value: completed, icon: 'ti ti-circle-check', color: '#1D4A6E' },
+          { label: 'Converted to Mentee', value: converted, icon: 'ti ti-user-check', color: '#15803d' },
+        ].map(s => (
+          <div key={s.label} style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '20px 22px' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 10 }}>
+              <i className={s.icon} style={{ fontSize: 12, marginRight: 5, color: s.color }} />
+              {s.label}
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: '#0F1F3D', fontFamily: "'Playfair Display', serif" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="bit-table-wrap" style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, overflowX: 'auto' }}>
+        <table className="bit-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              {['Name / Email', 'Phone', 'Started', 'Assessment', 'Mentee Account'].map(h => (
+                <th key={h}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {leads.map((l: any) => (
+              <tr key={l.id}>
+                <td>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#0F1F3D' }}>{l.firstName || '—'}</div>
+                  <div style={{ fontSize: 12, color: '#8A8070', marginTop: 2 }}>{l.email}</div>
+                </td>
+                <td style={{ fontSize: 13, color: '#6B6B6B' }}>
+                  {l.phoneNumber ? (
+                    <span>
+                      <i className="ti ti-brand-whatsapp" style={{ fontSize: 12, marginRight: 4, color: '#25D366' }} />
+                      {l.phoneNumber}
+                    </span>
+                  ) : '—'}
+                </td>
+                <td style={{ fontSize: 12, color: '#6B6B6B' }}>
+                  {new Date(l.startedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </td>
+                <td>
+                  {l.completedAt ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#15803d' }}>
+                      <i className="ti ti-circle-check" style={{ fontSize: 10 }} /> Completed
+                    </span>
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#FBF7EC', border: '1px solid #DFC97A', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#7A5C1E' }}>
+                      <i className="ti ti-clock" style={{ fontSize: 10 }} /> Abandoned
+                    </span>
+                  )}
+                </td>
+                <td>
+                  {l.hasMenteeAccount ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: '#15803d' }}>
+                      <i className="ti ti-user-check" style={{ fontSize: 10 }} /> Yes
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 12, color: '#8A8070' }}>No</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {leads.length === 0 && (
+          <div style={{ padding: '48px 0', textAlign: 'center', color: '#8A8070', fontSize: 14 }}>
+            <i className="ti ti-mail" style={{ fontSize: 32, display: 'block', margin: '0 auto 12px', color: '#C8C0B4' }} />
+            No leads captured yet.
           </div>
         )}
       </div>

@@ -155,6 +155,12 @@ export async function completeAssessment(req: Request, res: Response) {
       where: { email: session.email },
     });
 
+    // Look up lead capture record to carry over phoneNumber
+    const leadRecord = await prisma.leadCapture.findFirst({
+      where: { email: session.email!.toLowerCase() },
+      orderBy: { startedAt: 'desc' },
+    }).catch(() => null)
+
     let mentee;
 
     if (existingMentee) {
@@ -171,6 +177,7 @@ export async function completeAssessment(req: Request, res: Response) {
           allScores: scores,
           mentorNote: analysis?.mentorNote || null,
           onboardedAt: new Date(),
+          ...(leadRecord?.phoneNumber ? { phoneNumber: leadRecord.phoneNumber } : {}),
         },
       });
 
@@ -195,8 +202,17 @@ export async function completeAssessment(req: Request, res: Response) {
           allScores: scores,
           mentorNote: analysis?.mentorNote || null,
           onboardedAt: new Date(),
+          phoneNumber: leadRecord?.phoneNumber || null,
         },
       });
+    }
+
+    // Update lead capture record: mark completed and link session
+    if (leadRecord) {
+      await prisma.leadCapture.update({
+        where: { id: leadRecord.id },
+        data: { completedAt: new Date(), assessmentSessionId: token },
+      }).catch(() => null)
     }
 
     // Send welcome email to mentee (non-blocking)
