@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { prisma } from '../models/prisma'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { getCurrentWeek, getMenteeStatusLabel, getWeeksBehind } from '../utils/menteeStatus'
+import { getCurrentWeek, getMenteeStatusLabel, getDaysSinceLastSubmission } from '../utils/menteeStatus'
 
 interface AuthRequest extends Request {
   liaisonId?: string
@@ -69,12 +69,7 @@ export async function getLiaisonDashboard(req: AuthRequest, res: Response) {
       !m.submissions.some(s => new Date(s.submittedAt) > oneWeekAgo)
     )
 
-    const atRisk = activeMentees.filter(m => {
-      const lastSubmitted = m.submissions.length > 0
-        ? Math.max(...m.submissions.map(s => s.weekNumber))
-        : 0
-      return getMenteeStatusLabel(m, lastSubmitted) === 'AT_RISK'
-    })
+    const atRisk = activeMentees.filter(m => getMenteeStatusLabel(m, m.submissions) === 'AT_RISK')
 
     return res.json({
       officer: { id: officer.id, name: officer.name, email: officer.email },
@@ -102,7 +97,7 @@ export async function getLiaisonDashboard(req: AuthRequest, res: Response) {
         email: m.email,
         accessCode: m.accessCode,
         domainTrack: m.domainTrack,
-        currentWeek: getCurrentWeek(m),
+        currentWeek: getCurrentWeek(m, m.submissions),
         lastSubmission: m.submissions
           .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())[0],
       })),
@@ -112,26 +107,23 @@ export async function getLiaisonDashboard(req: AuthRequest, res: Response) {
         email: m.email,
         accessCode: m.accessCode,
         domainTrack: m.domainTrack,
-        currentWeek: getCurrentWeek(m),
+        currentWeek: getCurrentWeek(m, m.submissions),
         lastSubmittedWeek: m.submissions.length > 0
           ? Math.max(...m.submissions.map(s => s.weekNumber))
           : 0,
       })),
-      atRisk: atRisk.map(m => {
-        const lastSubmittedWeek = m.submissions.length > 0
+      atRisk: atRisk.map(m => ({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        accessCode: m.accessCode,
+        domainTrack: m.domainTrack,
+        currentWeek: getCurrentWeek(m, m.submissions),
+        lastSubmittedWeek: m.submissions.length > 0
           ? Math.max(...m.submissions.map(s => s.weekNumber))
-          : 0
-        return {
-          id: m.id,
-          name: m.name,
-          email: m.email,
-          accessCode: m.accessCode,
-          domainTrack: m.domainTrack,
-          currentWeek: getCurrentWeek(m),
-          lastSubmittedWeek,
-          weeksBehind: getWeeksBehind(m, lastSubmittedWeek),
-        }
-      }),
+          : 0,
+        daysSinceLastSubmission: getDaysSinceLastSubmission(m, m.submissions),
+      })),
     })
   } catch (error) {
     console.error('Liaison dashboard error:', error)
@@ -149,32 +141,29 @@ export async function getLiaisonMentees(req: AuthRequest, res: Response) {
       orderBy: { createdAt: 'desc' },
     })
 
-    const result = mentees.map(m => {
-      const lastSubmittedWeek = m.submissions.length > 0
+    const result = mentees.map(m => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      accessCode: m.accessCode,
+      domainTrack: m.domainTrack,
+      currentWeek: getCurrentWeek(m, m.submissions),
+      submissionsCount: m.submissions.length,
+      lastSubmittedWeek: m.submissions.length > 0
         ? Math.max(...m.submissions.map(s => s.weekNumber))
-        : 0
-      return {
-        id: m.id,
-        name: m.name,
-        email: m.email,
-        accessCode: m.accessCode,
-        domainTrack: m.domainTrack,
-        currentWeek: getCurrentWeek(m),
-        submissionsCount: m.submissions.length,
-        lastSubmittedWeek,
-        startDate: m.startDate,
-        notes: m.liaisonNotes,
-        hasStarted: m.hasStarted,
-        isPaused: m.isPaused,
-        pausedAt: m.pausedAt,
-        pauseReason: m.pauseReason,
-        status: getMenteeStatusLabel(m, lastSubmittedWeek),
-        plan: m.plan,
-        planExpiresAt: m.planExpiresAt,
-        pendingPaymentPlan: m.pendingPaymentPlan,
-        hasReceivedCertificate: m.hasReceivedCertificate,
-      }
-    })
+        : 0,
+      startDate: m.startDate,
+      notes: m.liaisonNotes,
+      hasStarted: m.hasStarted,
+      isPaused: m.isPaused,
+      pausedAt: m.pausedAt,
+      pauseReason: m.pauseReason,
+      status: getMenteeStatusLabel(m, m.submissions),
+      plan: m.plan,
+      planExpiresAt: m.planExpiresAt,
+      pendingPaymentPlan: m.pendingPaymentPlan,
+      hasReceivedCertificate: m.hasReceivedCertificate,
+    }))
 
     return res.json(result)
   } catch (error) {

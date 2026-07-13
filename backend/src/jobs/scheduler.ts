@@ -3,64 +3,50 @@ import { prisma } from '../models/prisma'
 import { sendReminderEmail } from '../emails/reminderEmail'
 import { sendWelcomeEmail } from '../emails/welcomeEmail'
 import { getCurriculumForDomain } from '../utils/curriculum'
-import { getCurrentWeek, getMenteeStatusLabel } from '../utils/menteeStatus'
+import { getCurrentWeek, getMenteeStatusLabel, getDaysSinceLastSubmission } from '../utils/menteeStatus'
 import { sendPremiumExpiredEmail } from '../emails/premiumExpiredEmail'
-
-function getDayInCurrentWeek(startDate: Date): number {
-  const diffMs = Date.now() - new Date(startDate).getTime()
-  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000))
-  return (diffDays % 7) + 1
-}
 
 // ─────────────────────────────────────────────
 // JOB 1: Day 3 Gentle Reminder
-// Runs every day at 9am server time
-// Sends a reminder if mentee has not submitted by day 3 of current week
+// Runs every day at 9am — fires if 3 days have passed since last submission
 // ─────────────────────────────────────────────
 cron.schedule('0 9 * * *', async () => {
   console.log('[Scheduler] Running day 3 reminder check...')
   try {
     const mentees = await prisma.mentee.findMany({
       where: { isActive: true },
+      include: { submissions: { select: { weekNumber: true, submittedAt: true } } },
     })
 
     for (const mentee of mentees) {
       if (!mentee.hasStarted || mentee.isPaused) continue
 
-      const currentWeek = getCurrentWeek(mentee)!
-      const dayInWeek = getDayInCurrentWeek(mentee.startDate)
+      const daysSince = getDaysSinceLastSubmission(mentee, mentee.submissions)
+      if (daysSince !== 3) continue
 
-      if (dayInWeek !== 3) continue
+      const currentWeek = getCurrentWeek(mentee, mentee.submissions)!
+      const weekData = getCurriculumForDomain(mentee.domainTrack).find(w => w.week === currentWeek)
 
-      const submission = await prisma.weeklySubmission.findUnique({
-        where: { menteeId_weekNumber: { menteeId: mentee.id, weekNumber: currentWeek } },
+      await sendReminderEmail({
+        name: mentee.name,
+        email: mentee.email,
+        weekNumber: currentWeek,
+        weekTitle: weekData?.title || `Week ${currentWeek}`,
+        isFinal: false,
       })
 
-      if (!submission) {
-        const weekData = getCurriculumForDomain(mentee.domainTrack)
-          .find(w => w.week === currentWeek)
+      await prisma.emailLog.create({
+        data: {
+          menteeId: mentee.id,
+          emailType: 'reminder',
+          recipient: mentee.email,
+          subject: `Week ${currentWeek} is waiting for you`,
+          status: 'sent',
+          sentAt: new Date(),
+        },
+      })
 
-        await sendReminderEmail({
-          name: mentee.name,
-          email: mentee.email,
-          weekNumber: currentWeek,
-          weekTitle: weekData?.title || `Week ${currentWeek}`,
-          isFinal: false,
-        })
-
-        await prisma.emailLog.create({
-          data: {
-            menteeId: mentee.id,
-            emailType: 'reminder',
-            recipient: mentee.email,
-            subject: `Week ${currentWeek} is waiting for you`,
-            status: 'sent',
-            sentAt: new Date(),
-          },
-        })
-
-        console.log(`[Scheduler] Day 3 reminder sent to ${mentee.email}`)
-      }
+      console.log(`[Scheduler] Day 3 reminder sent to ${mentee.email}`)
     }
   } catch (error) {
     console.error('[Scheduler] Day 3 reminder error:', error)
@@ -69,53 +55,45 @@ cron.schedule('0 9 * * *', async () => {
 
 // ─────────────────────────────────────────────
 // JOB 2: Day 6 Final Reminder
-// Runs every day at 6pm server time
-// Sends a final urgent reminder if still no submission by day 6
+// Runs every day at 6pm — fires if 6 days have passed since last submission
 // ─────────────────────────────────────────────
 cron.schedule('0 18 * * *', async () => {
   console.log('[Scheduler] Running day 6 final reminder check...')
   try {
     const mentees = await prisma.mentee.findMany({
       where: { isActive: true },
+      include: { submissions: { select: { weekNumber: true, submittedAt: true } } },
     })
 
     for (const mentee of mentees) {
       if (!mentee.hasStarted || mentee.isPaused) continue
 
-      const currentWeek = getCurrentWeek(mentee)!
-      const dayInWeek = getDayInCurrentWeek(mentee.startDate)
+      const daysSince = getDaysSinceLastSubmission(mentee, mentee.submissions)
+      if (daysSince !== 6) continue
 
-      if (dayInWeek !== 6) continue
+      const currentWeek = getCurrentWeek(mentee, mentee.submissions)!
+      const weekData = getCurriculumForDomain(mentee.domainTrack).find(w => w.week === currentWeek)
 
-      const submission = await prisma.weeklySubmission.findUnique({
-        where: { menteeId_weekNumber: { menteeId: mentee.id, weekNumber: currentWeek } },
+      await sendReminderEmail({
+        name: mentee.name,
+        email: mentee.email,
+        weekNumber: currentWeek,
+        weekTitle: weekData?.title || `Week ${currentWeek}`,
+        isFinal: true,
       })
 
-      if (!submission) {
-        const weekData = getCurriculumForDomain(mentee.domainTrack)
-          .find(w => w.week === currentWeek)
+      await prisma.emailLog.create({
+        data: {
+          menteeId: mentee.id,
+          emailType: 'finalReminder',
+          recipient: mentee.email,
+          subject: `Last chance — submit Week ${currentWeek} today`,
+          status: 'sent',
+          sentAt: new Date(),
+        },
+      })
 
-        await sendReminderEmail({
-          name: mentee.name,
-          email: mentee.email,
-          weekNumber: currentWeek,
-          weekTitle: weekData?.title || `Week ${currentWeek}`,
-          isFinal: true,
-        })
-
-        await prisma.emailLog.create({
-          data: {
-            menteeId: mentee.id,
-            emailType: 'finalReminder',
-            recipient: mentee.email,
-            subject: `Last chance — Week ${currentWeek} ends today`,
-            status: 'sent',
-            sentAt: new Date(),
-          },
-        })
-
-        console.log(`[Scheduler] Day 6 final reminder sent to ${mentee.email}`)
-      }
+      console.log(`[Scheduler] Day 6 final reminder sent to ${mentee.email}`)
     }
   } catch (error) {
     console.error('[Scheduler] Day 6 reminder error:', error)
@@ -125,7 +103,7 @@ cron.schedule('0 18 * * *', async () => {
 // ─────────────────────────────────────────────
 // JOB 3: At-Risk Check
 // Runs every Monday at 8am
-// Identifies mentees 2+ weeks behind and sends a check-in email
+// Identifies mentees 10+ days without a submission and sends a check-in email
 // ─────────────────────────────────────────────
 cron.schedule('0 8 * * 1', async () => {
   console.log('[Scheduler] Running at-risk check...')
@@ -134,7 +112,8 @@ cron.schedule('0 8 * * 1', async () => {
       where: { isActive: true },
       include: {
         submissions: {
-          orderBy: { weekNumber: 'desc' },
+          select: { weekNumber: true, submittedAt: true },
+          orderBy: { submittedAt: 'desc' },
           take: 1,
         },
       },
@@ -143,11 +122,9 @@ cron.schedule('0 8 * * 1', async () => {
     for (const mentee of mentees) {
       if (!mentee.hasStarted || mentee.isPaused) continue
 
-      const currentWeek = getCurrentWeek(mentee)!
-      const lastSubmitted = mentee.submissions[0]?.weekNumber || 0
-      const weeksBehind = currentWeek - lastSubmitted
+      const daysSince = getDaysSinceLastSubmission(mentee, mentee.submissions)
 
-      if (weeksBehind >= 2) {
+      if (daysSince >= 10) {
         const alreadySentThisWeek = await prisma.emailLog.findFirst({
           where: {
             menteeId: mentee.id,
@@ -160,8 +137,7 @@ cron.schedule('0 8 * * 1', async () => {
           await sendCheckinEmail({
             name: mentee.name,
             email: mentee.email,
-            weeksBehind,
-            currentWeek,
+            daysSince,
           })
 
           await prisma.emailLog.create({
@@ -175,7 +151,7 @@ cron.schedule('0 8 * * 1', async () => {
             },
           })
 
-          console.log(`[Scheduler] Check-in sent to ${mentee.email} (${weeksBehind} weeks behind)`)
+          console.log(`[Scheduler] Check-in sent to ${mentee.email} (${daysSince} days since last submission)`)
         }
       }
     }
@@ -252,12 +228,10 @@ cron.schedule('0 0 * * *', async () => {
   }
 })
 
-// placeholder functions - implemented in next step
 async function sendCheckinEmail(data: {
   name: string
   email: string
-  weeksBehind: number
-  currentWeek: number
+  daysSince: number
 }) {
   const { sendEmail } = await import('../emails/sender.js')
   const firstName = data.name.split(' ')[0]
@@ -269,26 +243,25 @@ async function sendCheckinEmail(data: {
     html: `
 <!DOCTYPE html>
 <html>
-<body style="margin:0;padding:0;background:#faf7f2;font-family:Arial,sans-serif;color:#1a1208;">
-  <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
-    <div style="background:white;border-radius:16px;padding:40px;border:1px solid #e2d9cc;">
-      <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#1a1208;">
+<body style="margin:0;padding:0;background:#f9f7f1;font-family:Arial,sans-serif;color:#0F1F3D;">
+  <div style="max-width:560px;margin:0 auto;padding:40px 20px;">
+    <div style="background:white;border-radius:16px;padding:40px;border:1px solid #E8E4D9;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C9A84C;margin-bottom:16px;">Build In Tech</div>
+      <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#0F1F3D;font-family:Georgia,serif;">
         Checking in on you, ${firstName}
       </h1>
-      <p style="margin:0 0 16px;color:#4a3f2f;font-size:15px;line-height:1.7;">
-        You have not submitted for ${data.weeksBehind} weeks. That is okay. Life happens.
+      <p style="margin:0 0 16px;color:#4A3F2F;font-size:15px;line-height:1.7;">
+        It has been ${data.daysSince} day${data.daysSince === 1 ? '' : 's'} since your last submission. That is okay — life happens.
       </p>
-      <p style="margin:0 0 24px;color:#4a3f2f;font-size:15px;line-height:1.7;">
-        You are currently on Week ${data.currentWeek}. The best thing you can do right now is submit something small for the most recent week you missed. Even a brief summary counts.
+      <p style="margin:0 0 24px;color:#4A3F2F;font-size:15px;line-height:1.7;">
+        The best next step is to submit something small — even a brief summary of what you have been working on counts. Your progress is waiting for you.
       </p>
       <a href="${dashboardUrl}"
-         style="display:inline-block;background:#d4622a;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:600;margin-bottom:24px;">
+         style="display:inline-block;background:#C9A84C;color:#0F1F3D;padding:14px 28px;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700;margin-bottom:24px;">
         Back to My Dashboard →
       </a>
-      <div style="border-top:1px solid #e2d9cc;padding-top:20px;">
-        <p style="margin:0;font-size:13px;color:#9a8e7e;">
-          Tech Mentorship Program — we are rooting for you.
-        </p>
+      <div style="border-top:1px solid #E8E4D9;padding-top:20px;margin-top:8px;">
+        <p style="margin:0;font-size:12px;color:#9A8E7E;">Build In Tech — we are rooting for you.</p>
       </div>
     </div>
   </div>
@@ -399,12 +372,7 @@ cron.schedule('0 7 * * 1', async () => {
         !m.submissions.some(s => new Date(s.submittedAt) > oneWeekAgo)
       )
 
-      const atRisk = activeMentees.filter(m => {
-        const lastSubmitted = m.submissions.length > 0
-          ? Math.max(...m.submissions.map(s => s.weekNumber))
-          : 0
-        return getMenteeStatusLabel(m, lastSubmitted) === 'AT_RISK'
-      })
+      const atRisk = activeMentees.filter(m => getMenteeStatusLabel(m, m.submissions) === 'AT_RISK')
 
       const { sendEmail } = await import('../emails/sender.js')
       await sendEmail({
@@ -433,11 +401,8 @@ cron.schedule('0 7 * * 1', async () => {
               <h3 style="margin: 0 0 8px; color: #991b1b;">🚨 Needs Urgent Help (${atRisk.length})</h3>
               ${atRisk.length === 0 ? '<p style="color: #666;">No one is at risk this week.</p>' :
                 atRisk.map(m => {
-                  const lastSubmitted = m.submissions.length > 0
-                    ? Math.max(...m.submissions.map(s => s.weekNumber))
-                    : 0
-                  const currentWeek = getCurrentWeek(m) ?? 0
-                  return `<p style="margin: 4px 0;"><strong>${m.name}</strong> — ${m.domainTrack} — ${currentWeek - lastSubmitted} weeks behind</p>`
+                  const days = getDaysSinceLastSubmission(m, m.submissions)
+                  return `<p style="margin: 4px 0;"><strong>${m.name}</strong> — ${m.domainTrack} — ${days} day${days === 1 ? '' : 's'} inactive</p>`
                 }).join('')
               }
             </div>

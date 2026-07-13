@@ -346,7 +346,7 @@ export function MentorDashboard() {
             <i className="ti ti-alert-triangle" style={{ fontSize: 18, color: '#ef4444', flexShrink: 0 }} />
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: '#b91c1c', marginBottom: 2 }}>
-                {stats.atRisk} mentee{stats.atRisk > 1 ? 's are' : ' is'} 2+ weeks behind
+                {stats.atRisk} mentee{stats.atRisk > 1 ? 's are' : ' is'} 10+ days inactive
               </p>
               <p style={{ fontSize: 12, color: '#dc2626' }}>Consider sending them a personal check-in message.</p>
             </div>
@@ -462,6 +462,11 @@ export function MentorDashboard() {
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 999, padding: '3px 10px', fontSize: 11, fontWeight: 600, color: sc.color }}>
                               <i className={sc.icon} style={{ fontSize: 10 }} /> {sc.label}
                             </span>
+                            {m.status === 'AT_RISK' && m.daysSinceLastSubmission > 0 && (
+                              <div style={{ fontSize: 10, color: '#b91c1c', marginTop: 3 }}>
+                                Last active {m.daysSinceLastSubmission}d ago
+                              </div>
+                            )}
                           </td>
                           <td>
                             {m.plan === 'PREMIUM' ? (

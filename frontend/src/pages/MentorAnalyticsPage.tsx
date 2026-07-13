@@ -57,7 +57,7 @@ export function MentorAnalyticsPage() {
   const trackDistribution = data?.trackDistribution || []
   const statusBreakdown = data?.statusBreakdown || { NOT_STARTED: 0, ON_TRACK: 0, AT_RISK: 0, PAUSED: 0 }
   const atRiskList = data?.atRiskList || []
-  const completionProjection = data?.completionProjection || { eligibleCount: 0, averageCompletionPct: 0, projectedCompletionDate: null, message: 'Not enough data yet' }
+  const programDistribution = data?.programDistribution || []
 
   const statusPieData = Object.entries(statusBreakdown)
     .map(([status, count]) => ({ status, label: STATUS_LABELS[status] || status, count: count as number }))
@@ -200,7 +200,7 @@ export function MentorAnalyticsPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* ── AT-RISK + COMPLETION PROJECTION ───────────────────────────── */}
+        {/* ── AT-RISK + PROGRAM DISTRIBUTION ────────────────────────────── */}
         <div className="bit-analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
           {/* At-risk list */}
@@ -209,7 +209,7 @@ export function MentorAnalyticsPage() {
               <i className="ti ti-alert-triangle" style={{ fontSize: 15, color: '#ef4444' }} />
               At-Risk Mentees ({atRiskList.length})
             </h3>
-            <p style={{ fontSize: 12, color: '#8A8070', marginBottom: 16 }}>Active mentees who are 2+ weeks behind</p>
+            <p style={{ fontSize: 12, color: '#8A8070', marginBottom: 16 }}>Active mentees with 10+ days since last submission</p>
             {atRiskList.length === 0 ? (
               <div style={{ padding: '24px 0', textAlign: 'center', color: '#8A8070', fontSize: 13 }}>
                 <i className="ti ti-circle-check" style={{ fontSize: 26, display: 'block', margin: '0 auto 10px', color: '#bbf7d0' }} />
@@ -223,51 +223,39 @@ export function MentorAnalyticsPage() {
                       <div style={{ fontSize: 13, fontWeight: 600, color: '#0F1F3D' }}>{m.name}</div>
                       <div style={{ fontSize: 11, color: '#8A8070' }}>{m.track}</div>
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>{m.weeksBehind} wk behind</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#b91c1c' }}>{m.daysSinceLastSubmission}d inactive</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Completion projection */}
+          {/* Program distribution */}
           <div className="bit-card">
             <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 700, color: '#0F1F3D', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 7 }}>
-              <i className="ti ti-target-arrow" style={{ fontSize: 15, color: '#C9A84C' }} />
-              Completion Projection
+              <i className="ti ti-chart-bar" style={{ fontSize: 15, color: '#C9A84C' }} />
+              Program Distribution
             </h3>
-            <p style={{ fontSize: 12, color: '#8A8070', marginBottom: 16 }}>Based on active, non-paused mentees</p>
-
-            {completionProjection.message ? (
+            <p style={{ fontSize: 12, color: '#8A8070', marginBottom: 16 }}>How many active mentees are on each week</p>
+            {programDistribution.length === 0 ? (
               <div style={{ padding: '24px 0', textAlign: 'center', color: '#8A8070', fontSize: 13 }}>
                 <i className="ti ti-chart-dots" style={{ fontSize: 26, display: 'block', margin: '0 auto 10px', color: '#C8C0B4' }} />
-                {completionProjection.message}
+                No active mentees yet.
               </div>
             ) : (
-              <>
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#8A8070', marginBottom: 8 }}>
-                    <span>Average completion</span>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#C9A84C' }}>{completionProjection.averageCompletionPct}%</span>
-                  </div>
-                  <div style={{ height: 6, borderRadius: 99, background: '#F0EBD8', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', borderRadius: 99, background: '#C9A84C', width: `${completionProjection.averageCompletionPct}%` }} />
-                  </div>
-                </div>
-                <div style={{ background: '#F9F7F1', border: '1px solid #E8E4D9', borderRadius: 9, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8A8070', marginBottom: 5 }}>
-                    Projected cohort completion
-                  </div>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 900, color: '#0F1F3D' }}>
-                    {completionProjection.projectedCompletionDate
-                      ? new Date(completionProjection.projectedCompletionDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-                      : 'Not enough submission history yet'}
-                  </div>
-                </div>
-                <p style={{ fontSize: 11, color: '#8A8070', marginTop: 10 }}>
-                  Based on {completionProjection.eligibleCount} eligible mentee{completionProjection.eligibleCount === 1 ? '' : 's'} (started, not paused).
-                </p>
-              </>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={programDistribution} margin={{ bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E8E4D9" />
+                  <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#8A8070' }} label={{ value: 'Week', position: 'insideBottom', offset: -2, fontSize: 10, fill: '#8A8070' }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#8A8070' }} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E4D9' }}
+                    formatter={(v: any) => [v, 'Mentees']}
+                    labelFormatter={(w: any) => `Week ${w}`}
+                  />
+                  <Bar dataKey="count" name="Mentees" fill="#C9A84C" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             )}
           </div>
         </div>

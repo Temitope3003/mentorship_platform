@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express'
+import { Router } from 'express'
 import { requireMentee } from '../middleware/auth'
 import {
   getProfile,
@@ -19,13 +19,10 @@ import {
   clearChatHistory,
   getJobListings,
   getIncomeOpportunities,
+  getCohortProgress,
 } from '../controllers/menteeController'
 
 
-
-interface AuthRequest extends Request {
-  menteeId?: string
-}
 
 export const menteeRouter = Router()
 
@@ -49,3 +46,4 @@ menteeRouter.get('/me/chat/history', getChatHistory)
 menteeRouter.delete('/me/chat/history', clearChatHistory)
 menteeRouter.get('/me/jobs', getJobListings)
 menteeRouter.get('/me/income-opportunities', getIncomeOpportunities)
+menteeRouter.get('/me/cohort-progress', getCohortProgress)

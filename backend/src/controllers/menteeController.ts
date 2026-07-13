@@ -1,9 +1,10 @@
 import { Request, Response } from 'express'
 import { prisma } from '../models/prisma'
-import { getCurriculumForDomain, getWeekForDomain } from '../utils/curriculum'
+import { getCurriculumForDomain } from '../utils/curriculum'
 import { sendConfirmationEmail } from '../emails/confirmationEmail'
 import { sendMenteePauseResumeAlertEmail } from '../emails/menteePauseResumeAlertEmail'
 import { getCurrentWeek } from '../utils/menteeStatus'
+
 import { changeMenteeTrack, TrackChangeError } from '../services/menteeTrackService'
 import { sendPaymentClaimAlertEmail } from '../emails/paymentClaimAlertEmail'
 import { sendMenteeRequestAlertEmail } from '../emails/menteeRequestAlertEmail'
@@ -155,13 +156,12 @@ export async function getRoadmap(req: AuthRequest, res: Response) {
       })
     }
 
-    const currentWeek = getCurrentWeek(mentee)!
-    const curriculum = getCurriculumForDomain(mentee.domainTrack)
-
     const submissions = await prisma.weeklySubmission.findMany({
       where: { menteeId: req.menteeId },
       select: { weekNumber: true },
     })
+    const currentWeek = getCurrentWeek(mentee, submissions)!
+    const curriculum = getCurriculumForDomain(mentee.domainTrack)
     const submittedWeeks = submissions.map(s => s.weekNumber)
 
     const weeks = curriculum.map(week => ({
@@ -224,7 +224,11 @@ export async function createSubmission(req: AuthRequest, res: Response) {
       return res.status(400).json({ error: 'Your journey is paused. Resume to continue submitting work.' })
     }
 
-    const currentWeek = getCurrentWeek(mentee)!
+    const existingSubmissions = await prisma.weeklySubmission.findMany({
+      where: { menteeId: req.menteeId },
+      select: { weekNumber: true },
+    })
+    const currentWeek = getCurrentWeek(mentee, existingSubmissions)!
     if (weekNumber > currentWeek) {
       return res.status(400).json({ error: 'You cannot submit a future week' })
     }
@@ -294,12 +298,13 @@ export async function getStats(req: AuthRequest, res: Response) {
       orderBy: { weekNumber: 'asc' },
     })
 
-    const currentWeek = getCurrentWeek(mentee)!
+    const currentWeek = getCurrentWeek(mentee, submissions)!
     const submittedWeeks = submissions.map(s => s.weekNumber)
     const completionPct = Math.round((submissions.length / 48) * 100)
 
+    const highestSubmitted = submittedWeeks.length > 0 ? Math.max(...submittedWeeks) : 0
     let streak = 0
-    for (let w = currentWeek; w >= 1; w--) {
+    for (let w = highestSubmitted; w >= 1; w--) {
       if (submittedWeeks.includes(w)) streak++
       else break
     }
@@ -597,7 +602,14 @@ export async function chatWithBot(req: AuthRequest, res: Response) {
     })
     const historyChronological = recentMessages.reverse()
 
-    const currentWeek = mentee.hasStarted ? getCurrentWeek(mentee) : null
+    let currentWeek: number | null = null
+    if (mentee.hasStarted) {
+      const chatSubmissions = await prisma.weeklySubmission.findMany({
+        where: { menteeId: req.menteeId },
+        select: { weekNumber: true },
+      })
+      currentWeek = getCurrentWeek(mentee, chatSubmissions)
+    }
 
     const reply = await getMenteeChatReply({
       domainTrack: mentee.domainTrack,
@@ -678,6 +690,36 @@ export async function getJobListings(req: AuthRequest, res: Response) {
     })
   } catch (error) {
     console.error('Get job listings error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export async function getCohortProgress(req: AuthRequest, res: Response) {
+  try {
+    const mentee = await prisma.mentee.findUnique({ where: { id: req.menteeId } })
+    if (!mentee) return res.status(404).json({ error: 'Mentee not found' })
+
+    if (!mentee.hasStarted) {
+      return res.json({ currentWeek: null, rank: null, total: 0 })
+    }
+
+    const mySubmissions = await prisma.weeklySubmission.findMany({
+      where: { menteeId: req.menteeId },
+      select: { weekNumber: true },
+    })
+    const myCurrentWeek = getCurrentWeek(mentee, mySubmissions) ?? 1
+
+    const activeMentees = await prisma.mentee.findMany({
+      where: { isActive: true, hasStarted: true, isPaused: false },
+      include: { submissions: { select: { weekNumber: true } } },
+    })
+
+    const allWeeks = activeMentees.map(m => getCurrentWeek(m, m.submissions) ?? 1)
+    const rank = allWeeks.filter(w => w > myCurrentWeek).length + 1
+
+    return res.json({ currentWeek: myCurrentWeek, rank, total: allWeeks.length })
+  } catch (error) {
+    console.error('Get cohort progress error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

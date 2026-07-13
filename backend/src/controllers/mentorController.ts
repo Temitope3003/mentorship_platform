@@ -7,7 +7,7 @@ import { sendWelcomeEmail } from '../emails/welcomeEmail'
 import { sendMentorApplicationAlertEmail } from '../emails/mentorApplicationAlertEmail'
 import { sendMentorApprovalEmail } from '../emails/mentorApprovalEmail'
 import { sendMentorRejectionEmail } from '../emails/mentorRejectionEmail'
-import { getCurrentWeek, getMenteeStatusLabel, getWeeksBehind } from '../utils/menteeStatus'
+import { getCurrentWeek, getMenteeStatusLabel, getDaysSinceLastSubmission } from '../utils/menteeStatus'
 import { DOMAINS } from '../utils/questionData'
 import bcrypt from 'bcryptjs'
 import { generateCertificateCode } from '../utils/certificateCode'
@@ -37,40 +37,35 @@ export async function getAllMentees(req: AuthRequest, res: Response) {
   try {
     const mentees = await prisma.mentee.findMany({
       where: { isActive: true },
-      include: { submissions: { select: { weekNumber: true } } },
+      include: { submissions: { select: { weekNumber: true, submittedAt: true } } },
       orderBy: { createdAt: 'desc' },
     })
 
-    const result = mentees.map(m => {
-      const lastSubmittedWeek = m.submissions.length > 0
-        ? Math.max(...m.submissions.map(s => s.weekNumber))
-        : 0
-      return {
-        id: m.id,
-        name: m.name,
-        email: m.email,
-        accessCode: m.accessCode,
-        domainTrack: m.domainTrack,
-        currentWeek: getCurrentWeek(m),
-        submissionsCount: m.submissions.length,
-        isActive: m.isActive,
-        startDate: m.startDate,
-        topMatch: m.topMatch,
-        alignmentStatus: m.alignmentStatus,
-        hasStarted: m.hasStarted,
-        isPaused: m.isPaused,
-        pausedAt: m.pausedAt,
-        pauseReason: m.pauseReason,
-        status: getMenteeStatusLabel(m, lastSubmittedWeek),
-        weeksBehind: getWeeksBehind(m, lastSubmittedWeek),
-        liaisonOfficerId: m.liaisonOfficerId,
-        plan: m.plan,
-        planExpiresAt: m.planExpiresAt,
-        pendingPaymentPlan: m.pendingPaymentPlan,
-        hasReceivedCertificate: m.hasReceivedCertificate,
-        phoneNumber: m.phoneNumber || null,
-      }
-    })
+    const result = mentees.map(m => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      accessCode: m.accessCode,
+      domainTrack: m.domainTrack,
+      currentWeek: getCurrentWeek(m, m.submissions),
+      submissionsCount: m.submissions.length,
+      isActive: m.isActive,
+      startDate: m.startDate,
+      topMatch: m.topMatch,
+      alignmentStatus: m.alignmentStatus,
+      hasStarted: m.hasStarted,
+      isPaused: m.isPaused,
+      pausedAt: m.pausedAt,
+      pauseReason: m.pauseReason,
+      status: getMenteeStatusLabel(m, m.submissions),
+      daysSinceLastSubmission: getDaysSinceLastSubmission(m, m.submissions),
+      liaisonOfficerId: m.liaisonOfficerId,
+      plan: m.plan,
+      planExpiresAt: m.planExpiresAt,
+      pendingPaymentPlan: m.pendingPaymentPlan,
+      hasReceivedCertificate: m.hasReceivedCertificate,
+      phoneNumber: m.phoneNumber || null,
+    }))
 
     return res.json(result)
   } catch (error) {
@@ -180,15 +175,10 @@ export async function getCohortStats(req: AuthRequest, res: Response) {
     const totalMentees = mentees.length
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     const submissionsThisWeek = mentees.reduce((sum, m) => {
-      return sum + m.submissions.filter(s => s.submittedAt > oneWeekAgo).length
+      return sum + m.submissions.filter(s => new Date(s.submittedAt) > oneWeekAgo).length
     }, 0)
 
-    const atRisk = mentees.filter(m => {
-      const lastSubmitted = m.submissions.length > 0
-        ? Math.max(...m.submissions.map(s => s.weekNumber))
-        : 0
-      return getMenteeStatusLabel(m, lastSubmitted) === 'AT_RISK'
-    }).length
+    const atRisk = mentees.filter(m => getMenteeStatusLabel(m, m.submissions) === 'AT_RISK').length
 
     const engagementRate = totalMentees > 0
       ? Math.round((submissionsThisWeek / totalMentees) * 100)
@@ -475,7 +465,7 @@ export async function getAnalytics(req: AuthRequest, res: Response) {
       include: { submissions: { select: { weekNumber: true, submittedAt: true } } },
     })
 
-    // ── 1. SUBMISSION TRENDS: last 12 rolling weeks ──────────────────────────
+    // ── 1. SUBMISSION TRENDS: last 12 rolling weeks ─────────────────────
     const WEEKS_BACK = 12
     const now = Date.now()
     const submissionTrends: { weekLabel: string; count: number }[] = []
@@ -503,73 +493,38 @@ export async function getAnalytics(req: AuthRequest, res: Response) {
     })
     const trackDistribution = Object.entries(trackCounts).map(([track, count]) => ({ track, count }))
 
-    // ── 3. STATUS BREAKDOWN + per-mentee status (reused below) ──────────────
+    // ── 3. STATUS BREAKDOWN + per-mentee status (reused below) ─────────────
     const statusBreakdown = { NOT_STARTED: 0, ON_TRACK: 0, AT_RISK: 0, PAUSED: 0 }
     const menteeStatuses = mentees.map(m => {
-      const lastSubmittedWeek = m.submissions.length > 0
-        ? Math.max(...m.submissions.map(s => s.weekNumber))
-        : 0
-      const status = getMenteeStatusLabel(m, lastSubmittedWeek)
+      const status = getMenteeStatusLabel(m, m.submissions)
       statusBreakdown[status]++
-      return { mentee: m, status, lastSubmittedWeek }
+      return { mentee: m, status }
     })
 
-    // ── 4. AT-RISK LIST ───────────────────────────────────────────────────────
+    // ── 4. AT-RISK LIST ──────────────────────────────────────────────────────
     const atRiskList = menteeStatuses
       .filter(x => x.status === 'AT_RISK')
       .map(x => ({
         id: x.mentee.id,
         name: x.mentee.name,
         track: x.mentee.domainTrack,
-        weeksBehind: getWeeksBehind(x.mentee, x.lastSubmittedWeek),
+        daysSinceLastSubmission: getDaysSinceLastSubmission(x.mentee, x.mentee.submissions),
       }))
-      .sort((a, b) => b.weeksBehind - a.weeksBehind)
+      .sort((a, b) => b.daysSinceLastSubmission - a.daysSinceLastSubmission)
 
-    // ── 5. COMPLETION RATE PROJECTION ────────────────────────────────────────
-    const eligible = menteeStatuses.filter(x => x.mentee.hasStarted && !x.mentee.isPaused)
-    let completionProjection: {
-      eligibleCount: number
-      averageCompletionPct: number
-      projectedCompletionDate: string | null
-      message: string | null
-    }
+    // ── 5. PROGRAM DISTRIBUTION: mentee count per current week ──────────────
+    const weekCounts: Record<number, number> = {}
+    for (let w = 1; w <= 48; w++) weekCounts[w] = 0
+    mentees.forEach(m => {
+      if (!m.hasStarted || m.isPaused) return
+      const wk = getCurrentWeek(m, m.submissions) ?? 1
+      weekCounts[wk] = (weekCounts[wk] || 0) + 1
+    })
+    const programDistribution = Object.entries(weekCounts)
+      .map(([week, count]) => ({ week: Number(week), count }))
+      .filter(d => d.count > 0)
 
-    if (eligible.length === 0) {
-      completionProjection = {
-        eligibleCount: 0,
-        averageCompletionPct: 0,
-        projectedCompletionDate: null,
-        message: 'Not enough data yet',
-      }
-    } else {
-      const avgWeeksCompleted = eligible.reduce((sum, x) => sum + x.lastSubmittedWeek, 0) / eligible.length
-      const averageCompletionPct = Math.round((avgWeeksCompleted / 48) * 100)
-
-      const avgPace = eligible.reduce((sum, x) => {
-        const wk = getCurrentWeek(x.mentee) ?? 1
-        return sum + x.lastSubmittedWeek / wk
-      }, 0) / eligible.length
-
-      if (avgPace <= 0 || avgWeeksCompleted <= 0) {
-        completionProjection = {
-          eligibleCount: eligible.length,
-          averageCompletionPct,
-          projectedCompletionDate: null,
-          message: 'Not enough submission history yet to project a completion date',
-        }
-      } else {
-        const remainingWeeks = Math.ceil((48 - avgWeeksCompleted) / avgPace)
-        const projectedDate = new Date(now + Math.max(0, remainingWeeks) * 7 * 24 * 60 * 60 * 1000)
-        completionProjection = {
-          eligibleCount: eligible.length,
-          averageCompletionPct,
-          projectedCompletionDate: projectedDate.toISOString(),
-          message: null,
-        }
-      }
-    }
-
-    // ── 6. SUMMARY STATS ROW ──────────────────────────────────────────────────
+    // ── 6. SUMMARY STATS ROW ─────────────────────────────────────────────────
     const totalMentees = mentees.length
     const startedMentees = mentees.filter(m => m.hasStarted).length
     const totalSubmissions = mentees.reduce((sum, m) => sum + m.submissions.length, 0)
@@ -591,7 +546,7 @@ export async function getAnalytics(req: AuthRequest, res: Response) {
       trackDistribution,
       statusBreakdown,
       atRiskList,
-      completionProjection,
+      programDistribution,
     })
   } catch (error) {
     console.error('Get analytics error:', error)

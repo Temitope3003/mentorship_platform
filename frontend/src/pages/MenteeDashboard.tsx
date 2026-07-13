@@ -152,10 +152,14 @@ export function MenteeDashboard() {
   const [jobsData, setJobsData] = useState<{ listings: any[]; totalAvailable: number; isPremium: boolean } | null>(null)
   const [jobsLoading, setJobsLoading] = useState(false)
   const [incomeOpps, setIncomeOpps] = useState<any[]>([])
+  const [cohortProgress, setCohortProgress] = useState<{ currentWeek: number | null; rank: number | null; total: number } | null>(null)
 
   useEffect(() => {
     api.get('/mentee/me/income-opportunities')
       .then(r => setIncomeOpps(r.data.opportunities || []))
+      .catch(() => {})
+    api.get('/mentee/me/cohort-progress')
+      .then(r => setCohortProgress(r.data))
       .catch(() => {})
   }, [])
 
@@ -417,7 +421,11 @@ export function MenteeDashboard() {
             Welcome back, {firstName}
           </h1>
           <p style={{ fontSize: 14, color: '#6B6B6B' }}>
-            Week {currentWeek} of 48 &middot; {stats?.currentPhase}
+            {stats?.weeksSubmitted === 0
+              ? 'Submit Week 1 to begin your journey'
+              : `You are on Week ${currentWeek} — submit to unlock Week ${Math.min(48, currentWeek + 1)}`
+            }
+            {stats?.currentPhase && <span style={{ color: '#C8C0B4' }}> &middot; {stats.currentPhase}</span>}
           </p>
 
           {/* Track change — only before first submission */}
@@ -573,6 +581,25 @@ export function MenteeDashboard() {
           ))}
         </div>
 
+        {/* ── COHORT PROGRESS ────────────────────────────────────────────── */}
+        {cohortProgress && cohortProgress.total > 1 && cohortProgress.rank !== null && (
+          <div style={{ background: '#0F1F3D', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 12, padding: '14px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
+            <i className="ti ti-trophy" style={{ fontSize: 20, color: '#C9A84C', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#F5D87A', fontFamily: "'Playfair Display', serif" }}>
+                #{cohortProgress.rank} of {cohortProgress.total} active mentees
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
+                {cohortProgress.rank === 1
+                  ? 'You are leading the cohort — keep going!'
+                  : cohortProgress.rank <= Math.ceil(cohortProgress.total * 0.25)
+                  ? 'You are in the top 25% of the cohort.'
+                  : 'Keep submitting to climb the cohort rankings.'}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── PHASE PROGRESS ─────────────────────────────────────────────── */}
         <div style={{ background: '#fff', border: '1px solid #E8E4D9', borderRadius: 12, padding: '18px 22px', marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -683,7 +710,10 @@ export function MenteeDashboard() {
                       />
                     )}
                     {week.isLocked && (
-                      <i className="ti ti-lock" style={{ fontSize: 14, color: '#C8C0B4' }} />
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#C8C0B4', fontWeight: 500 }}>
+                        <i className="ti ti-lock" style={{ fontSize: 12 }} />
+                        Complete Week {week.week - 1} to unlock
+                      </span>
                     )}
                   </div>
                 </button>

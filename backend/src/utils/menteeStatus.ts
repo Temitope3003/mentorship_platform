@@ -1,41 +1,37 @@
 export interface MenteeTimeline {
   hasStarted: boolean
-  startDate: Date
   isPaused: boolean
-  pausedAt: Date | null
-  totalPausedDays: number
+  startDate: Date
 }
 
 export type MenteeStatusLabel = 'NOT_STARTED' | 'PAUSED' | 'AT_RISK' | 'ON_TRACK'
 
-/**
- * Returns null for a mentee who has not started — hasStarted is always the source
- * of truth, regardless of startDate or any existing submissions.
- */
-export function getCurrentWeek(mentee: MenteeTimeline): number | null {
+export function getCurrentWeek(
+  mentee: { hasStarted: boolean },
+  submissions: { weekNumber: number }[]
+): number | null {
   if (!mentee.hasStarted) return null
-
-  const now = Date.now()
-  const ongoingPauseMs = mentee.isPaused && mentee.pausedAt
-    ? now - new Date(mentee.pausedAt).getTime()
-    : 0
-  const totalPausedMs = mentee.totalPausedDays * 24 * 60 * 60 * 1000 + ongoingPauseMs
-
-  const diffMs = now - new Date(mentee.startDate).getTime() - totalPausedMs
-  const diffWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1
-  return Math.max(1, Math.min(48, diffWeeks))
+  if (submissions.length === 0) return 1
+  const highest = Math.max(...submissions.map(s => s.weekNumber))
+  return Math.min(48, highest + 1)
 }
 
-export function getMenteeStatusLabel(mentee: MenteeTimeline, lastSubmittedWeek: number): MenteeStatusLabel {
+export function getDaysSinceLastSubmission(
+  mentee: MenteeTimeline,
+  submissions: { weekNumber: number; submittedAt: Date }[]
+): number {
+  if (!mentee.hasStarted || mentee.isPaused) return 0
+  const referenceDate = submissions.length > 0
+    ? submissions.reduce((d, s) => (new Date(s.submittedAt) > d ? new Date(s.submittedAt) : d), new Date(0))
+    : new Date(mentee.startDate)
+  return Math.floor((Date.now() - referenceDate.getTime()) / (24 * 60 * 60 * 1000))
+}
+
+export function getMenteeStatusLabel(
+  mentee: MenteeTimeline,
+  submissions: { weekNumber: number; submittedAt: Date }[]
+): MenteeStatusLabel {
   if (!mentee.hasStarted) return 'NOT_STARTED'
   if (mentee.isPaused) return 'PAUSED'
-  const currentWeek = getCurrentWeek(mentee) ?? 1
-  return currentWeek - lastSubmittedWeek >= 2 ? 'AT_RISK' : 'ON_TRACK'
-}
-
-/** Weeks behind only applies to mentees who have started and are not paused. */
-export function getWeeksBehind(mentee: MenteeTimeline, lastSubmittedWeek: number): number {
-  if (!mentee.hasStarted || mentee.isPaused) return 0
-  const currentWeek = getCurrentWeek(mentee) ?? 1
-  return Math.max(0, currentWeek - lastSubmittedWeek)
+  return getDaysSinceLastSubmission(mentee, submissions) >= 10 ? 'AT_RISK' : 'ON_TRACK'
 }
