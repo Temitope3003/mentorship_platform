@@ -46,6 +46,14 @@ export const QUESTIONS: Question[] = [
       { text: 'Cybersecurity or protecting systems', scores: { 'Cybersecurity': 15 } },
       { text: 'Cloud infrastructure and DevOps', scores: { 'Cloud & Infrastructure': 15 } },
       { text: 'Product design and user experience', scores: { 'Product, Design & UX': 15 } },
+      { text: 'Building frontend interfaces and web experiences', scores: { 'Frontend Development': 15 } },
+      { text: 'Backend development, APIs, and database design', scores: { 'Backend Development': 15 } },
+      { text: 'Data engineering and large-scale data pipelines', scores: { 'Data Science & Engineering': 15 } },
+      { text: 'Automating workflows using no-code and AI tools', scores: { 'AI Automation & No-Code': 15 } },
+      { text: 'Developer advocacy, technical writing, or community building', scores: { 'DevRel & Technical Writing': 15 } },
+      { text: 'Virtual assistance and supporting remote teams', scores: { 'Virtual Assistant': 15 } },
+      { text: 'DevSecOps and securing software delivery pipelines', scores: { 'DevSecOps': 15 } },
+      { text: 'Exploring emerging technologies and what comes next', scores: { 'Emerging Tech': 15 } },
       { text: 'I genuinely have no idea yet', scores: {} },
     ],
   },
@@ -67,6 +75,7 @@ export const QUESTIONS: Question[] = [
       { text: 'Analysing data and drawing insights', scores: { 'Data Analysis': 4, 'Data Science & Engineering': 4 } },
       { text: 'Designing interfaces and user flows', scores: { 'Product, Design & UX': 4, 'Frontend Development': 3 } },
       { text: 'Automating repetitive tasks and building workflows', scores: { 'AI Automation & No-Code': 5, 'Cloud & Infrastructure': 2, 'DevSecOps': 3 } },
+      { text: 'Investigating security threats and hardening systems against attack', scores: { 'Cybersecurity': 5, 'DevSecOps': 3 } },
     ],
   },
   {
@@ -114,6 +123,8 @@ export const QUESTIONS: Question[] = [
       { text: 'React, CSS, and browser performance', scores: { 'Frontend Development': 5, 'Full Stack Engineering': 2 } },
       { text: 'Docker, Kubernetes, and cloud platforms', scores: { 'Cloud & Infrastructure': 5, 'DevSecOps': 4 } },
       { text: 'Zapier, Make, Bubble, or Webflow', scores: { 'AI Automation & No-Code': 5, 'Virtual Assistant': 2 } },
+      { text: 'Developer portals, documentation platforms, and community tools', scores: { 'DevRel & Technical Writing': 5, 'Product, Design & UX': 1 } },
+      { text: 'SQL, Power BI, Tableau, or Excel for data analysis', scores: { 'Data Analysis': 5, 'Data Science & Engineering': 2 } },
     ],
   },
   {
@@ -130,7 +141,7 @@ export const QUESTIONS: Question[] = [
     id: 9,
     text: 'When you think about your ideal work environment, which fits best?',
     options: [
-      { text: 'Deep focus work alone on complex technical problems', scores: { 'AI & Machine Learning': 4, 'Backend Development': 4, 'Data Science & Engineering': 4, 'Cybersecurity': 3, 'DevSecOps': 3 } },
+      { text: 'Deep focus work alone on complex technical problems', scores: { 'AI & Machine Learning': 4, 'Backend Development': 4, 'Data Science & Engineering': 4, 'Data Analysis': 4, 'Cybersecurity': 3, 'DevSecOps': 3 } },
       { text: 'Collaborative work with designers, PMs, and engineers', scores: { 'Frontend Development': 4, 'Product, Design & UX': 4, 'Full Stack Engineering': 3 } },
       { text: 'Building and maintaining infrastructure that keeps things running', scores: { 'Cloud & Infrastructure': 5, 'Backend Development': 3, 'DevSecOps': 4 } },
       { text: 'Flexible remote work supporting clients and teams', scores: { 'Virtual Assistant': 5, 'DevRel & Technical Writing': 3 } },
@@ -144,6 +155,8 @@ export const QUESTIONS: Question[] = [
       { text: 'Creating apps millions of people use on their phones', scores: { 'Mobile Development': 5, 'Frontend Development': 3, 'Full Stack Engineering': 3 } },
       { text: 'Protecting organisations from cyber attacks', scores: { 'Cybersecurity': 5, 'DevSecOps': 4 } },
       { text: 'Helping developers succeed with tools and documentation', scores: { 'DevRel & Technical Writing': 5 } },
+      { text: 'Being at the frontier and shaping what comes next in technology', scores: { 'Emerging Tech': 5, 'AI & Machine Learning': 2 } },
+      { text: 'Helping organisations make smarter decisions through data insights', scores: { 'Data Analysis': 5, 'Data Science & Engineering': 3 } },
     ],
   },
   {
@@ -174,7 +187,7 @@ export const QUESTIONS: Question[] = [
     text: 'When you look at a mobile app, what do you notice first?',
     options: [
       { text: 'How fast it loads and how smooth the animations are', scores: { 'Mobile Development': 5, 'Frontend Development': 4 } },
-      { text: 'How the data is structured and where it comes from', scores: { 'Backend Development': 4, 'Data Science & Engineering': 3 } },
+      { text: 'How the data is structured and where it comes from', scores: { 'Backend Development': 4, 'Data Science & Engineering': 3, 'Data Analysis': 3 } },
       { text: 'How intuitive and easy it is to navigate', scores: { 'Product, Design & UX': 5 } },
       { text: 'What security vulnerabilities it might have', scores: { 'Cybersecurity': 5, 'DevSecOps': 4 } },
     ],
@@ -204,7 +217,7 @@ export const QUESTIONS: Question[] = [
     text: 'What motivates you most about working in tech?',
     options: [
       { text: 'Building products that directly improve people\'s lives', scores: { 'Mobile Development': 3, 'Full Stack Engineering': 3, 'Product, Design & UX': 4 } },
-      { text: 'Solving complex technical problems at scale', scores: { 'Backend Development': 4, 'Cloud & Infrastructure': 4, 'Data Science & Engineering': 4, 'DevSecOps': 3 } },
+      { text: 'Solving complex technical problems at scale', scores: { 'Backend Development': 4, 'Cloud & Infrastructure': 4, 'Data Science & Engineering': 4, 'Data Analysis': 3, 'Cybersecurity': 3, 'DevSecOps': 3 } },
       { text: 'Staying at the frontier of new technology', scores: { 'Emerging Tech': 5, 'AI & Machine Learning': 3, 'AI Automation & No-Code': 3 } },
       { text: 'Teaching and helping other people grow in tech', scores: { 'DevRel & Technical Writing': 5, 'Virtual Assistant': 2 } },
     ],
@@ -214,7 +227,7 @@ export const QUESTIONS: Question[] = [
     text: 'How do you prefer to work with other people?',
     options: [
       { text: 'I lead and facilitate, keeping teams organised and moving', scores: { 'Product, Design & UX': 4, 'Virtual Assistant': 4, 'DevRel & Technical Writing': 3 } },
-      { text: 'I prefer deep individual work with minimal meetings', scores: { 'AI & Machine Learning': 3, 'Backend Development': 4, 'Data Science & Engineering': 3, 'Cybersecurity': 3, 'DevSecOps': 3 } },
+      { text: 'I prefer deep individual work with minimal meetings', scores: { 'AI & Machine Learning': 3, 'Backend Development': 4, 'Data Science & Engineering': 3, 'Data Analysis': 3, 'Cybersecurity': 3, 'DevSecOps': 3 } },
       { text: 'I collaborate closely with designers and PMs to ship features', scores: { 'Frontend Development': 4, 'Full Stack Engineering': 3, 'Mobile Development': 3 } },
       { text: 'I work independently with clients remotely', scores: { 'Virtual Assistant': 5, 'DevRel & Technical Writing': 3 } },
     ],
@@ -256,7 +269,7 @@ export const QUESTIONS: Question[] = [
       { text: 'I genuinely enjoy it and do it already', scores: { 'DevRel & Technical Writing': 5 } },
       { text: 'I would do it as part of a broader role', scores: { 'Product, Design & UX': 2, 'AI & Machine Learning': 2, 'Full Stack Engineering': 2 } },
       { text: 'I prefer building over writing', scores: { 'Backend Development': 3, 'Mobile Development': 3, 'Frontend Development': 3 } },
-      { text: 'I write to explain things to non-technical people', scores: { 'Virtual Assistant': 3, 'DevRel & Technical Writing': 4, 'Product, Design & UX': 3 } },
+      { text: 'I write to explain things to non-technical people', scores: { 'Virtual Assistant': 3, 'DevRel & Technical Writing': 4, 'Product, Design & UX': 3, 'Data Analysis': 2 } },
     ],
   },
   {
@@ -270,6 +283,8 @@ export const QUESTIONS: Question[] = [
       { text: 'Figma and user research tools', scores: { 'Product, Design & UX': 5, 'Frontend Development': 2 } },
       { text: 'Node.js, PostgreSQL, and Docker', scores: { 'Backend Development': 5, 'Full Stack Engineering': 3, 'DevSecOps': 3 } },
       { text: 'dbt, Spark, or Airflow', scores: { 'Data Science & Engineering': 5, 'Data Analysis': 3 } },
+      { text: 'Burp Suite, Metasploit, or security testing platforms', scores: { 'Cybersecurity': 5, 'DevSecOps': 3 } },
+      { text: 'Web3 platforms, AR/VR frameworks, or frontier AI APIs', scores: { 'Emerging Tech': 5, 'AI & Machine Learning': 2 } },
     ],
   },
   {
@@ -277,7 +292,7 @@ export const QUESTIONS: Question[] = [
     text: 'How important is it to you to see your work used by real people quickly?',
     options: [
       { text: 'Very important, I want fast visible results', scores: { 'Frontend Development': 4, 'Mobile Development': 4, 'AI Automation & No-Code': 4, 'Virtual Assistant': 3 } },
-      { text: 'Important but I am willing to work on long term projects', scores: { 'Backend Development': 3, 'Cloud & Infrastructure': 3, 'Data Science & Engineering': 3, 'DevSecOps': 3 } },
+      { text: 'Important but I am willing to work on long term projects', scores: { 'Backend Development': 3, 'Cloud & Infrastructure': 3, 'Data Science & Engineering': 3, 'Data Analysis': 3, 'DevSecOps': 3 } },
       { text: 'I prefer deep foundational work even if results take time', scores: { 'AI & Machine Learning': 4, 'Cybersecurity': 3, 'Data Science & Engineering': 3, 'DevSecOps': 3 } },
       { text: 'I want to influence decisions more than build directly', scores: { 'Product, Design & UX': 4, 'DevRel & Technical Writing': 3 } },
     ],
@@ -288,7 +303,7 @@ export const QUESTIONS: Question[] = [
     options: [
       { text: 'I love it and want to live in the terminal', scores: { 'Cloud & Infrastructure': 5, 'Backend Development': 4, 'Cybersecurity': 4, 'DevSecOps': 5 } },
       { text: 'I use it when I need to but prefer GUIs', scores: { 'Full Stack Engineering': 3, 'Data Analysis': 2, 'Frontend Development': 2, 'DevSecOps': 1 } },
-      { text: 'I avoid it where possible', scores: { 'AI Automation & No-Code': 3, 'Virtual Assistant': 3, 'Product, Design & UX': 2 } },
+      { text: 'I avoid it where possible', scores: { 'AI Automation & No-Code': 3, 'Virtual Assistant': 3, 'Product, Design & UX': 2, 'DevRel & Technical Writing': 2 } },
       { text: 'I am learning to get comfortable with it', scores: { 'Data Science & Engineering': 3, 'Mobile Development': 2 } },
     ],
   },
@@ -300,6 +315,9 @@ export const QUESTIONS: Question[] = [
       { text: 'Lead Mobile Developer building apps used across Africa', scores: { 'Mobile Development': 5 } },
       { text: 'Developer Advocate at a major tech company', scores: { 'DevRel & Technical Writing': 5 } },
       { text: 'Automation Consultant helping businesses work smarter', scores: { 'AI Automation & No-Code': 5, 'Virtual Assistant': 3 } },
+      { text: 'Security Engineer or Penetration Tester protecting critical systems', scores: { 'Cybersecurity': 5, 'DevSecOps': 3 } },
+      { text: 'Emerging Tech Researcher or Innovation Lead building what comes next', scores: { 'Emerging Tech': 5, 'AI & Machine Learning': 2 } },
+      { text: 'Lead Data Analyst or Business Intelligence Manager driving business decisions', scores: { 'Data Analysis': 5, 'Data Science & Engineering': 3 } },
     ],
   },
 ]
