@@ -1099,3 +1099,30 @@ export async function getLeads(_req: AuthRequest, res: Response) {
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
+
+const MOTIVATIONAL_EMAIL_TYPES = ['motivational_nudge', 'motivational_celebration', 'motivational_monday']
+
+export async function getMotivationalMessages(req: AuthRequest, res: Response) {
+  try {
+    const logs = await prisma.emailLog.findMany({
+      where: { emailType: { in: MOTIVATIONAL_EMAIL_TYPES } },
+      include: { mentee: { select: { name: true } } },
+      orderBy: { sentAt: 'desc' },
+      take: 20,
+    })
+
+    const result = logs.map(log => ({
+      id:         log.id,
+      menteeName: log.mentee?.name ?? log.recipient,
+      trigger:    log.emailType.replace('motivational_', '') as 'nudge' | 'celebration' | 'monday',
+      subject:    log.subject,
+      recipient:  log.recipient,
+      sentAt:     log.sentAt,
+    }))
+
+    return res.json(result)
+  } catch (error) {
+    console.error('Get motivational messages error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}

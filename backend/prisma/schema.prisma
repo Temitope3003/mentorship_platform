@@ -63,6 +63,7 @@ model Mentee {
   hasReceivedCertificate Boolean      @default(false)
   certificateIssuedAt DateTime?
   certificateCode  String?
+  lastNudgeSentAt  DateTime?
   emailLogs        EmailLog[]
   liaisonOfficer   LiaisonOfficer?    @relation(fields: [liaisonOfficerId], references: [id])
   mentor           Mentor?            @relation(fields: [mentorId], references: [id])

@@ -5,6 +5,8 @@ import { sendWelcomeEmail } from '../emails/welcomeEmail'
 import { getCurriculumForDomain } from '../utils/curriculum'
 import { getCurrentWeek, getMenteeStatusLabel, getDaysSinceLastSubmission } from '../utils/menteeStatus'
 import { sendPremiumExpiredEmail } from '../emails/premiumExpiredEmail'
+import { generatePersonalisedMessage } from '../services/motivationalMessageService'
+import { sendMotivationalEmail } from '../emails/motivationalEmail'
 
 // ─────────────────────────────────────────────
 // JOB 1: Day 3 Gentle Reminder
@@ -654,6 +656,243 @@ cron.schedule('0 10 * * *', async () => {
     }
   } catch (error) {
     console.error('[Scheduler] Completed-no-account follow-up error:', error)
+  }
+})
+
+// ─────────────────────────────────────────────
+// JOB: Motivational Nudge
+// Runs daily at 9am — finds mentees who have gone exactly 5 days without
+// submitting and have not received a nudge in the last 5 days.
+// Generates a personalised AI message and sends it by email.
+// ─────────────────────────────────────────────
+cron.schedule('0 9 * * *', async () => {
+  console.log('[Scheduler] Running motivational nudge check...')
+  try {
+    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+    const sixDaysAgo  = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
+
+    const mentees = await prisma.mentee.findMany({
+      where: { isActive: true, hasStarted: true, isPaused: false },
+      include: {
+        submissions: {
+          select: { weekNumber: true, submittedAt: true },
+          orderBy: { submittedAt: 'desc' },
+        },
+      },
+    })
+
+    for (const mentee of mentees) {
+      const daysSince = getDaysSinceLastSubmission(mentee, mentee.submissions)
+      if (daysSince !== 5) continue
+
+      // Skip if a nudge was already sent in the last 5 days
+      const recentNudge = mentee.lastNudgeSentAt && mentee.lastNudgeSentAt >= fiveDaysAgo
+      if (recentNudge) continue
+
+      const currentWeek = getCurrentWeek(mentee, mentee.submissions) ?? 1
+      const firstName   = mentee.name.split(' ')[0]
+
+      let message: string
+      try {
+        message = await generatePersonalisedMessage({
+          firstName,
+          domainTrack:      mentee.domainTrack,
+          currentWeek,
+          totalSubmissions: mentee.submissions.length,
+          trigger:          'nudge',
+          daysSince,
+        })
+      } catch (aiErr) {
+        console.error(`[Scheduler] Nudge AI error for ${mentee.email}:`, aiErr)
+        continue
+      }
+
+      await sendMotivationalEmail({
+        to:          mentee.email,
+        firstName,
+        currentWeek,
+        trigger:     'nudge',
+        message,
+      })
+
+      await Promise.all([
+        prisma.mentee.update({
+          where: { id: mentee.id },
+          data: { lastNudgeSentAt: new Date() },
+        }),
+        prisma.emailLog.create({
+          data: {
+            menteeId:  mentee.id,
+            emailType: 'motivational_nudge',
+            recipient: mentee.email,
+            subject:   `Week ${currentWeek} is waiting for you`,
+            status:    'sent',
+            sentAt:    new Date(),
+          },
+        }),
+      ])
+
+      console.log(`[Scheduler] Motivational nudge sent to ${mentee.email}`)
+    }
+  } catch (error) {
+    console.error('[Scheduler] Motivational nudge error:', error)
+  }
+})
+
+// ─────────────────────────────────────────────
+// JOB: Celebration — runs every hour
+// Finds WeeklySubmissions created in the last hour, generates a
+// personalised celebration message, and emails the mentee.
+// ─────────────────────────────────────────────
+cron.schedule('0 * * * *', async () => {
+  console.log('[Scheduler] Running celebration check...')
+  try {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+
+    const recentSubmissions = await prisma.weeklySubmission.findMany({
+      where: { submittedAt: { gte: oneHourAgo } },
+      include: {
+        mentee: {
+          include: {
+            submissions: {
+              select: { weekNumber: true, submittedAt: true },
+              orderBy: { submittedAt: 'desc' },
+            },
+          },
+        },
+      },
+    })
+
+    for (const sub of recentSubmissions) {
+      const mentee = sub.mentee
+
+      // Skip if a celebration email was already sent for this submission week
+      const alreadySent = await prisma.emailLog.findFirst({
+        where: {
+          menteeId:  mentee.id,
+          emailType: 'motivational_celebration',
+          subject:   { contains: `Week ${sub.weekNumber}` },
+        },
+      })
+      if (alreadySent) continue
+
+      const currentWeek  = getCurrentWeek(mentee, mentee.submissions) ?? sub.weekNumber + 1
+      const weekUnlocked = Math.min(48, sub.weekNumber + 1)
+      const firstName    = mentee.name.split(' ')[0]
+
+      let message: string
+      try {
+        message = await generatePersonalisedMessage({
+          firstName,
+          domainTrack:      mentee.domainTrack,
+          currentWeek:      sub.weekNumber,
+          totalSubmissions: mentee.submissions.length,
+          trigger:          'celebration',
+          weekJustSubmitted: sub.weekNumber,
+          weekUnlocked,
+        })
+      } catch (aiErr) {
+        console.error(`[Scheduler] Celebration AI error for ${mentee.email}:`, aiErr)
+        continue
+      }
+
+      await sendMotivationalEmail({
+        to:          mentee.email,
+        firstName,
+        currentWeek: sub.weekNumber,
+        trigger:     'celebration',
+        message,
+      })
+
+      await prisma.emailLog.create({
+        data: {
+          menteeId:  mentee.id,
+          emailType: 'motivational_celebration',
+          recipient: mentee.email,
+          subject:   `Hey ${firstName} 👋 — Week ${sub.weekNumber} submitted`,
+          status:    'sent',
+          sentAt:    new Date(),
+        },
+      })
+
+      console.log(`[Scheduler] Celebration email sent to ${mentee.email} for Week ${sub.weekNumber}`)
+    }
+  } catch (error) {
+    console.error('[Scheduler] Celebration check error:', error)
+  }
+})
+
+// ─────────────────────────────────────────────
+// JOB: Weekly Monday Morning Check-in
+// Runs every Monday at 8am — sends every active mentee a personalised
+// Monday message that references their track, week, and cohort rank.
+// ─────────────────────────────────────────────
+cron.schedule('0 8 * * 1', async () => {
+  console.log('[Scheduler] Running Monday morning motivational check...')
+  try {
+    const mentees = await prisma.mentee.findMany({
+      where: { isActive: true, hasStarted: true, isPaused: false },
+      include: {
+        submissions: {
+          select: { weekNumber: true, submittedAt: true },
+          orderBy: { submittedAt: 'desc' },
+        },
+      },
+    })
+
+    // Build cohort week map for rank calculation
+    const weekMap: { id: string; week: number }[] = mentees.map(m => ({
+      id:   m.id,
+      week: getCurrentWeek(m, m.submissions) ?? 1,
+    }))
+    const totalActive = weekMap.length
+
+    for (const mentee of mentees) {
+      const currentWeek = getCurrentWeek(mentee, mentee.submissions) ?? 1
+      const firstName   = mentee.name.split(' ')[0]
+
+      // Rank = number of mentees on a higher week + 1
+      const rank = weekMap.filter(x => x.week > currentWeek).length + 1
+      const cohortRank = `${rank}${rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th'} out of ${totalActive}`
+
+      let message: string
+      try {
+        message = await generatePersonalisedMessage({
+          firstName,
+          domainTrack:      mentee.domainTrack,
+          currentWeek,
+          totalSubmissions: mentee.submissions.length,
+          trigger:          'weekly_monday',
+          cohortRank,
+        })
+      } catch (aiErr) {
+        console.error(`[Scheduler] Monday AI error for ${mentee.email}:`, aiErr)
+        continue
+      }
+
+      await sendMotivationalEmail({
+        to:          mentee.email,
+        firstName,
+        currentWeek,
+        trigger:     'weekly_monday',
+        message,
+      })
+
+      await prisma.emailLog.create({
+        data: {
+          menteeId:  mentee.id,
+          emailType: 'motivational_monday',
+          recipient: mentee.email,
+          subject:   `Good morning, ${firstName}`,
+          status:    'sent',
+          sentAt:    new Date(),
+        },
+      })
+
+      console.log(`[Scheduler] Monday message sent to ${mentee.email}`)
+    }
+  } catch (error) {
+    console.error('[Scheduler] Monday motivational check error:', error)
   }
 })
 

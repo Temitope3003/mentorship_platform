@@ -38,6 +38,7 @@ import {
   rejectIncomeOpportunity,
   updateIncomeOpportunity,
   getLeads,
+  getMotivationalMessages,
 } from '../controllers/mentorController'
 
 export const mentorRouter = Router()
@@ -81,6 +82,7 @@ mentorRouter.patch('/liaison-officers/:id/deactivate', deactivateLiaisonOfficer)
 mentorRouter.post('/mentees/:id/issue-certificate', issueCertificate)
 mentorRouter.post('/mentees/:id/issue-recommendation-letter', issueRecommendationLetter)
 mentorRouter.get('/leads', requireSuperAdmin, getLeads)
+mentorRouter.get('/motivational-messages', requireSuperAdmin, getMotivationalMessages)
 mentorRouter.post('/jobs/refresh', requireSuperAdmin, refreshJobs)
 mentorRouter.get('/income-opportunities/pending', requireSuperAdmin, getPendingIncomeOpportunities)
 mentorRouter.patch('/income-opportunities/:id/approve', requireSuperAdmin, approveIncomeOpportunity)

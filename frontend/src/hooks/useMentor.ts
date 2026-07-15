@@ -47,6 +47,13 @@ export function useAddFeedback() {
   })
 }
 
+export function useMotivationalMessages() {
+  return useQuery({
+    queryKey: ['mentor', 'motivational-messages'],
+    queryFn: () => api.get('/mentor/motivational-messages').then(r => r.data),
+  })
+}
+
 export function useCreateMentee() {
   const queryClient = useQueryClient()
   return useMutation({

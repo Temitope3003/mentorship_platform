@@ -3,7 +3,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { useMentorAnalytics } from '../hooks/useMentor'
+import { useMentorAnalytics, useMotivationalMessages } from '../hooks/useMentor'
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700&display=swap');
@@ -23,6 +23,23 @@ const CSS = `
   }
 `
 
+const TRIGGER_META: Record<string, { label: string; color: string; bg: string; icon: string }> = {
+  nudge:       { label: 'Nudge',       color: '#b45309', bg: '#fffbeb', icon: 'ti ti-bell' },
+  celebration: { label: 'Celebration', color: '#15803d', bg: '#f0fdf4', icon: 'ti ti-confetti' },
+  monday:      { label: 'Monday',      color: '#1D4A6E', bg: '#eff6ff', icon: 'ti ti-calendar-week' },
+}
+
+function formatRelative(date: string | null | undefined): string {
+  if (!date) return '—'
+  const diff = Date.now() - new Date(date).getTime()
+  const mins  = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days  = Math.floor(diff / 86400000)
+  if (mins < 60)  return `${mins}m ago`
+  if (hours < 24) return `${hours}h ago`
+  return `${days}d ago`
+}
+
 const STATUS_COLORS: Record<string, string> = {
   NOT_STARTED: '#8A8070',
   ON_TRACK: '#15803d',
@@ -39,6 +56,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function MentorAnalyticsPage() {
   const { data, isLoading } = useMentorAnalytics()
+  const { data: messages = [] } = useMotivationalMessages()
 
   if (isLoading) {
     return (
@@ -258,6 +276,73 @@ export function MentorAnalyticsPage() {
               </ResponsiveContainer>
             )}
           </div>
+        </div>
+
+        {/* ── MOTIVATIONAL MESSAGES ──────────────────────────────────────── */}
+        <div className="bit-card" style={{ marginTop: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <i className="ti ti-message-heart" style={{ fontSize: 16, color: '#C9A84C' }} />
+            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 700, color: '#0F1F3D', margin: 0 }}>
+              Motivational Messages
+            </h3>
+          </div>
+          <p style={{ fontSize: 12, color: '#8A8070', marginBottom: 16 }}>Last 20 personalised messages sent across the cohort</p>
+
+          {messages.length === 0 ? (
+            <div style={{ padding: '32px 0', textAlign: 'center', color: '#8A8070', fontSize: 13 }}>
+              <i className="ti ti-message-off" style={{ fontSize: 28, display: 'block', margin: '0 auto 10px', color: '#C8C0B4' }} />
+              No messages sent yet. They will appear here as the system generates them.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {/* Table header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px 1.8fr 80px', gap: 12, padding: '6px 12px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8070' }}>
+                <span>Mentee</span>
+                <span>Type</span>
+                <span>Subject</span>
+                <span style={{ textAlign: 'right' }}>Sent</span>
+              </div>
+              {messages.map((msg: any) => {
+                const meta = TRIGGER_META[msg.trigger] || TRIGGER_META.nudge
+                return (
+                  <div
+                    key={msg.id}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 110px 1.8fr 80px',
+                      gap: 12,
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      background: '#FAFAF8',
+                      border: '1px solid #F0EDE6',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#0F1F3D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {msg.menteeName}
+                    </div>
+                    <div>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        background: meta.bg, color: meta.color,
+                        borderRadius: 999, padding: '2px 9px',
+                        fontSize: 11, fontWeight: 600,
+                      }}>
+                        <i className={meta.icon} style={{ fontSize: 10 }} />
+                        {meta.label}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: '#6B6B6B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {msg.subject}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#8A8070', textAlign: 'right' }}>
+                      {formatRelative(msg.sentAt)}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
       </div>
