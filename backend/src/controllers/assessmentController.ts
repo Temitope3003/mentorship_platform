@@ -207,15 +207,29 @@ export async function completeAssessment(req: Request, res: Response) {
       });
     }
 
-    // Update lead capture record: mark completed and link session
+    // Mark session complete — must succeed before any email is dispatched.
+    // If this throws, the outer catch returns a 500 and no email fires.
+    await prisma.assessmentSession.update({
+      where: { sessionToken: token },
+      data: {
+        completed: true,
+        menteeId: mentee.id,
+        answers,
+        topContributions,
+      },
+    });
+
+    // Update lead capture record (non-critical — failure must not block the response,
+    // but log it so it is visible in server output).
     if (leadRecord) {
       await prisma.leadCapture.update({
         where: { id: leadRecord.id },
         data: { completedAt: new Date(), assessmentSessionId: token },
-      }).catch(() => null)
+      }).catch((err) => console.error('Lead capture update error:', err.message));
     }
 
-    // Send welcome email to mentee (non-blocking)
+    // Both DB writes have committed. Fire emails now — failures are logged but must
+    // not fail the response because the account already exists at this point.
     const topDomains = ranked.slice(0, 4).map((r) => ({
       domain: r.domain,
       score: r.score,
@@ -235,7 +249,6 @@ export async function completeAssessment(req: Request, res: Response) {
       choiceContext: analysis?.choiceContext || undefined,
     }).catch((err) => console.error('Welcome email error:', err.message));
 
-    // Send mentor alert email (non-blocking)
     sendMentorAlertEmail({
       mentorEmail: 'ajaotemitope5@gmail.com',
       menteeName: mentee.name,
@@ -249,17 +262,6 @@ export async function completeAssessment(req: Request, res: Response) {
       mentorNote: analysis?.mentorNote || null,
       statedGoal: mentee.statedGoal || null,
     }).catch((err) => console.error('Mentor alert email error:', err.message));
-
-    // Mark session complete
-    await prisma.assessmentSession.update({
-      where: { sessionToken: token },
-      data: {
-        completed: true,
-        menteeId: mentee.id,
-        answers,
-        topContributions,
-      },
-    });
 
     return res.status(201).json({
       success: true,
